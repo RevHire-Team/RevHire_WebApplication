@@ -2,7 +2,7 @@
 
 ---
 
-# 🛍️ Welcome to RevShop P2 WebApplication
+# 🛍️ Welcome to RevHire P2 WebApplication
 
 RevHire P2 is a full-stack monolithic job portal web application developed as part of the Revature Training Program (Phase 2) by the PES Mandya Batch.
 
