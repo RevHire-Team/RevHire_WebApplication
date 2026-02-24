@@ -1,4 +1,4 @@
-package com.revhire.entity;
+package com.RevHire.entity;
 
 public enum Role {
     JOB_SEEKER,
