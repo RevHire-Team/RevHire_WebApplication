@@ -1,14 +1,16 @@
 package com.RevHire.service;
 
+import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.entity.Application;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ApplicationService {
 
     Application applyJob(Long jobId, Long seekerId, Long resumeId, String coverLetter);
 
-    List<Application> getApplicationsBySeeker(Long seekerId);
+    List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId);
 
     void withdrawApplication(Long applicationId, String reason);
 

@@ -8,58 +8,33 @@ import org.springframework.web.bind.annotation.*;
 import com.RevHire.entity.User;
 import com.RevHire.service.AuthService;
 
-@Controller
+@RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
-    @GetMapping("/register")
-    public String showRegisterForm(Model model) {
-        model.addAttribute("user", new User());
-        return "register";
-    }
-
     @PostMapping("/register")
-    public String register(@ModelAttribute User user, Model model) {
+    public String register(@RequestBody User user) {
         authService.registerUser(user);
-        model.addAttribute("success", "Registration successful!");
-        return "login";
-    }
-
-    @GetMapping("/login")
-    public String showLoginForm() {
-        return "login";
+        return "Registration successful";
     }
 
     @PostMapping("/login")
     public String login(@RequestParam String email,
-                        @RequestParam String password,
-                        Model model) {
+                        @RequestParam String password) {
 
-        try {
-            User user = authService.login(email, password);
-            return "redirect:/dashboard";
-        } catch (Exception e) {
-            model.addAttribute("error", "Invalid credentials");
-            return "login";
-        }
+        authService.login(email, password);
+        return "Login successful";
     }
 
     @PostMapping("/reset-password")
     public String resetPassword(@RequestParam String email,
                                 @RequestParam String answer,
-                                @RequestParam String newPassword,
-                                Model model) {
+                                @RequestParam String newPassword) {
 
-        try {
-            authService.resetPassword(email, answer, newPassword);
-            model.addAttribute("success", "Password updated");
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-        }
-
-        return "login";
+        authService.resetPassword(email, answer, newPassword);
+        return "Password updated";
     }
 }
