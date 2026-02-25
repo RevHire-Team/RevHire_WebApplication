@@ -1,5 +1,6 @@
 package com.RevHire.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -38,10 +39,14 @@ public class Application {
     @JoinColumn(name = "resume_id")
     private Resume resume;
 
-    @Lob
+    @Column(name = "cover_letter")
     private String coverLetter;
 
+    @Column(name = "status")
     private String status;
+
+    @Column(name = "applied_date", insertable = false, updatable = false)
+    private LocalDateTime appliedDate;
 
     @Column(name = "withdraw_reason")
     private String withdrawReason;

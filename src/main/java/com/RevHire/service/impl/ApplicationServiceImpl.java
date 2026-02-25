@@ -2,6 +2,7 @@ package com.RevHire.service.impl;
 
 import java.util.List;
 
+import com.RevHire.dto.ApplicationResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,15 +32,26 @@ public class ApplicationServiceImpl implements ApplicationService {
     private ResumeRepository resumeRepository;
 
     @Override
-    public Application applyJob(Long jobId, Long seekerId, Long resumeId, String coverLetter) {
+    public Application applyJob(Long jobId,
+                                Long seekerId,
+                                Long resumeId,
+                                String coverLetter) {
 
-        if(applicationRepository.findByJobJobIdAndSeekerSeekerId(jobId, seekerId).isPresent()) {
+        if(applicationRepository
+                .findByJobJobIdAndSeekerSeekerId(jobId, seekerId)
+                .isPresent()) {
+
             throw new RuntimeException("Already applied for this job");
         }
 
-        Job job = jobRepository.findById(jobId).orElseThrow();
-        JobSeekerProfile seeker = seekerRepository.findById(seekerId).orElseThrow();
-        Resume resume = resumeRepository.findById(resumeId).orElseThrow();
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+
+        JobSeekerProfile seeker = seekerRepository.findById(seekerId)
+                .orElseThrow(() -> new RuntimeException("Seeker not found with id: " + seekerId));
+
+        Resume resume = resumeRepository.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found with id: " + resumeId));
 
         Application application = new Application();
         application.setJob(job);
@@ -51,9 +63,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applicationRepository.save(application);
     }
 
-    @Override
-    public List<Application> getApplicationsBySeeker(Long seekerId) {
-        return applicationRepository.findBySeekerSeekerId(seekerId);
+    public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId) {
+
+        return applicationRepository.findBySeekerSeekerId(seekerId)
+                .stream()
+                .map(app -> {
+                    ApplicationResponseDTO dto = new ApplicationResponseDTO();
+                    dto.setApplicationId(app.getApplicationId());
+                    dto.setJobTitle(app.getJob().getTitle());
+                    dto.setStatus(app.getStatus());
+                    dto.setAppliedDate(app.getAppliedDate());
+                    return dto;
+                })
+                .toList();
     }
 
     @Override

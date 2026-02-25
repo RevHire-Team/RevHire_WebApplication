@@ -31,7 +31,7 @@ public class Job {
 
     private String title;
 
-    @Lob
+    @Column(name = "description")
     private String description;
 
     @Column(name = "experience_required")
