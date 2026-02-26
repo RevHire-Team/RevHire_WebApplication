@@ -33,9 +33,6 @@ public class ApplicationNotesDTO {
 
     public String getNoteText() { return noteText; }
     public void setNoteText(String noteText) { this.noteText = noteText; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    
 }
