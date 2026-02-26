@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "application_notes")
+@Table(name = "APPLICATIONS_NOTES")
 @Getter @Setter
 public class ApplicationNote {
 

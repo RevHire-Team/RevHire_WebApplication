@@ -22,22 +22,42 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     private final ResumeFileRepository resumeFileRepo;
     private final FavoriteJobRepository favoriteJobRepo;
     private final NotificationRepository notificationRepo;
+    private final UserRepository userRepo;
+    private final JobRepository jobRepo;
+
 
     public JobSeekerServiceImpl(JobSeekerProfileRepository profileRepo,
                                 ResumeRepository resumeRepo,
                                 ResumeFileRepository resumeFileRepo,
                                 FavoriteJobRepository favoriteJobRepo,
-                                NotificationRepository notificationRepo) {
+                                NotificationRepository notificationRepo,
+                                UserRepository userRepo,
+                                JobRepository jobRepo) {
         this.profileRepo = profileRepo;
         this.resumeRepo = resumeRepo;
         this.resumeFileRepo = resumeFileRepo;
         this.favoriteJobRepo = favoriteJobRepo;
         this.notificationRepo = notificationRepo;
+        this.userRepo=userRepo;
+        this.jobRepo=jobRepo;
     }
 
     // ========== PROFILE ==========
     @Override
     public JobSeekerProfile createProfile(JobSeekerProfile profile) {
+        System.out.println(profile.getUser());
+        System.out.println(profile.getUser().getUserId());
+        Long userId = profile.getUser().getUserId();
+        System.out.println("User ID received: " + userId);
+
+        Optional<User> userOptional = userRepo.findById(userId);
+        System.out.println("User present? " + userOptional.isPresent());
+
+        User user = userOptional
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        profile.setUser(user);
+
         return profileRepo.save(profile);
     }
 
@@ -62,48 +82,76 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     // ========== RESUME FILE UPLOAD ==========
     @Override
     public ResumeFile uploadResumeFile(Long resumeId, MultipartFile file) {
+
+        System.out.println("Incoming resumeId: " + resumeId);
+
+        List<Resume> allResumes = resumeRepo.findAll();
+        System.out.println("Total resumes in DB: " + allResumes.size());
+
         Resume resume = resumeRepo.findById(resumeId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-        // Simple file save to local folder (adjust path as needed)
-        String uploadDir = "uploads/resumes/";
-        File folder = new File(uploadDir);
-        if (!folder.exists()) folder.mkdirs();
-
-        String filePath = uploadDir + file.getOriginalFilename();
         try {
-            file.transferTo(new File(filePath));
+            // Get project root directory
+            String projectPath = System.getProperty("user.dir");
+
+            String uploadDir = projectPath + File.separator + "uploads" + File.separator + "resumes";
+
+            File folder = new File(uploadDir);
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            // Prevent overwrite
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+
+            File destination = new File(uploadDir + File.separator + fileName);
+
+            file.transferTo(destination);
+
+            ResumeFile resumeFile = new ResumeFile();
+            resumeFile.setResume(resume);
+            resumeFile.setFileName(fileName);
+            resumeFile.setFilePath(destination.getAbsolutePath());
+            resumeFile.setFileSize(file.getSize());
+            String extension = file.getOriginalFilename()
+                    .substring(file.getOriginalFilename().lastIndexOf(".") + 1)
+                    .toUpperCase();
+
+            resumeFile.setFileType(extension);
+
+            return resumeFileRepo.save(resumeFile);
+
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file", e);
         }
-
-        ResumeFile resumeFile = new ResumeFile();
-        resumeFile.setResume(resume);
-        resumeFile.setFileName(file.getOriginalFilename());
-        resumeFile.setFilePath(filePath);
-        resumeFile.setFileSize(file.getSize());
-        resumeFile.setFileType(file.getContentType());
-
-        return resumeFileRepo.save(resumeFile);
     }
 
     // ========== FAVORITE JOBS ==========
     @Override
     public FavoriteJob addFavoriteJob(Long seekerId, Long jobId) {
-        FavoriteJob fav = new FavoriteJob();
+        System.out.println("Total seekers in DB: " + profileRepo.count());
         JobSeekerProfile seeker = profileRepo.findById(seekerId)
                 .orElseThrow(() -> new RuntimeException("Seeker not found"));
-        Job job = new Job();
-        job.setJobId(jobId); // assuming Job entity exists
+
+        Job job = jobRepo.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (favoriteJobRepo.existsBySeekerSeekerIdAndJobJobId(seekerId, jobId)) {
+            throw new RuntimeException("Already added to favorites");
+        }
+
+        FavoriteJob fav = new FavoriteJob();
         fav.setSeeker(seeker);
         fav.setJob(job);
+
         return favoriteJobRepo.save(fav);
     }
 
-    @Override
-    public List<FavoriteJob> getFavorites(Long seekerId) {
-        return favoriteJobRepo.findBySeekerSeekerId(seekerId);
-    }
+        @Override
+        public List<FavoriteJob> getFavorites(Long seekerId) {
+            return favoriteJobRepo.findBySeekerSeekerId(seekerId);
+        }
 
     @Override
     public void removeFavoriteJob(Long favId) {
@@ -115,7 +163,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     public void markNotificationAsRead(Long notificationId) {
         Notification notification = notificationRepo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
-        notification.setIsRead("YES");
+        notification.setIsRead("Y");
         notificationRepo.save(notification);
     }
 }

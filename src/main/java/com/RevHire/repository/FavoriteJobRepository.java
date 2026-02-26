@@ -8,4 +8,6 @@ public interface FavoriteJobRepository extends JpaRepository<FavoriteJob, Long> 
 
     List<FavoriteJob> findBySeekerSeekerId(Long seekerId);
 
+    boolean existsBySeekerSeekerIdAndJobJobId(Long seekerId, Long jobId);
+
 }
