@@ -32,9 +32,8 @@ public class NotificationsDTO {
 
     public String getIsRead() { return isRead; }
     public void setIsRead(String isRead) { this.isRead = isRead; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    
+
 }
