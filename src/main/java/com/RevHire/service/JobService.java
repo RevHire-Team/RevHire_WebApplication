@@ -1,5 +1,6 @@
 package com.RevHire.service;
 
+import com.RevHire.dto.JobDTO;
 import com.RevHire.entity.Job;
 
 import java.util.List;
@@ -8,9 +9,19 @@ public interface JobService {
 
     Job createJob(Job job);
 
-    List<Job> getAllOpenJobs();
+    List<JobDTO> getAllOpenJobs();
 
-    List<Job> searchJobs(String location, String title, String jobType);
+      List<JobDTO> searchJobs(
+          String title,
+          String location,
+          Integer experience,
+          String companyName,
+          Double minSalary,
+          Double maxSalary,
+          String jobType
+   );
 
-    void closeJob(Long jobId);
+  void closeJob(Long jobId);
+
+//    List<JobDTO> searchJobs(String location, String title, String jobType);
 }
