@@ -23,5 +23,4 @@ public interface JobService {
 
   void closeJob(Long jobId);
 
-//    List<JobDTO> searchJobs(String location, String title, String jobType);
 }
