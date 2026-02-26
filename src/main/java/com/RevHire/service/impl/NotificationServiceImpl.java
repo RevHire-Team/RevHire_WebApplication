@@ -1,5 +1,6 @@
 package com.RevHire.service.impl;
 
+import com.RevHire.dto.NotificationDTO;
 import com.RevHire.entity.Notification;
 import com.RevHire.repository.NotificationRepository;
 import com.RevHire.repository.UserRepository;
@@ -30,7 +31,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getUserNotifications(Long userId) {
-        return notificationRepository.findByUserUserId(userId);
+    public List<NotificationDTO> getUserNotifications(Long userId) {
+
+        List<NotificationDTO> notifications = notificationRepository.findByUserUserId(userId);
+
+        return notifications.stream()
+                .map(n -> new NotificationDTO(
+                        n.getNotificationId(),
+                        n.getMessage(),
+                        n.getIsRead()
+                ))
+                .toList();
     }
 }

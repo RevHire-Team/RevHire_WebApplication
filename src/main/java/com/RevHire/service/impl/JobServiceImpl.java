@@ -1,11 +1,14 @@
 package com.RevHire.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.RevHire.entity.Job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.RevHire.entity.Job;
+import com.RevHire.dto.JobDTO;
 import com.RevHire.repository.JobRepository;
 import com.RevHire.service.JobService;
 
@@ -21,14 +24,42 @@ public class JobServiceImpl implements JobService {
         return jobRepository.save(job);
     }
 
-    @Override
-    public List<Job> getAllOpenJobs() {
-        return jobRepository.findByStatus("OPEN");
+    public List<JobDTO> getAllOpenJobs() {
+
+        return jobRepository.findByStatus("OPEN")
+                .stream()
+                .map(job -> new JobDTO(
+                        job.getJobId(),
+                        job.getTitle(),
+                        job.getLocation(),
+                        job.getSalaryMin(),
+                        job.getSalaryMax(),
+                        job.getJobType(),
+                        job.getStatus(),
+                        job.getEmployer().getCompanyName()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Job> searchJobs(String location, String title, String jobType) {
-        return jobRepository.advancedSearch(location, title, jobType);
+    public List<JobDTO> searchJobs(
+            String title,
+            String location,
+            Integer experience,
+            String companyName,
+            Double minSalary,
+            Double maxSalary,
+            String jobType) {
+
+        return jobRepository.advancedSearch(
+                title,
+                location,
+                experience,
+                companyName,
+                minSalary,
+                maxSalary,
+                jobType
+        );
     }
 
     @Override
