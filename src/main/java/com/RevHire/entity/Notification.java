@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "NOTIFICATIONS")
 @Getter @Setter
 public class Notification {
 
@@ -25,6 +25,7 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "message")
     private String message;
 
     @Column(name = "is_read")

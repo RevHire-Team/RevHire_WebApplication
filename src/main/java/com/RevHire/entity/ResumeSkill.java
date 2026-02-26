@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "resume_skills")
+@Table(name = "RESUME_SKILLS")
 @Getter @Setter
 public class ResumeSkill {
 

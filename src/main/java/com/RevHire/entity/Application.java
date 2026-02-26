@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +19,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "applications")
+@Table(name = "APPLICATIONS")
 @Getter
 @Setter
 public class Application {
@@ -54,6 +55,7 @@ public class Application {
     private String withdrawReason;
 
     @OneToMany(mappedBy = "application")
+    @JsonIgnore
     private List<ApplicationNote> notes;
     
     

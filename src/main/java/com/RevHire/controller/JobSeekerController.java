@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/jobseeker")
@@ -22,6 +23,10 @@ public class JobSeekerController {
         this.resumeService = resumeService;
     }
 
+    @GetMapping("/test")
+    public String test(){
+        return "test worked";
+    }
     // ========== PROFILE ==========
     @PostMapping("/profile")
     public ResponseEntity<JobSeekerProfile> createProfile(@RequestBody JobSeekerProfile profile) {
@@ -50,8 +55,13 @@ public class JobSeekerController {
 
     // ========== FAVORITE JOBS ==========
     @PostMapping("/favorites/{seekerId}/{jobId}")
-    public FavoriteJob addFavorite(@PathVariable Long seekerId, @PathVariable Long jobId) {
-        return jobSeekerService.addFavoriteJob(seekerId, jobId);
+    public ResponseEntity<?> addFavorite(@PathVariable Long seekerId, @PathVariable Long jobId) {
+        jobSeekerService.addFavoriteJob(seekerId, jobId);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Job added to favorites successfully",
+                "jobId", jobId
+        ));
     }
 
     @GetMapping("/favorites/{seekerId}")
