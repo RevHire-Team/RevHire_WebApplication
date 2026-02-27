@@ -21,7 +21,7 @@ public class AuthController {
         return "Registration successful";
     }
 
-    @PostMapping("/login")
+        @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password) {
 
