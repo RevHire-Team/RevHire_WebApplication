@@ -25,8 +25,8 @@ public interface JobService {
 
   void deleteJob(Long jobId);
 
-  List<Job> getEmployerJobs(Long employerId);
+  List<JobDTO> getEmployerJobs(Long employerId);
 
-  Job toggleJobStatus(Long jobId);
+    JobDTO toggleJobStatus(Long jobId);
 
 }
