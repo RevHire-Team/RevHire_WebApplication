@@ -70,4 +70,24 @@ public class JobServiceImpl implements JobService {
         job.setStatus("CLOSED");
         jobRepository.save(job);
     }
+
+    @Override
+    public void deleteJob(Long jobId) {
+        jobRepository.deleteById(jobId);
+    }
+
+    @Override
+    public List<Job> getEmployerJobs(Long employerId) {
+        return jobRepository.findByEmployerEmployerId(employerId);
+    }
+
+    @Override
+    public Job toggleJobStatus(Long jobId) {
+
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        job.setActive(!job.getActive());
+        return jobRepository.save(job);
+    }
 }

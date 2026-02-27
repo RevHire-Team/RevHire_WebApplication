@@ -11,7 +11,7 @@ public interface JobService {
 
     List<JobDTO> getAllOpenJobs();
 
-      List<JobDTO> searchJobs(
+    List<JobDTO> searchJobs(
           String title,
           String location,
           Integer experience,
@@ -22,5 +22,11 @@ public interface JobService {
    );
 
   void closeJob(Long jobId);
+
+  void deleteJob(Long jobId);
+
+  List<Job> getEmployerJobs(Long employerId);
+
+  Job toggleJobStatus(Long jobId);
 
 }

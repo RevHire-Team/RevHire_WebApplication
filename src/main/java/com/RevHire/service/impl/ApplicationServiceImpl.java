@@ -67,14 +67,14 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return applicationRepository.findBySeekerSeekerId(seekerId)
                 .stream()
-                .map(app -> {
-                    ApplicationResponseDTO dto = new ApplicationResponseDTO();
-                    dto.setApplicationId(app.getApplicationId());
-                    dto.setJobTitle(app.getJob().getTitle());
-                    dto.setStatus(app.getStatus());
-                    dto.setAppliedDate(app.getAppliedDate());
-                    return dto;
-                })
+                .map(app -> new ApplicationResponseDTO(
+                        app.getApplicationId(),
+                        app.getSeeker().getFullName(),
+                        app.getSeeker().getUser().getEmail(),
+                        app.getJob().getTitle(),
+                        app.getStatus(),
+                        app.getAppliedDate()
+                ))
                 .toList();
     }
 
@@ -91,12 +91,52 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public void updateStatus(Long applicationId, String status) {
+    public Application updateStatus(Long applicationId, String status) {
 
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow();
 
+        List<String> validStatuses = List.of(
+                "APPLIED", "UNDER_REVIEW",
+                "SHORTLISTED", "REJECTED", "WITHDRAWN"
+        );
+
+        if(!validStatuses.contains(status)) {
+            throw new RuntimeException("Invalid status value");
+        }
+
         app.setStatus(status);
-        applicationRepository.save(app);
+        return applicationRepository.save(app);
+
     }
+
+    @Override
+    public List<ApplicationResponseDTO> getApplicationsByJob(Long jobId) {
+
+        return applicationRepository.findByJobJobId(jobId)
+                .stream()
+                .map(app -> new ApplicationResponseDTO(
+                        app.getApplicationId(),
+                        app.getSeeker().getFullName(),
+                        app.getSeeker().getUser().getEmail(),
+                        app.getJob().getTitle(),
+                        app.getStatus()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<Application> getApplicationsByEmployer(Long employerId) {
+        return applicationRepository.findByJobEmployerEmployerId(employerId);
+    }
+
+//    @Override
+//    public Application addEmployerNotes(Long applicationId, String notes) {
+//
+//        Application app = applicationRepository.findById(applicationId)
+//                .orElseThrow(() -> new RuntimeException("Application not found"));
+//
+//        app.setEmployerNotes(notes);
+//        return applicationRepository.save(app);
+//    }
 }

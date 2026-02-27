@@ -32,12 +32,31 @@ public class ApplicationController {
     }
 
     @GetMapping("/seeker/{seekerId}")
-    public ResponseEntity<List<ApplicationResponseDTO>> viewSeekerApplications(@PathVariable Long seekerId) {
+    public ResponseEntity<List<ApplicationResponseDTO>> getBySeeker(
+            @PathVariable Long seekerId) {
 
         return ResponseEntity.ok(
                 applicationService.getApplicationsBySeeker(seekerId)
         );
     }
+
+    // Employer views applications of job
+    @GetMapping("/job/{jobId}")
+    public ResponseEntity<List<ApplicationResponseDTO>> getByJob(
+            @PathVariable Long jobId) {
+
+        return ResponseEntity.ok(
+                applicationService.getApplicationsByJob(jobId)
+        );
+    }
+
+    // Employer views all applications
+    @GetMapping("/employer/{employerId}")
+    public ResponseEntity<?> getByEmployer(@PathVariable Long employerId) {
+        return ResponseEntity.ok(
+                applicationService.getApplicationsByEmployer(employerId));
+    }
+
 
     @PostMapping("/withdraw/{id}")
     public ResponseEntity<String> withdraw(@PathVariable Long id, @RequestParam String reason) {
@@ -47,10 +66,20 @@ public class ApplicationController {
     }
 
     @PostMapping("/update-status/{id}")
-    public ResponseEntity<String> updateStatus(@PathVariable Long id, @RequestParam String status) {
+    public ResponseEntity<String> updateStatus(@PathVariable Long id,
+                                               @RequestParam String status) {
 
         applicationService.updateStatus(id, status);
-//        return "redirect:/applications";
-        return ResponseEntity.ok("Application withdrawn successfully");
+        return ResponseEntity.ok("Application status updated successfully");
     }
+
+//    // Add notes
+//    @PutMapping("/notes/{applicationId}")
+//    public ResponseEntity<?> addNotes(
+//            @PathVariable Long applicationId,
+//            @RequestBody String notes) {
+//
+//        return ResponseEntity.ok(
+//                applicationService.addEmployerNotes(applicationId, notes));
+//    }
 }

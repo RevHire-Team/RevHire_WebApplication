@@ -31,7 +31,6 @@ public class Application {
 
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false)
-    @JsonBackReference
     private Job job;
 
     @ManyToOne
@@ -42,6 +41,7 @@ public class Application {
     @JoinColumn(name = "resume_id")
     private Resume resume;
 
+    @Lob
     @Column(name = "cover_letter")
     private String coverLetter;
 
@@ -55,8 +55,5 @@ public class Application {
     private String withdrawReason;
 
     @OneToMany(mappedBy = "application")
-    @JsonIgnore
     private List<ApplicationNote> notes;
-    
-    
 }

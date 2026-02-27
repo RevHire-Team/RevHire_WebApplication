@@ -163,7 +163,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     public void markNotificationAsRead(Long notificationId) {
         Notification notification = notificationRepo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
-        notification.setIsRead("Y");
+        notification.setIsRead(Boolean.valueOf("Y"));
         notificationRepo.save(notification);
     }
 }

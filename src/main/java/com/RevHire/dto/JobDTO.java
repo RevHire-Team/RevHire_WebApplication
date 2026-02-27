@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Data
@@ -12,8 +14,8 @@ public class JobDTO {
     private Long jobId;
     private String title;
     private String location;
-    private Double salaryMin;
-    private Double salaryMax;
+    private BigDecimal salaryMin;
+    private BigDecimal salaryMax;
     private String jobType;
     private String status;
     private String companyName;
@@ -21,8 +23,8 @@ public class JobDTO {
     public JobDTO(Long jobId,
                   String title,
                   String location,
-                  Double salaryMin,
-                  Double salaryMax,
+                  BigDecimal salaryMin,
+                  BigDecimal salaryMax,
                   String jobType,
                   String status,
                   String companyName) {

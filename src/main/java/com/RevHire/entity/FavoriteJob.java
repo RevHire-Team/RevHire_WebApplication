@@ -25,7 +25,6 @@ public class FavoriteJob {
 
     @ManyToOne
     @JoinColumn(name = "seeker_id", nullable = false)
-    @JsonIgnore
     private JobSeekerProfile seeker;
 
     @ManyToOne

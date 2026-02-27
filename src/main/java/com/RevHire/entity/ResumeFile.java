@@ -24,7 +24,6 @@ public class ResumeFile {
 
     @ManyToOne
     @JoinColumn(name = "resume_id", nullable = false)
-    @JsonIgnore
     private Resume resume;
 
     @Column(name = "file_name")

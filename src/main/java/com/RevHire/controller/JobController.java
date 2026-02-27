@@ -18,11 +18,6 @@ public class JobController {
 
     @Autowired
     private JobService jobService;
-
-    @GetMapping("/test")
-    public String test() {
-        return "working";
-    }
     
     @GetMapping
     public List<JobDTO> viewAllJobs() {
@@ -59,5 +54,21 @@ public class JobController {
     public String closeJob(@PathVariable Long id) {
         jobService.closeJob(id);
         return "Job Closed Successfully";
+    }
+
+    @GetMapping("/jobs/{employerId}")
+    public ResponseEntity<?> getEmployerJobs(@PathVariable Long employerId) {
+        return ResponseEntity.ok(jobService.getEmployerJobs(employerId));
+    }
+
+    @DeleteMapping("/jobs/{jobId}")
+    public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
+        jobService.deleteJob(jobId);
+        return ResponseEntity.ok("Deleted successfully");
+    }
+
+    @PutMapping("/jobs/toggle/{jobId}")
+    public ResponseEntity<?> toggleJob(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.toggleJobStatus(jobId));
     }
 }

@@ -21,6 +21,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     List<Job> findByEmployerEmployerId(Long employerId);
 
+    Long countByEmployerEmployerId(Long employerId);
+
+    Long countByEmployerEmployerIdAndStatus(Long employerId, String status);
+
     @Query("""
 SELECT new com.RevHire.dto.JobDTO(
     j.jobId,

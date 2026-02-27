@@ -2,6 +2,7 @@ package com.RevHire.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -23,6 +24,7 @@ public class Job {
     @JoinColumn(name = "employer_id", nullable = false)
     private EmployerProfile employer;
 
+    @Column(name = "title")
     private String title;
 
     @Column(name = "description")
@@ -34,26 +36,27 @@ public class Job {
     @Column(name = "education_required")
     private String educationRequired;
 
+    @Column(name = "location")
     private String location;
 
-    @Column(name = "salary_min")
-    private Double salaryMin;
+    @Column(name = "salary_min", precision = 10, scale = 2)
+    private BigDecimal salaryMin;
 
-    @Column(name = "salary_max")
-    private Double salaryMax;
+    @Column(name = "salary_max", precision = 10, scale = 2)
+    private BigDecimal salaryMax;
 
     @Column(name = "job_type")
     private String jobType;
 
     private Integer openings;
+
+    @Column(name = "status")
     private String status;
 
     @OneToMany(mappedBy = "job")
     private List<JobSkill> skills;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    @JsonIgnore
     private List<Application> applications;
 
     @Column(name = "created_at")
@@ -63,5 +66,8 @@ public class Job {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @Column(name = "active")
+    private Boolean active;
 
 }

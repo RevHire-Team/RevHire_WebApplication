@@ -25,7 +25,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = new Notification();
         notification.setUser(userRepository.findById(userId).orElseThrow());
         notification.setMessage(message);
-        notification.setIsRead("N");
+        notification.setIsRead(Boolean.valueOf("N"));
 
         notificationRepository.save(notification);
     }

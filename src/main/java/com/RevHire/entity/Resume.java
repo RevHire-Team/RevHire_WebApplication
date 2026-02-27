@@ -28,6 +28,7 @@
         @JoinColumn(name = "seeker_id", nullable = false)
         private JobSeekerProfile seeker;
 
+        @Column(length = 1000)
         private String objective;
 
         @OneToMany(mappedBy = "resume")

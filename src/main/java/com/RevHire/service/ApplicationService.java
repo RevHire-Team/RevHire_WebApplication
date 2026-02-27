@@ -10,9 +10,15 @@ public interface ApplicationService {
 
     Application applyJob(Long jobId, Long seekerId, Long resumeId, String coverLetter);
 
-    List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId);
+    public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId);
 
     void withdrawApplication(Long applicationId, String reason);
 
-    void updateStatus(Long applicationId, String status);
+    List<ApplicationResponseDTO> getApplicationsByJob(Long jobId);
+
+    List<Application> getApplicationsByEmployer(Long employerId);
+
+    Application updateStatus(Long applicationId, String status);
+
+//    Application addEmployerNotes(Long applicationId, String notes);
 }
