@@ -12,6 +12,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "APPLICATION_NOTES")
 @Getter @Setter
@@ -33,4 +35,6 @@ public class ApplicationNote {
     @Lob
     @Column(name = "note_text")
     private String noteText;
+
+    private LocalDateTime createdAt;
 }

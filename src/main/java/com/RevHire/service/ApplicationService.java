@@ -1,6 +1,7 @@
 package com.RevHire.service;
 
 import com.RevHire.dto.ApplicationResponseDTO;
+import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.entity.Application;
 
 import java.time.LocalDateTime;
@@ -16,9 +17,11 @@ public interface ApplicationService {
 
     List<ApplicationResponseDTO> getApplicationsByJob(Long jobId);
 
-    List<Application> getApplicationsByEmployer(Long employerId);
+    List<EmployerApplicationDTO> getApplicationsByEmployer(Long employerId);
 
     Application updateStatus(Long applicationId, String status);
 
-//    Application addEmployerNotes(Long applicationId, String notes);
+    String addEmployerNotes(Long applicationId,
+                            Long employerId,
+                            String noteText);
 }

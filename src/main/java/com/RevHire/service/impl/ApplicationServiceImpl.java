@@ -1,19 +1,15 @@
 package com.RevHire.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.RevHire.dto.ApplicationResponseDTO;
+import com.RevHire.dto.EmployerApplicationDTO;
+import com.RevHire.entity.*;
+import com.RevHire.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.RevHire.entity.Application;
-import com.RevHire.entity.Job;
-import com.RevHire.entity.JobSeekerProfile;
-import com.RevHire.entity.Resume;
-import com.RevHire.repository.ApplicationRepository;
-import com.RevHire.repository.JobRepository;
-import com.RevHire.repository.JobSeekerProfileRepository;
-import com.RevHire.repository.ResumeRepository;
 import com.RevHire.service.ApplicationService;
 
 @Service
@@ -23,6 +19,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     private ApplicationRepository applicationRepository;
 
     @Autowired
+    private ApplicationNoteRepository applicationNoteRepository;
+
+    @Autowired
     private JobRepository jobRepository;
 
     @Autowired
@@ -30,6 +29,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private ResumeRepository resumeRepository;
+
+    @Autowired
+    private EmployerProfileRepository employerRepository;
 
     @Override
     public Application applyJob(Long jobId,
@@ -120,23 +122,49 @@ public class ApplicationServiceImpl implements ApplicationService {
                         app.getSeeker().getFullName(),
                         app.getSeeker().getUser().getEmail(),
                         app.getJob().getTitle(),
-                        app.getStatus()
+                        app.getStatus(),
+                        app.getAppliedDate()
                 ))
                 .toList();
     }
 
     @Override
-    public List<Application> getApplicationsByEmployer(Long employerId) {
-        return applicationRepository.findByJobEmployerEmployerId(employerId);
+    public List<EmployerApplicationDTO> getApplicationsByEmployer(Long employerId) {
+
+        return applicationRepository
+                .findByJobEmployerEmployerId(employerId)
+                .stream()
+                .map(app -> new EmployerApplicationDTO(
+                        app.getApplicationId(),
+                        app.getJob().getTitle(),
+                        app.getJob().getJobId(),
+                        app.getSeeker().getFullName(),
+                        app.getSeeker().getUser().getEmail(),
+                        app.getStatus(),
+                        app.getAppliedDate()
+                ))
+                .toList();
     }
 
-//    @Override
-//    public Application addEmployerNotes(Long applicationId, String notes) {
-//
-//        Application app = applicationRepository.findById(applicationId)
-//                .orElseThrow(() -> new RuntimeException("Application not found"));
-//
-//        app.setEmployerNotes(notes);
-//        return applicationRepository.save(app);
-//    }
+    @Override
+    public String addEmployerNotes(Long applicationId,
+                                   Long employerId,
+                                   String noteText) {
+
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        EmployerProfile employer = employerRepository.findById(employerId)
+                .orElseThrow(() -> new RuntimeException("Employer not found"));
+
+        ApplicationNote note = new ApplicationNote();
+        note.setApplication(application);
+        note.setEmployer(employer);
+        note.setNoteText(noteText);
+        note.setCreatedAt(LocalDateTime.now());
+
+        applicationNoteRepository.save(note);
+
+        return "Note added successfully";
+    }
 }

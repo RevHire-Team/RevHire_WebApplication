@@ -56,4 +56,5 @@ public class Application {
 
     @OneToMany(mappedBy = "application")
     private List<ApplicationNote> notes;
+
 }

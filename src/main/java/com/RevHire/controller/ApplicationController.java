@@ -1,6 +1,8 @@
 package com.RevHire.controller;
 
 import com.RevHire.dto.ApplicationResponseDTO;
+import com.RevHire.dto.EmployerApplicationDTO;
+import com.RevHire.dto.NoteRequestDTO;
 import com.RevHire.entity.Application;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,11 +54,13 @@ public class ApplicationController {
 
     // Employer views all applications
     @GetMapping("/employer/{employerId}")
-    public ResponseEntity<?> getByEmployer(@PathVariable Long employerId) {
-        return ResponseEntity.ok(
-                applicationService.getApplicationsByEmployer(employerId));
-    }
+    public ResponseEntity<List<EmployerApplicationDTO>>
+    getByEmployer(@PathVariable Long employerId) {
 
+        return ResponseEntity.ok(
+                applicationService.getApplicationsByEmployer(employerId)
+        );
+    }
 
     @PostMapping("/withdraw/{id}")
     public ResponseEntity<String> withdraw(@PathVariable Long id, @RequestParam String reason) {
@@ -73,13 +77,18 @@ public class ApplicationController {
         return ResponseEntity.ok("Application status updated successfully");
     }
 
-//    // Add notes
-//    @PutMapping("/notes/{applicationId}")
-//    public ResponseEntity<?> addNotes(
-//            @PathVariable Long applicationId,
-//            @RequestBody String notes) {
-//
-//        return ResponseEntity.ok(
-//                applicationService.addEmployerNotes(applicationId, notes));
-//    }
+    // Add notes
+        @PutMapping("/notes/{applicationId}")
+    public ResponseEntity<?> addNotes(
+            @PathVariable Long applicationId,
+            @RequestBody NoteRequestDTO request) {
+
+        return ResponseEntity.ok(
+                applicationService.addEmployerNotes(
+                        applicationId,
+                        request.getEmployerId(),
+                        request.getNoteText()
+                )
+        );
+    }
 }
