@@ -1,5 +1,6 @@
 package com.RevHire.controller;
 
+import com.RevHire.dto.FavoriteJobDTO;
 import com.RevHire.entity.*;
 import com.RevHire.service.JobSeekerService;
 import com.RevHire.service.ResumeService;
@@ -22,15 +23,12 @@ public class JobSeekerController {
         this.jobSeekerService = jobSeekerService;
         this.resumeService = resumeService;
     }
-
-    @GetMapping("/test")
-    public String test(){
-        return "test worked";
-    }
     // ========== PROFILE ==========
-    @PostMapping("/profile")
-    public ResponseEntity<JobSeekerProfile> createProfile(@RequestBody JobSeekerProfile profile) {
-        return ResponseEntity.ok(jobSeekerService.createProfile(profile));
+    @PostMapping("/profile/{userId}")
+    public ResponseEntity<JobSeekerProfile> createProfile(
+            @PathVariable Long userId,
+            @RequestBody JobSeekerProfile profile) {
+        return ResponseEntity.ok(jobSeekerService.createProfile(profile, userId));
     }
 
     @GetMapping("/profile/{userId}")
@@ -65,12 +63,13 @@ public class JobSeekerController {
     }
 
     @GetMapping("/favorites/{seekerId}")
-    public List<FavoriteJob> getFavorites(@PathVariable Long seekerId) {
+    public List<FavoriteJobDTO> getFavorites(@PathVariable Long seekerId) {
         return jobSeekerService.getFavorites(seekerId);
     }
 
     @DeleteMapping("/favorites/{favId}")
     public void removeFavorite(@PathVariable Long favId) {
+
         jobSeekerService.removeFavoriteJob(favId);
     }
 
