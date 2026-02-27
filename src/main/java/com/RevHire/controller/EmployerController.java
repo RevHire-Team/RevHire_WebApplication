@@ -14,11 +14,6 @@ public class EmployerController {
 
     private final EmployerService employerService;
 
-    @GetMapping("/test")
-    public String test(){
-        return "test working";
-    }
-
     @PostMapping("/profile/{userId}")
     public ResponseEntity<?> createOrUpdateProfile(
             @PathVariable Long userId,
