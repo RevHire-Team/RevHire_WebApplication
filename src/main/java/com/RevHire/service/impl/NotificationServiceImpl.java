@@ -1,7 +1,9 @@
 package com.RevHire.service.impl;
 
 //import com.RevHire.dto.NotificationDTO;
+import com.RevHire.dto.NotificationDTO;
 import com.RevHire.entity.Notification;
+import com.RevHire.entity.User;
 import com.RevHire.repository.NotificationRepository;
 import com.RevHire.repository.UserRepository;
 import com.RevHire.service.NotificationService;
@@ -21,26 +23,28 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendNotification(Long userId, String message) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
         Notification notification = new Notification();
-        notification.setUser(userRepository.findById(userId).orElseThrow());
+        notification.setUser(user);
         notification.setMessage(message);
-        notification.setIsRead(Boolean.valueOf("N"));
+        notification.setIsRead(false);
 
         notificationRepository.save(notification);
     }
 
-//    @Override
-//    public List<NotificationDTO> getUserNotifications(Long userId) {
-//
-//        List<NotificationDTO> notifications = notificationRepository.findByUserUserId(userId);
-//
-//        return notifications.stream()
-//                .map(n -> new NotificationDTO(
-//                        n.getNotificationId(),
-//                        n.getMessage(),
-//                        n.getIsRead()
-//                ))
-//                .toList();
-//    }
+    @Override
+    public List<NotificationDTO> getUserNotifications(Long userId) {
+        List<Notification> notifications = notificationRepository.findByUserUserId(userId);
+
+        return notifications.stream()
+                .map(n -> new NotificationDTO(
+                        n.getNotificationId(),
+                        n.getUser().getUserId(),
+                        n.getMessage(),
+                        n.getIsRead()
+                ))
+                .toList();
+    }
 }
