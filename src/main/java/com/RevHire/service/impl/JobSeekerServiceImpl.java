@@ -1,5 +1,6 @@
 package com.RevHire.service.impl;
 
+import com.RevHire.dto.FavoriteJobDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
@@ -44,20 +45,10 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     // ========== PROFILE ==========
     @Override
-    public JobSeekerProfile createProfile(JobSeekerProfile profile) {
-        System.out.println(profile.getUser());
-        System.out.println(profile.getUser().getUserId());
-        Long userId = profile.getUser().getUserId();
-        System.out.println("User ID received: " + userId);
-
-        Optional<User> userOptional = userRepo.findById(userId);
-        System.out.println("User present? " + userOptional.isPresent());
-
-        User user = userOptional
+    public JobSeekerProfile createProfile(JobSeekerProfile profile, Long userId) {
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-
         profile.setUser(user);
-
         return profileRepo.save(profile);
     }
 
@@ -148,11 +139,22 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         return favoriteJobRepo.save(fav);
     }
 
-        @Override
-        public List<FavoriteJob> getFavorites(Long seekerId) {
-            return favoriteJobRepo.findBySeekerSeekerId(seekerId);
-        }
+    @Override
+    public List<FavoriteJobDTO> getFavorites(Long seekerId) {
+        List<FavoriteJob> favorites = favoriteJobRepo.findBySeekerSeekerId(seekerId);
 
+        return favorites.stream().map(fav -> new FavoriteJobDTO(
+                fav.getFavId(),
+                fav.getJob().getJobId(),
+                fav.getJob().getTitle(),
+                fav.getJob().getLocation(),
+                fav.getJob().getSalaryMin(),
+                fav.getJob().getSalaryMax(),
+                fav.getJob().getJobType(),
+                fav.getJob().getStatus(),
+                fav.getJob().getEmployer().getCompanyName() // flatten company name
+        )).toList();
+    }
     @Override
     public void removeFavoriteJob(Long favId) {
         favoriteJobRepo.deleteById(favId);
@@ -163,7 +165,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     public void markNotificationAsRead(Long notificationId) {
         Notification notification = notificationRepo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
-        notification.setIsRead(Boolean.valueOf("Y"));
+        notification.setIsRead(true);
         notificationRepo.save(notification);
     }
 }

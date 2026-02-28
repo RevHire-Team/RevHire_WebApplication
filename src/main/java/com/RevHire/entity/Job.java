@@ -24,42 +24,37 @@ public class Job {
     @JoinColumn(name = "employer_id", nullable = false)
     private EmployerProfile employer;
 
-    @Column(name = "title")
     private String title;
-
-    @Column(name = "description")
     private String description;
-
-    @Column(name = "experience_required")
     private Integer experienceRequired;
-
-    @Column(name = "education_required")
     private String educationRequired;
-
-    @Column(name = "location")
     private String location;
 
-    @Column(name = "salary_min", precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal salaryMin;
 
-    @Column(name = "salary_max", precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal salaryMax;
 
-    @Column(name = "job_type")
     private String jobType;
-
     private Integer openings;
-
-    @Column(name = "status")
     private String status;
 
-    @OneToMany(mappedBy = "job")
+    @OneToMany(mappedBy = "job",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private List<JobSkill> skills;
 
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "job",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private List<Application> applications;
 
-    @Column(name = "created_at")
+    @OneToMany(mappedBy = "job",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<FavoriteJob> favoriteJobs;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -67,7 +62,5 @@ public class Job {
         this.createdAt = LocalDateTime.now();
     }
 
-    @Column(name = "active")
     private Boolean active;
-
 }

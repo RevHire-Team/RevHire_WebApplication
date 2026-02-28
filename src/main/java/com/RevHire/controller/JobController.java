@@ -57,18 +57,18 @@ public class JobController {
     }
 
     @GetMapping("/jobs/{employerId}")
-    public ResponseEntity<?> getEmployerJobs(@PathVariable Long employerId) {
+    public ResponseEntity<List<JobDTO>> getEmployerJobs(@PathVariable Long employerId) {
         return ResponseEntity.ok(jobService.getEmployerJobs(employerId));
     }
 
-    @DeleteMapping("/jobs/{jobId}")
+    @DeleteMapping("/{jobId}")
     public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
         jobService.deleteJob(jobId);
         return ResponseEntity.ok("Deleted successfully");
     }
 
     @PutMapping("/jobs/toggle/{jobId}")
-    public ResponseEntity<?> toggleJob(@PathVariable Long jobId) {
+    public ResponseEntity<JobDTO> toggleJob(@PathVariable Long jobId) {
         return ResponseEntity.ok(jobService.toggleJobStatus(jobId));
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.RevHire.entity.Job;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,22 +73,52 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Transactional
     public void deleteJob(Long jobId) {
-        jobRepository.deleteById(jobId);
-    }
-
-    @Override
-    public List<Job> getEmployerJobs(Long employerId) {
-        return jobRepository.findByEmployerEmployerId(employerId);
-    }
-
-    @Override
-    public Job toggleJobStatus(Long jobId) {
 
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
+        jobRepository.delete(job);
+    }
+
+    @Override
+    public List<JobDTO> getEmployerJobs(Long employerId) {
+
+        return jobRepository.findByEmployerEmployerId(employerId)
+                .stream()
+                .map(job -> new JobDTO(
+                        job.getJobId(),
+                        job.getTitle(),
+                        job.getLocation(),
+                        job.getSalaryMin(),
+                        job.getSalaryMax(),
+                        job.getJobType(),
+                        job.getStatus(),
+                        job.getEmployer().getCompanyName()
+                ))
+                .toList();
+    }
+
+    @Override
+    public JobDTO toggleJobStatus(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        // Toggle active status
         job.setActive(!job.getActive());
-        return jobRepository.save(job);
+        Job savedJob = jobRepository.save(job);
+
+        // Map Job to JobDTO
+        return new JobDTO(
+                savedJob.getJobId(),
+                savedJob.getTitle(),
+                savedJob.getLocation(),
+                savedJob.getSalaryMin(),
+                savedJob.getSalaryMax(),
+                savedJob.getJobType(),
+                savedJob.getStatus(),
+                savedJob.getEmployer().getCompanyName()
+        );
     }
 }
