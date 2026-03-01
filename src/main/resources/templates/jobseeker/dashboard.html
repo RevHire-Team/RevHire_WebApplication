@@ -1,99 +1,271 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Job Seeker Dashboard - RevHire</title>
+<title>RevHire Dashboard</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="../../static/css/jobseeker-style.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
+<style>
+body{
+    background:#f4f6fb;
+    font-family:'Segoe UI', sans-serif;
+}
+
+/* SIDEBAR */
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:230px;
+    height:100vh;
+    background:linear-gradient(180deg,#4e73df,#224abe);
+    padding-top:20px;
+    color:white;
+}
+.sidebar h4{
+    padding-left:20px;
+}
+.sidebar a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:12px 20px;
+    transition:0.3s;
+}
+.sidebar a:hover{
+    background:rgba(255,255,255,0.2);
+}
+
+/* HEADER BAR */
+.header-bar{
+    margin-left:230px;
+    height:70px;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 25px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.brand{
+    font-size:22px;
+    font-weight:bold;
+    color:#2e59d9;
+}
+.search-box{
+    width:500px;
+}
+.header-icons i{
+    font-size:20px;
+    margin-left:20px;
+    cursor:pointer;
+}
+
+/* CONTENT */
+.content{
+    margin-left:230px;
+    padding:30px;
+}
+
+/* CARDS */
+.card{
+    border-radius:15px;
+    padding:15px !important;
+    min-height:140px;
+}
+
+/* PROFILE CIRCLE */
+.circle{
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    border:4px solid #4e73df;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:600;
+    color:#2e59d9;
+    margin:auto;
+}
+
+/* MOTIVATION IMAGE SECTION */
+.motivation{
+    background:url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d');
+    background-size:cover;
+    background-position:center;
+    border-radius:20px;
+    color:white;
+    padding:25px;
+    position:relative;
+    margin-top:30px;
+    overflow:hidden;
+    height:200px;
+}
+.motivation::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+}
+.motivation-content{
+    position:relative;
+    z-index:2;
+}
+</style>
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-<div class="container-fluid">
-<a class="navbar-brand fw-bold" href="#">RevHire</a>
-<a href="../auth/login.html" class="btn btn-light">Logout</a>
-</div>
-</nav>
-
-<div class="container-fluid">
-<div class="row">
-
-<!-- Sidebar -->
-<div class="col-md-3 sidebar p-4">
-<h5 class="text-white">JOB SEEKER MENU</h5>
-<ul class="nav flex-column">
-
-<li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
-<li class="nav-item"><a href="resume-builder.html" class="nav-link">Resume Builder</a></li>
-<li class="nav-item"><a href="jobs/search.html" class="nav-link">Search Jobs</a></li>
-<li class="nav-item"><a href="applications.html" class="nav-link">My Applications</a></li>
-<li class="nav-item"><a href="saved-jobs.html" class="nav-link">Saved Jobs</a></li>
-<li class="nav-item"><a href="notifications.html" class="nav-link">Notifications</a></li>
-<li class="nav-item"><a href="settings.html" class="nav-link">Settings</a></li>
-</ul>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h4>RevHire</h4>
+    <hr> 
+    <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="create-profile.html"><i class="bi bi-person"></i> Create Profile</a>
+    <a href="manage-profile.html"><i class="bi bi-pencil-square"></i> Manage Profile</a>
+    <a href="resume-builder.html"><i class="bi bi-file-earmark-text"></i> Create Resume</a>
+    <a href="upload-resume.html"><i class="bi bi-upload"></i> Upload Resume (PDF)</a>
+    <a href="view-resume.html"><i class="bi bi-eye"></i> View Resume</a>
+    <a href="search-jobs.html"><i class="bi bi-search"></i> Search Jobs</a>
+    <a href="applications.html"><i class="bi bi-briefcase"></i> View Applications</a>
+    <a href="favourites.html"><i class="bi bi-heart"></i> Favourite Jobs</a>
+    <a href="notifications.html"><i class="bi bi-bell"></i> Notifications</a>
+    <a href="reset-password.html"><i class="bi bi-key"></i> Reset Password</a>
+    <a href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
 </div>
 
-<!-- Main Content -->
-<div class="col-md-9 p-5">
-
-<div class="welcome-banner p-4 rounded shadow">
-<h2>Welcome Back 👋</h2>
-<p>Find your dream job today and grow your career with RevHire.</p>
-<img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" width="100">
+<!-- HEADER -->
+<div class="header-bar">
+    <div class="brand">RevHire</div>
+    <input type="text" class="form-control search-box" placeholder="Search jobs, companies...">
+    <div class="header-icons">
+        <i class="bi bi-bell"></i>
+        <i class="bi bi-person-circle"></i>
+    </div>
 </div>
 
-<br>
+<!-- CONTENT -->
+<div class="content">
 
-<div class="row">
+<h3 id="welcomeText">Welcome Back 👋</h3>
+
+<div class="row mt-4">
 
 <div class="col-md-4">
-<div class="card shadow p-3 text-center">
-<h6>Profile Completion</h6>
-<div class="progress">
-<div class="progress-bar bg-success" style="width:70%">70%</div>
-</div>
+<div class="card shadow p-4 text-center">
+<h6 class="fw-bold">Profile Completion</h6>
+<div class="circle mt-3" id="profileScore">0%</div>
+<p class="mt-2 text-muted">Complete your profile to increase visibility</p>
 </div>
 </div>
 
 <div class="col-md-4">
-<div class="card shadow p-3 text-center">
-<h6>Applications</h6>
-<h3>5</h3>
+<div class="card shadow p-4 text-center">
+<h6 class="fw-bold">Applications</h6>
+<h5 id="totalApps">0</h5>
+<p class="text-success" id="shortlistedCount">0 Shortlisted</p>
 </div>
 </div>
 
 <div class="col-md-4">
-<div class="card shadow p-3 text-center">
-<h6>Saved Jobs</h6>
-<h3>3</h3>
+<div class="card shadow p-4 text-center">
+<h6 class="fw-bold">Resume Score</h6>
+<h5 class="text-primary" id="resumeScore">0%</h5>
+<p class="text-muted">Improve your resume to attract recruiters</p>
 </div>
 </div>
 
 </div>
 
-<br>
-
-<h4>Recommended Jobs</h4>
-
-<div class="card shadow p-3 mb-3">
-<h5>Java Developer</h5>
-<p>Location: Hyderabad | Salary: ₹5,00,000</p>
-<button class="btn btn-primary">Apply Now</button>
-</div>
-
-<div class="card shadow p-3">
-<h5>Python Developer</h5>
-<p>Location: Bangalore | Salary: ₹6,00,000</p>
-<button class="btn btn-primary">Apply Now</button>
-</div>
-
-</div>
+<!-- MOTIVATIONAL IMAGE SECTION -->
+<div class="motivation">
+<div class="motivation-content">
+<h5>“Success is where preparation meets opportunity.”</h5>
+<p>Keep learning, keep applying, stay consistent — your dream job is coming 🚀</p>
+<button class="btn btn-warning btn-sm mt-3">Explore Jobs Now</button>
 </div>
 </div>
 
-<script src="../../static/js/jobseeker.js"></script>
+</div>
+
+<script>
+// ==============================
+// GET DATA FROM LOCAL STORAGE
+// ==============================
+
+// Profile object from Create Profile page
+let profile = JSON.parse(localStorage.getItem("profile")) || {};
+
+// Resume object from Resume Builder page
+let resume = JSON.parse(localStorage.getItem("resume")) || {};
+
+// Applications array
+let applications = JSON.parse(localStorage.getItem("applications")) || [];
+
+// ==============================
+// 1️⃣ WELCOME NAME
+// ==============================
+if(profile.name){
+    document.getElementById("welcomeText").innerHTML =
+    "Welcome Back, " + profile.name + " 👋";
+}
+
+// ==============================
+// 2️⃣ PROFILE COMPLETION
+// ==============================
+let profileFields = [
+    profile.name,
+    profile.email,
+    profile.phone,
+    profile.location,
+    profile.education,
+    profile.experience,
+    profile.skills,
+    profile.certifications
+];
+
+let filledProfile = profileFields.filter(field =>
+    field && field.trim() !== ""
+).length;
+
+let profilePercent = Math.round((filledProfile / profileFields.length) * 100);
+document.getElementById("profileScore").innerText = profilePercent + "%";
+
+// ==============================
+// 3️⃣ APPLICATION COUNT
+// ==============================
+document.getElementById("totalApps").innerText = applications.length;
+
+let shortlisted = applications.filter(app =>
+    app.status === "Shortlisted"
+).length;
+
+document.getElementById("shortlistedCount").innerText =
+shortlisted + " Shortlisted";
+
+// ==============================
+// 4️⃣ RESUME SCORE
+// ==============================
+let resumeFields = [
+    resume.objective,
+    resume.education,
+    resume.experience,
+    resume.skills,
+    resume.projects,
+    resume.certifications
+];
+
+let filledResume = resumeFields.filter(field =>
+    field && field.trim() !== ""
+).length;
+
+let resumePercent = Math.round((filledResume / resumeFields.length) * 100);
+
+document.getElementById("resumeScore").innerText = resumePercent + "%";
+
+</script>
+
 </body>
 </html>
