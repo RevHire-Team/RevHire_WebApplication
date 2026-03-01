@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Employer Dashboard - RevHire</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f1f5f9;
+font-family:'Segoe UI',sans-serif;
+animation:fadeIn 0.5s ease;
+}
+
+/* Fade animation */
+@keyframes fadeIn{
+from{
+opacity:0;
+transform:translateY(10px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+/* Sidebar */
+.sidebar{
+height:100vh;
+background:linear-gradient(180deg,#1e3a8a,#2563eb);
+color:white;
+padding-top:20px;
+position:fixed;
+width:240px;
+box-shadow:4px 0 15px rgba(0,0,0,0.1);
+}
+
+/* Clickable logo */
+.logo{
+text-decoration:none;
+color:white;
+display:block;
+}
+
+.logo:hover{
+color:white;
+transform:scale(1.03);
+}
+
+.sidebar h4{
+font-weight:bold;
+}
+
+/* Sidebar links */
+.sidebar a.nav-link{
+color:white;
+text-decoration:none;
+display:block;
+padding:12px 20px;
+border-radius:10px;
+margin:8px 10px;
+transition:0.3s;
+font-weight:500;
+}
+
+.sidebar a.nav-link:hover{
+background:rgba(255,255,255,0.2);
+transform:translateX(6px);
+}
+
+.sidebar a.active{
+background:white;
+color:#2563eb;
+font-weight:600;
+}
+
+/* Main content */
+.main-content{
+margin-left:260px;
+padding:30px;
+}
+
+/* Header */
+.dashboard-header{
+background:white;
+padding:20px 25px;
+border-radius:12px;
+box-shadow:0 4px 15px rgba(0,0,0,0.05);
+margin-bottom:25px;
+animation:fadeIn 0.6s ease;
+}
+
+/* Cards */
+.card{
+border:none;
+border-radius:15px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+/* Info box */
+.info-box{
+background:white;
+padding:25px;
+border-radius:15px;
+box-shadow:0 4px 15px rgba(0,0,0,0.05);
+animation:fadeIn 0.8s ease;
+}
+
+/* Buttons */
+.btn-primary{
+background:linear-gradient(to right,#2563eb,#3b82f6);
+border:none;
+border-radius:8px;
+transition:0.3s;
+}
+
+.btn-primary:hover{
+transform:scale(1.03);
+}
+
+.btn-outline-primary{
+border-radius:8px;
+transition:0.3s;
+}
+
+.btn-outline-primary:hover{
+transform:scale(1.03);
+}
+
+/* Image hover */
+.info-box img{
+transition:0.4s;
+}
+
+.info-box img:hover{
+transform:scale(1.02);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<!-- FIXED: Clickable logo -->
+<a href="../index.html" class="logo">
+<h4 class="text-center mb-4">
+ RevHire
+</h4>
+</a>
+
+<a href="EmployeerDashboard.html" class="nav-link active">
+<i class="bi bi-speedometer2"></i> Dashboard
+</a>
+
+<a href="jobs/create-job.html" class="nav-link">
+<i class="bi bi-plus-circle"></i> Post Job
+</a>
+
+<a href="jobs/manage-jobs.html" class="nav-link">
+<i class="bi bi-briefcase"></i> Manage Jobs
+</a>
+
+<a href="applications/manage-applications.html" class="nav-link">
+<i class="bi bi-file-earmark-text"></i> Applications
+</a>
+
+<a href="company-profile.html" class="nav-link">
+<i class="bi bi-building"></i> Profile
+</a>
+
+</div>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+<div class="dashboard-header">
+
+<h3>
+Welcome Back, Employer
+<i class="bi bi-hand-thumbs-up"></i>
+</h3>
+
+<p class="text-muted mb-0">
+Manage your job postings and track applications easily.
+</p>
+
+</div>
+
+
+<!-- Stats -->
+<div class="row g-4">
+
+<div class="col-md-3">
+<div class="card p-3 text-center">
+<i class="bi bi-briefcase fs-3 text-primary"></i>
+<h6 class="mt-2">Total Jobs</h6>
+<h3 id="totalJobs">0</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 text-center">
+<i class="bi bi-check-circle fs-3 text-success"></i>
+<h6 class="mt-2">Active Jobs</h6>
+<h3 id="activeJobs">0</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 text-center">
+<i class="bi bi-people fs-3 text-info"></i>
+<h6 class="mt-2">Total Applications</h6>
+<h3 id="totalApps">0</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 text-center">
+<i class="bi bi-star fs-3 text-warning"></i>
+<h6 class="mt-2">Shortlisted</h6>
+<h3 id="shortlisted">0</h3>
+</div>
+</div>
+
+</div>
+
+
+<!-- IMAGE + QUICK ACTIONS -->
+<div class="row mt-4">
+
+<div class="col-md-8">
+
+<div class="info-box">
+
+<img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
+class="img-fluid rounded mb-3">
+
+<h5>Grow Your Company with RevHire 🚀</h5>
+
+<p class="text-muted">
+Post jobs, manage applicants, shortlist top talent and build your dream team.
+RevHire connects employers with skilled professionals.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="col-md-4">
+
+<div class="info-box">
+
+<h5 class="mb-3">Quick Actions</h5>
+
+<a href="jobs/create-job.html"
+class="btn btn-primary w-100 mb-3">
+<i class="bi bi-plus-circle"></i> Post New Job
+</a>
+
+<a href="jobs/manage-jobs.html"
+class="btn btn-outline-primary w-100 mb-3">
+<i class="bi bi-briefcase"></i> Manage Jobs
+</a>
+
+<a href="applications/manage-applications.html"
+class="btn btn-outline-primary w-100">
+<i class="bi bi-file-earmark-text"></i> View Applications
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- FIXED SCRIPT PATH -->
+<script src="../static/js/employer.js"></script>
+
+</body>
+</html>

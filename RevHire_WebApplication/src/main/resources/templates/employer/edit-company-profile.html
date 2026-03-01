@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<title>Edit Company Profile - RevHire</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f1f5f9;
+font-family:'Segoe UI',sans-serif;
+margin:0;
+}
+
+/* Sidebar */
+.sidebar{
+height:100vh;
+background:linear-gradient(180deg,#1e3a8a,#2563eb);
+color:white;
+padding-top:20px;
+position:fixed;
+width:240px;
+top:0;
+left:0;
+box-shadow:4px 0 15px rgba(0,0,0,0.1);
+}
+
+/* Logo */
+.logo{
+text-decoration:none;
+color:white;
+display:block;
+}
+
+.logo h4{
+margin:0;
+padding:10px;
+font-weight:600;
+text-align:center;
+}
+
+/* Sidebar links */
+.sidebar .nav-link{
+color:white;
+display:block;
+padding:12px 20px;
+border-radius:8px;
+margin:6px 12px;
+font-weight:500;
+}
+
+.sidebar .nav-link:hover{
+background:rgba(255,255,255,0.15);
+}
+
+.sidebar .nav-link.active{
+background:white;
+color:#2563eb;
+font-weight:600;
+}
+
+/* Main content */
+.main-content{
+margin-left:240px;
+padding:30px;
+}
+
+/* Header */
+.header-box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.05);
+margin-bottom:20px;
+}
+
+/* Form box */
+.form-box{
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.form-label{
+font-weight:600;
+}
+
+.form-control{
+border-radius:6px;
+padding:10px;
+}
+
+.btn-success{
+background:#16a34a;
+border:none;
+border-radius:6px;
+padding:12px;
+font-weight:600;
+}
+
+.btn-secondary{
+border-radius:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<!-- FIXED LOGO PATH -->
+
+<a href="../index.html" class="logo">
+<h4>RevHire</h4>
+</a>
+
+<a href="EmployeerDashboard.html" class="nav-link">
+Dashboard
+</a>
+
+<a href="jobs/create-job.html" class="nav-link">
+Post Job
+</a>
+
+<a href="jobs/manage-jobs.html" class="nav-link">
+Manage Jobs
+</a>
+
+<a href="applications/manage-applications.html" class="nav-link">
+Applications
+</a>
+
+<a href="company-profile.html" class="nav-link active">
+Company Profile
+</a>
+
+</div>
+
+<!-- MAIN CONTENT -->
+
+<div class="main-content">
+
+<div class="header-box d-flex justify-content-between align-items-center">
+
+<div>
+<h3>Edit Company Profile</h3>
+<p class="text-muted">Update your company information</p>
+</div>
+
+<a href="company-profile.html" class="btn btn-secondary">
+Back
+</a>
+
+</div>
+
+<div class="form-box">
+
+<form onsubmit="updateProfile(event)">
+
+<label class="form-label">Company Name</label> <input type="text" class="form-control mb-3">
+
+<label class="form-label">Industry</label> <input type="text" class="form-control mb-3">
+
+<label class="form-label">Company Size</label> <input type="text" class="form-control mb-3">
+
+<label class="form-label">Website</label> <input type="url" class="form-control mb-3">
+
+<label class="form-label">Location</label> <input type="text" class="form-control mb-3">
+
+<label class="form-label">Description</label>
+
+<textarea class="form-control mb-3"></textarea>
+
+<button class="btn btn-success w-100">
+Save Changes
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+<script src="../../static/js/employer.js"></script>
+
+</body>
+</html>
