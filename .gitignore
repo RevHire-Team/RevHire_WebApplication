@@ -8,6 +8,7 @@ uploads/
 !**/src/test/**/target/
 !**/src/main/**/dto/
 src/main/resources/application.properties
+src/main/resources/templates/index.html
 
 *.log
 *.class
