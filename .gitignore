@@ -4,13 +4,16 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-resources/application.properties
+### Application ###
 src/main/java
 src/test
+resources/application.properties
 
-target/
+### Logs ###
 *.log
 *.class
+
+### IDE ###
 .idea/
 *.iml
 .DS_Store
