@@ -2,6 +2,7 @@ package com.RevHire.controller;
 
 //import com.RevHire.dto.NotificationRequestDTO;
 import com.RevHire.dto.NotificationDTO;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,7 +14,7 @@ import com.RevHire.service.NotificationService;
 import java.util.List;
 import java.util.Map;
 
-@RestController
+@Controller
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
@@ -30,9 +31,12 @@ public class NotificationController {
         ));
     }
 
-    @GetMapping("/{userId}")
-    public List<NotificationDTO> getNotifications(@PathVariable Long userId) {
-        return notificationService.getUserNotifications(userId);
+    @GetMapping("/notifications")
+    public String showNotificationsPage(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/auth/login";
+        }
+        return "notifications/list"; // Path to your HTML file
     }
 
 }

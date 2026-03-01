@@ -4,6 +4,7 @@ import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
 import com.RevHire.entity.Application;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,7 +16,7 @@ import com.RevHire.service.ApplicationService;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/applications")
 public class ApplicationController {
 
@@ -53,13 +54,9 @@ public class ApplicationController {
     }
 
     // Employer views all applications
-    @GetMapping("/employer/{employerId}")
-    public ResponseEntity<List<EmployerApplicationDTO>>
-    getByEmployer(@PathVariable Long employerId) {
-
-        return ResponseEntity.ok(
-                applicationService.getApplicationsByEmployer(employerId)
-        );
+    @GetMapping("/employer/{employerUserId}")
+    public ResponseEntity<List<EmployerApplicationDTO>> getByEmployer(@PathVariable Long employerUserId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByEmployer(employerUserId));
     }
 
     @PostMapping("/withdraw/{id}")
@@ -90,6 +87,14 @@ public class ApplicationController {
                         request.getNoteText()
                 )
         );
+    }
+
+    // Add to ApplicationController.java
+
+    @GetMapping("/manage")
+    public String showManageApplicationsPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/applications/manage-applications"; // Path to your HTML file
     }
 }
 
