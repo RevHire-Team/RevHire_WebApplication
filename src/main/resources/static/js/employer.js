@@ -295,3 +295,37 @@ document.addEventListener("DOMContentLoaded",()=>{
     loadNotificationCount();
    
 });
+
+async function updateProfile(event) {
+    event.preventDefault();
+
+    // Ensure you have a way to get the userId (e.g., from a hidden input or URL)
+    const userId = document.getElementById('userId').value;
+
+    const profileData = {
+        companyName: document.getElementById('companyName').value,
+        industry: document.getElementById('industry').value,
+        companySize: parseInt(document.getElementById('companySize').value) || 0, // Convert to Number
+        description: document.getElementById('description').value,
+        website: document.getElementById('website').value,
+        location: document.getElementById('location').value,
+        contactEmail: document.getElementById('contactEmail').value // Passes current email back
+    };
+
+    try {
+        const response = await fetch(`/employer/profile/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profileData)
+        });
+
+        if (response.ok) {
+            alert("Profile Updated Successfully!");
+            window.location.href = "/employer/profile";
+        } else {
+            alert("Update failed. Please check your inputs.");
+        }
+    } catch (error) {
+        console.error("Error updating profile:", error);
+    }
+}

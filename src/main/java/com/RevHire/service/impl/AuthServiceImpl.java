@@ -15,10 +15,13 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
+    public void AuthService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     public User registerUser(User user) {
 
-        if(userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
 
