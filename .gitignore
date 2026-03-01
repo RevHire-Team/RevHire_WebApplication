@@ -7,7 +7,7 @@ uploads/
 !**/src/main/**/target/
 !**/src/test/**/target/
 !**/src/main/**/dto/
-git add src/main/resources/application.properties
+src/main/resources/application.properties
 
 *.log
 *.class

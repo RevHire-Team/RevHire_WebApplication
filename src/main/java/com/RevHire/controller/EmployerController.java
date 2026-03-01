@@ -58,7 +58,7 @@ public class EmployerController {
 
     @GetMapping("/dashboard/{employerId}")
     public String showDashboard(@PathVariable Long employerId, Model model) {
-        User user = (User) session.getAttribute("loggedInUser");
+//        User user = (User) session.getAttribute("loggedInUser");
 
         model.addAttribute("dashboard",
                 employerService.getDashboard(employerId));
