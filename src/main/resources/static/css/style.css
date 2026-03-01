@@ -1,18 +1,99 @@
+
+
 body {
-    background-color: #f4f6f9;
+    background: #f4f6fb;
+    font-family: 'Segoe UI', sans-serif;
 }
 
+/* TOP NAVBAR */
+.topbar {
+    height: 60px;
+    background: white;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+}
+
+.brand {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2e59d9;
+}
+
+.top-icons i {
+    font-size: 20px;
+    margin-left: 20px;
+    cursor: pointer;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 230px;
+    height: 100vh;
+    position: fixed;
+    background: linear-gradient(180deg,#4e73df,#224abe);
+    padding-top: 20px;
+    color: white;
+}
+
+.sidebar a {
+    color: white;
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.sidebar a:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* CONTENT */
+.content {
+    margin-left: 240px;
+    margin-top: 70px;
+    padding: 25px;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+/* Hero Section */
 .hero {
-    height: 90vh;
-    background: linear-gradient(to right, #0d6efd, #6610f2);
+    background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 50px;
+    border-radius: 20px;
+    position: relative;
 }
 
-.form-box {
-    max-width: 450px;
-    margin: auto;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+.hero::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    border-radius:20px;
 }
-.rule { font-size:14px; }
-.invalid { color:red; }
-.valid { color:green; }
+
+.hero-content {
+    position:relative;
+    z-index:2;
+}
+
+.circular-score {
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    border:10px solid #4e73df;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    font-weight:bold;
+    color:#2e59d9;
+}
