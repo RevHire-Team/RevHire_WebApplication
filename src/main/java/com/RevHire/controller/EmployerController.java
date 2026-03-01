@@ -65,4 +65,5 @@ public class EmployerController {
 
         return "employer/EmployeerDashboard"; // Thymeleaf file name
     }
+
 }
