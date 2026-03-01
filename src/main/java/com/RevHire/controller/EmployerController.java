@@ -58,12 +58,21 @@ public class EmployerController {
 
     @GetMapping("/dashboard/{employerId}")
     public String showDashboard(@PathVariable Long employerId, Model model) {
-//        User user = (User) session.getAttribute("loggedInUser");
 
         model.addAttribute("dashboard",
                 employerService.getDashboard(employerId));
 
         return "employer/EmployeerDashboard"; // Thymeleaf file name
     }
+
+//    @GetMapping("/dashboard")
+//    public String redirectToDashboard(HttpSession session) {
+//        User user = (User) session.getAttribute("loggedInUser");
+//        if (user == null) {
+//            return "redirect:/auth/login";
+//        }
+//        // This takes the user to /employer/dashboard/5 (or whatever their ID is)
+//        return "redirect:/employer/dashboard/" + user.getUserId();
+//    }
 
 }

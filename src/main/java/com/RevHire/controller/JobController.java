@@ -3,6 +3,7 @@ package com.RevHire.controller;
 import java.util.List;
 
 import com.RevHire.dto.JobDTO;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.RevHire.entity.Job;
 import com.RevHire.service.JobService;
 
-@RestController
+@Controller
 @RequestMapping("/jobs")
 public class JobController {
 
@@ -24,9 +25,16 @@ public class JobController {
         return jobService.getAllOpenJobs();
     }
 
-    @PostMapping("/create")
-    public Job createJob(@RequestBody Job job) {
-        return jobService.createJob(job);
+    @GetMapping("/jobs/create")
+    public String showCreateJobPage(HttpSession session, Model model) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/jobs/create-job";
+    }
+
+    @PostMapping("/create/{userId}")
+    @ResponseBody // Add this so Spring treats the return as JSON, not a HTML view name
+    public ResponseEntity<?> createJob(@PathVariable Long userId, @RequestBody Job job) {
+        return ResponseEntity.ok(jobService.createJob(job, userId));
     }
 
     @GetMapping("/search")

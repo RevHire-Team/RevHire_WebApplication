@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface JobService {
 
-    Job createJob(Job job);
+    Job createJob(Job job,Long userId);
 
     List<JobDTO> getAllOpenJobs();
 

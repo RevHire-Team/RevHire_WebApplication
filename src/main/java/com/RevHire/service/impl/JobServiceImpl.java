@@ -19,10 +19,27 @@ public class JobServiceImpl implements JobService {
     @Autowired
     private JobRepository jobRepository;
 
+    @Autowired
+    private com.RevHire.repository.EmployerProfileRepository employerRepository;
+
     @Override
-    public Job createJob(Job job) {
+    @Transactional
+    public Job createJob(Job job, Long userId) {
+        // DEBUG: Print to console to see if fields are null
+        System.out.println("Creating job: " + job.getTitle() + " for user: " + userId);
+
+        com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employer Profile not found"));
+
+        job.setEmployer(employer);
         job.setStatus("OPEN");
-        return jobRepository.save(job);
+        job.setActive(true);
+
+        // The result of this save is what actually goes to the DB
+        Job savedJob = jobRepository.save(job);
+        System.out.println("Job saved with ID: " + savedJob.getJobId());
+
+        return savedJob;
     }
 
     public List<JobDTO> getAllOpenJobs() {
