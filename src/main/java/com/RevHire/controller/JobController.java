@@ -64,9 +64,18 @@ public class JobController {
         return "Job Closed Successfully";
     }
 
-    @GetMapping("/jobs/{employerId}")
-    public ResponseEntity<List<JobDTO>> getEmployerJobs(@PathVariable Long employerId) {
-        return ResponseEntity.ok(jobService.getEmployerJobs(employerId));
+    // 1. Add this explicit mapping for the HTML page
+    @GetMapping("/jobs/manage")
+    public String showManageJobsPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/jobs/manage-jobs"; // Points to your manage-jobs.html
+    }
+
+    // 2. Keep this for API calls, but Spring will now check "/manage" first
+    @GetMapping("/jobs/{userId}")
+    @ResponseBody
+    public ResponseEntity<List<JobDTO>> getEmployerJobs(@PathVariable Long userId) {
+        return ResponseEntity.ok(jobService.getJobsByUserId(userId));
     }
 
     @DeleteMapping("/{jobId}")
@@ -78,5 +87,27 @@ public class JobController {
     @PutMapping("/jobs/toggle/{jobId}")
     public ResponseEntity<JobDTO> toggleJob(@PathVariable Long jobId) {
         return ResponseEntity.ok(jobService.toggleJobStatus(jobId));
+    }
+
+    // Add to JobController.java
+
+    @GetMapping("/jobs/edit/{jobId}")
+    public String showEditJobPage(@PathVariable Long jobId, Model model, HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        model.addAttribute("jobId", jobId); // Pass ID to the view for the JS to use
+        return "employer/jobs/edit-job";
+    }
+
+    @GetMapping("/get/{jobId}")
+    @ResponseBody
+    public ResponseEntity<JobDTO> getJobById(@PathVariable Long jobId) {
+        // You'll need to implement getJobById in your Service
+        return ResponseEntity.ok(jobService.getJobById(jobId));
+    }
+
+    @PutMapping("/update/{jobId}")
+    @ResponseBody
+    public ResponseEntity<?> updateJob(@PathVariable Long jobId, @RequestBody Job job) {
+        return ResponseEntity.ok(jobService.updateJob(jobId, job));
     }
 }
