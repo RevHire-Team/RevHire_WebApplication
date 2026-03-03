@@ -24,9 +24,4 @@ public class HomeController {
         return "auth/register";
     }
 
-//    @GetMapping("/register-employer")
-//    public String registerEmployer(Model model) {
-//        model.addAttribute("user", new User());  // if using th:object
-//        return "auth/registeremployer";
-//    }
 }

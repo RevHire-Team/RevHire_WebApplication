@@ -59,28 +59,38 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobDTO> searchJobs(
-            String title,
-            String location,
-            Integer experience,
-            String companyName,
-            Double minSalary,
-            Double maxSalary,
-            String jobType) {
+    public List<JobDTO> searchJobs(String title,
+                                   String location,
+                                   Integer experience,
+                                   String education,
+                                   Double minSalary,
+                                   Double maxSalary,
+                                   String jobType) {
 
         return jobRepository.advancedSearch(
-                title,
-                location,
-                experience,
-                companyName,
-                minSalary,
-                maxSalary,
-                jobType
-        );
+                        title,
+                        location,
+                        experience,
+                        education,
+                        minSalary,
+                        maxSalary,
+                        jobType
+                ).stream()
+                .map(job -> new JobDTO(
+                        job.getJobId(),
+                        job.getTitle(),
+                        job.getLocation(),
+                        job.getSalaryMin(),
+                        job.getSalaryMax(),
+                        job.getJobType(),
+                        job.getStatus(),
+                        job.getEmployer().getCompanyName()
+                ))
+                .toList();
     }
 
-    @Override
-    public void closeJob(Long jobId) {
+  @Override
+  public void closeJob(Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 

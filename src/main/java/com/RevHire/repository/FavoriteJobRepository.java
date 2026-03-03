@@ -10,4 +10,6 @@ public interface FavoriteJobRepository extends JpaRepository<FavoriteJob, Long> 
 
     boolean existsBySeekerSeekerIdAndJobJobId(Long seekerId, Long jobId);
 
+    long countBySeekerSeekerId(Long seekerId);
+
 }

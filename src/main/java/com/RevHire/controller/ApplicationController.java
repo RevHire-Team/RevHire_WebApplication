@@ -6,6 +6,7 @@ import com.RevHire.dto.NoteRequestDTO;
 import com.RevHire.entity.Application;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,15 +24,37 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
 
-    @PostMapping("/apply")
-    public ResponseEntity<String> apply(@RequestParam Long jobId,
-                                        @RequestParam Long seekerId,
-                                        @RequestParam Long resumeId,
-                                        @RequestParam(required = false) String coverLetter) {
+    @GetMapping("/jobseeker/jobs/apply/{jobId}")
+    public String showApplyPage(@PathVariable Long jobId, Model model, HttpSession session) {
+        // 1. Check if user is logged in
+        Object userId = session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
 
-        applicationService.applyJob(jobId, seekerId, resumeId, coverLetter);
+        // 2. Pass the jobId to the frontend
+        model.addAttribute("jobId", jobId);
+        model.addAttribute("userId", userId);
 
-        return ResponseEntity.ok("Application submitted successfully");
+        // 3. Return the name of your application form HTML file (apply-form.html)
+        return "jobseeker/applications";
+    }
+
+    @PostMapping("/submit-application")
+    public ResponseEntity<?> apply(@RequestParam Long jobId,
+                                   @RequestParam Long seekerId,
+                                   @RequestParam Long resumeId,
+                                   @RequestParam(required = false) String coverLetter) {
+        try {
+            applicationService.applyJob(jobId, seekerId, resumeId, coverLetter);
+            return ResponseEntity.ok("Application submitted successfully");
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Already applied")) {
+                // Return 409 Conflict so the frontend knows it's a duplicate
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+        }
     }
 
     @GetMapping("/seeker/{seekerId}")

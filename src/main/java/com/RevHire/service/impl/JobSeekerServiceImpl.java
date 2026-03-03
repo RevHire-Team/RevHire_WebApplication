@@ -1,6 +1,7 @@
 package com.RevHire.service.impl;
 
 import com.RevHire.dto.FavoriteJobDTO;
+import com.RevHire.dto.JobDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +27,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     private final NotificationRepository notificationRepo;
     private final UserRepository userRepo;
     private final JobRepository jobRepo;
-
+    private final ResumeSkillRepository resumeSkillRepo;
 
     public JobSeekerServiceImpl(JobSeekerProfileRepository profileRepo,
                                 ResumeRepository resumeRepo,
@@ -33,71 +35,87 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                                 FavoriteJobRepository favoriteJobRepo,
                                 NotificationRepository notificationRepo,
                                 UserRepository userRepo,
-                                JobRepository jobRepo) {
+                                JobRepository jobRepo,
+                                ResumeSkillRepository resumeSkillRepo) {
         this.profileRepo = profileRepo;
         this.resumeRepo = resumeRepo;
         this.resumeFileRepo = resumeFileRepo;
         this.favoriteJobRepo = favoriteJobRepo;
         this.notificationRepo = notificationRepo;
-        this.userRepo=userRepo;
-        this.jobRepo=jobRepo;
+        this.userRepo = userRepo;
+        this.jobRepo = jobRepo;
+        this.resumeSkillRepo = resumeSkillRepo;
     }
 
-    // ========== PROFILE ==========
+    // ========================= PROFILE =========================
+
     @Override
     public JobSeekerProfile createProfile(JobSeekerProfile profile, Long userId) {
+
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
         profile.setUser(user);
         return profileRepo.save(profile);
     }
 
     @Override
     public Optional<JobSeekerProfile> getProfile(Long userId) {
-        return profileRepo.findByUserUserId(userId);
+        // Return null instead of Optional to avoid JSON issues
+        return Optional.ofNullable(profileRepo.findByUserUserId(userId)
+                .orElse(null));
     }
 
     @Override
     public JobSeekerProfile updateProfile(Long profileId, JobSeekerProfile profile) {
+
         JobSeekerProfile existing = profileRepo.findById(profileId)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
+
         existing.setFullName(profile.getFullName());
         existing.setPhone(profile.getPhone());
         existing.setLocation(profile.getLocation());
         existing.setCurrentEmploymentStatus(profile.getCurrentEmploymentStatus());
         existing.setTotalExperience(profile.getTotalExperience());
         existing.setProfileCompletion(profile.getProfileCompletion());
+
         return profileRepo.save(existing);
     }
 
-    // ========== RESUME FILE UPLOAD ==========
+    // ========================= RESUME =========================
+
     @Override
-    public ResumeFile uploadResumeFile(Long resumeId, MultipartFile file) {
+    public Resume getOrCreateResume(Long userId) {
 
-        System.out.println("Incoming resumeId: " + resumeId);
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found. Create profile first."));
 
-        List<Resume> allResumes = resumeRepo.findAll();
-        System.out.println("Total resumes in DB: " + allResumes.size());
+        return resumeRepo.findBySeekerSeekerId(profile.getSeekerId())
+                .orElseGet(() -> {
+                    Resume newResume = new Resume();
+                    newResume.setSeeker(profile);
+                    return resumeRepo.save(newResume);
+                });
+    }
 
-        Resume resume = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+    @Override
+    public ResumeFile uploadResumeFile(Long userId, MultipartFile file) {
+
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        Resume resume = getOrCreateResume(userId);
 
         try {
-            // Get project root directory
-            String projectPath = System.getProperty("user.dir");
 
+            String projectPath = System.getProperty("user.dir");
             String uploadDir = projectPath + File.separator + "uploads" + File.separator + "resumes";
 
             File folder = new File(uploadDir);
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
+            if (!folder.exists()) folder.mkdirs();
 
-            // Prevent overwrite
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-
             File destination = new File(uploadDir + File.separator + fileName);
-
             file.transferTo(destination);
 
             ResumeFile resumeFile = new ResumeFile();
@@ -105,23 +123,26 @@ public class JobSeekerServiceImpl implements JobSeekerService {
             resumeFile.setFileName(fileName);
             resumeFile.setFilePath(destination.getAbsolutePath());
             resumeFile.setFileSize(file.getSize());
-            String extension = file.getOriginalFilename()
-                    .substring(file.getOriginalFilename().lastIndexOf(".") + 1)
-                    .toUpperCase();
+
+            String originalName = file.getOriginalFilename();
+            String extension = (originalName != null && originalName.contains("."))
+                    ? originalName.substring(originalName.lastIndexOf(".") + 1).toUpperCase()
+                    : "UNKNOWN";
 
             resumeFile.setFileType(extension);
 
             return resumeFileRepo.save(resumeFile);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save file", e);
+            throw new RuntimeException("FileSystem Error: Could not save file", e);
         }
     }
 
-    // ========== FAVORITE JOBS ==========
+    // ========================= FAVORITES =========================
+
     @Override
     public FavoriteJob addFavoriteJob(Long seekerId, Long jobId) {
-        System.out.println("Total seekers in DB: " + profileRepo.count());
+
         JobSeekerProfile seeker = profileRepo.findById(seekerId)
                 .orElseThrow(() -> new RuntimeException("Seeker not found"));
 
@@ -141,31 +162,100 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public List<FavoriteJobDTO> getFavorites(Long seekerId) {
-        List<FavoriteJob> favorites = favoriteJobRepo.findBySeekerSeekerId(seekerId);
 
-        return favorites.stream().map(fav -> new FavoriteJobDTO(
-                fav.getFavId(),
-                fav.getJob().getJobId(),
-                fav.getJob().getTitle(),
-                fav.getJob().getLocation(),
-                fav.getJob().getSalaryMin(),
-                fav.getJob().getSalaryMax(),
-                fav.getJob().getJobType(),
-                fav.getJob().getStatus(),
-                fav.getJob().getEmployer().getCompanyName() // flatten company name
-        )).toList();
+        List<FavoriteJob> favorites =
+                favoriteJobRepo.findBySeekerSeekerId(seekerId);
+
+        return favorites.stream().map(fav -> {
+
+            Job job = fav.getJob();
+
+            String companyName = (job.getEmployer() != null)
+                    ? job.getEmployer().getCompanyName()
+                    : "Unknown Company";
+
+            return new FavoriteJobDTO(
+                    fav.getFavId(),
+                    job.getJobId(),
+                    job.getTitle(),
+                    job.getLocation(),
+                    job.getSalaryMin(),
+                    job.getSalaryMax(),
+                    job.getJobType(),
+                    job.getStatus(),
+                    companyName
+            );
+
+        }).toList();
     }
+
     @Override
     public void removeFavoriteJob(Long favId) {
         favoriteJobRepo.deleteById(favId);
     }
 
-    // ========== NOTIFICATIONS ==========
+    // ========================= NOTIFICATIONS =========================
+
     @Override
     public void markNotificationAsRead(Long notificationId) {
+
         Notification notification = notificationRepo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
+
         notification.setIsRead(true);
         notificationRepo.save(notification);
+    }
+
+    // ========================= JOB SEARCH =========================
+
+    @Override
+    public List<JobDTO> searchJobs(String title,
+                                   String location,
+                                   Integer exp,
+                                   String edu,
+                                   Double minSal,
+                                   Double maxSal,
+                                   String type) {
+
+        BigDecimal bMin = (minSal != null)
+                ? BigDecimal.valueOf(minSal)
+                : BigDecimal.ZERO;
+
+        BigDecimal bMax = (maxSal != null)
+                ? BigDecimal.valueOf(maxSal)
+                : BigDecimal.valueOf(9999999);
+
+        List<Job> jobs = jobRepo.findAdvanced(
+                title != null ? "%" + title + "%" : "%",
+                location != null ? "%" + location + "%" : "%",
+                exp != null ? exp : 0,
+                edu != null ? "%" + edu + "%" : "%",
+                bMin,
+                bMax,
+                type != null ? "%" + type + "%" : "%",
+                "OPEN"
+        );
+
+        return jobs.stream().map(this::convertToDTO).toList();
+    }
+
+    // ========================= PRIVATE DTO CONVERTER =========================
+
+    private JobDTO convertToDTO(Job job) {
+
+        String companyName = (job.getEmployer() != null)
+                ? job.getEmployer().getCompanyName()
+                : "Unknown Company";
+
+        return new JobDTO(
+                job.getJobId(),
+                job.getTitle(),
+                job.getLocation(),
+                job.getSalaryMin(),
+                job.getSalaryMax(),
+                job.getJobType(),
+                job.getStatus(),
+                companyName
+        );
     }
 }

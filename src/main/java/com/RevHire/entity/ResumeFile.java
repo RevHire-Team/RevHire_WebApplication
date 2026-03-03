@@ -1,20 +1,16 @@
 package com.RevHire.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "RESUME_FILES")
-@Getter @Setter
+@Getter
+@Setter
 public class ResumeFile {
 
     @Id
@@ -22,20 +18,16 @@ public class ResumeFile {
     @Column(name = "file_id")
     private Long fileId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resume_id", nullable = false)
     @JsonIgnore
     private Resume resume;
 
-    @Column(name = "file_name")
     private String fileName;
-
-    @Column(name = "file_path")
     private String filePath;
-
-    @Column(name = "file_type")
     private String fileType;
-
-    @Column(name = "file_size")
     private Long fileSize;
+
+    @Column(name = "uploaded_at")
+    private LocalDateTime uploadedAt;
 }
