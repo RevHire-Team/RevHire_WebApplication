@@ -150,12 +150,9 @@
             <small class="text-muted">Stay updated with your application activity</small>
         </div>
 
-        <a class="back-btn"
-           th:href="${session.role} == 'JOB_SEEKER' ?
-@{'/jobseeker/dashboard/' + ${session.userId}} :
-(${session.role} == 'EMPLOYER' ?
-@{'/employer/dashboard/' + ${session.userId}} :
-@{'/admin/dashboard'})">
+        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
 
             <i class="bi bi-arrow-left"></i> Back
         </a>

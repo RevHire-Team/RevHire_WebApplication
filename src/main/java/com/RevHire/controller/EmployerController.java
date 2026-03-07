@@ -44,16 +44,16 @@ public class EmployerController {
     @GetMapping("/profile")
     public String viewProfilePage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("loggedInUser");
-
         if (user == null) {
             return "redirect:/auth/login";
         }
 
+        // This calls your Service method which fetches from DB
         EmployerProfileDTO profile = employerService.getProfile(user.getUserId());
 
+        // Pass the profile object to the template
         model.addAttribute("profile", profile);
-
-        return "employer/companyprofile";
+        return "employer/company-profile"; // Refers to templates/employer/companyprofile.html
     }
 
     @GetMapping("/dashboard/{employerId}")
@@ -62,7 +62,7 @@ public class EmployerController {
         model.addAttribute("dashboard",
                 employerService.getDashboard(employerId));
 
-        return "employer/EmployeerDashboard"; // Thymeleaf file name
+        return "employer/dashboard"; // Thymeleaf file name
     }
 
 //    @GetMapping("/dashboard")

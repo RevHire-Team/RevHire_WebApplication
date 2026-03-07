@@ -147,7 +147,7 @@ public class JobSeekerUIController {
             });
         });
 
-        return "jobseeker/resume-view";
+        return "jobseeker/view-resume";
     }
 
     @GetMapping("/jobs/search")
@@ -261,26 +261,6 @@ public class JobSeekerUIController {
         return count;
     }
 
-//    @GetMapping("/profile/{userId}")
-//    public ResponseEntity<?> getProfile(@PathVariable Long userId) {
-//    return jobSeekerService.getProfile(userId).map(profile -> {
-//        Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
-//
-//        java.util.Map<String, Object> response = new java.util.HashMap<>();
-//        // IMPORTANT: seekerId is needed by the JS for subsequent calls
-//        response.put("seekerId", profile.getSeekerId());
-//        response.put("fullName", profile.getFullName());
-//        response.put("phone", profile.getPhone());
-//        response.put("location", profile.getLocation());
-//        response.put("profileCompletion", profile.getProfileCompletion());
-//
-//        if (resumeOpt.isPresent()) {
-//            Resume r = resumeOpt.get();
-//            response.put("jobTitle", r.getObjective());
-//            // ... rest of your mapping logic
-//        }
-//
-//        return ResponseEntity.ok(response);
-//    }).orElse(ResponseEntity.notFound().build());
-//}
+
+
 }

@@ -296,4 +296,14 @@
             ));
         }
 
+        @GetMapping("/jobseeker/resume/view")
+        public String viewResumePage(HttpSession session) {
+
+            if(session.getAttribute("userId")==null){
+                return "redirect:/auth/login";
+            }
+
+            return "jobseeker/view-resume"; // loads view-resume.html
+        }
+
     }

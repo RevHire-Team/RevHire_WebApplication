@@ -1,193 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Post New Job | RevHire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-<title>Post New Job - RevHire</title>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-/* (Your styles unchanged — I did not modify anything) */
-body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;margin:0;}
-.sidebar{height:100vh;background:linear-gradient(180deg,#1e3a8a,#2563eb);color:white;position:fixed;width:240px;top:0;left:0;padding-top:20px;}
-.logo{text-decoration:none;color:white;display:block;text-align:center;font-size:22px;font-weight:600;margin-bottom:20px;}
-.sidebar .nav-link{color:white;display:block;padding:12px 20px;border-radius:8px;margin:6px 12px;text-decoration:none;}
-.sidebar .nav-link:hover{background:rgba(255,255,255,0.15);}
-.sidebar .nav-link.active{background:white;color:#2563eb;font-weight:600;}
-.main-content{margin-left:240px;padding:30px;}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-.topbar-icons{display:flex;gap:20px;align-items:center;}
-.notification-wrapper{position:relative;cursor:pointer;}
-.notification-badge{position:absolute;top:-6px;right:-8px;background:red;color:white;font-size:11px;padding:2px 6px;border-radius:50px;font-weight:600;}
-.profile-img{width:38px;height:38px;border-radius:50%;background:#2563eb;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;}
-.header-box{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
-.form-box{background:white;padding:30px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05);}
-.btn-primary{background:#2563eb;border:none;padding:12px;font-weight:600;border-radius:6px;}
-.btn-primary:hover{background:#1e40af;}
-</style>
-
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg-subtle: #f8fafc; --text-main: #0f172a; --border: #e2e8f0; }
+        body { background: var(--bg-subtle); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 50px; }
+        .header-box { background: white; padding: 1.5rem 2rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 2rem; }
+        .form-box { background: white; padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; color: var(--primary); font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .form-label { font-weight: 700; font-size: 0.9rem; }
+        .form-control, .form-select { border-radius: 10px; padding: 0.75rem 1rem; border: 1px solid var(--border); }
+        .btn-post { background: var(--primary); color: white; padding: 1rem; border-radius: 12px; font-weight: 800; border: none; width: 100%; transition: 0.3s; }
+        .btn-post:hover { background: var(--primary-dark); }
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
+<div class="container mt-5">
+    <div class="header-box">
+        <h2 class="fw-800 mb-1">Post New Job 🚀</h2>
+        <p class="text-muted mb-0">Fill in the details below to publish your job opportunity.</p>
+    </div>
 
-<a href="../EmployeerDashboard.html" class="logo">
-RevHire
-</a>
+    <div class="form-box">
+        <form id="createJobForm" onsubmit="handleCreate(event)">
+            <div class="section-header"><i class="bi bi-info-circle-fill"></i> Core Details</div>
+            <div class="row g-4">
+                <div class="col-md-6"><label class="form-label">Job Title</label><input type="text" id="title" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Location</label><input type="text" id="location" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">Job Type</label>
+                    <select id="jobType" class="form-select">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Contract">Contract</option>
+                    </select>
+                </div>
+                <div class="col-md-4"><label class="form-label">Min Salary</label><input type="number" id="salaryMin" class="form-control"></div>
+                <div class="col-md-4"><label class="form-label">Max Salary</label><input type="number" id="salaryMax" class="form-control"></div>
+            </div>
 
-<a href="../EmployeerDashboard.html" class="nav-link">
-<i class="bi bi-speedometer2"></i> Dashboard
-</a>
+            <div class="section-header mt-5"><i class="bi bi-card-text"></i> Requirements & Description</div>
+            <div class="row g-4">
+                <div class="col-md-6"><label class="form-label">Experience (Years)</label><input type="number" id="experienceRequired" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Education</label><input type="text" id="educationRequired" class="form-control" required></div>
+                <div class="col-md-12"><label class="form-label">Job Description</label><textarea id="description" class="form-control" rows="6" required></textarea></div>
+            </div>
 
-<a href="create-job.html" class="nav-link active">
-<i class="bi bi-plus-circle"></i> Post Job
-</a>
-
-<a href="manage-jobs.html" class="nav-link">
-<i class="bi bi-briefcase"></i> Manage Jobs
-</a>
-
-<a href="../applications/manage-applications.html" class="nav-link">
-<i class="bi bi-file-earmark-text"></i> Applications
-</a>
-
-<a href="../company-profile.html" class="nav-link">
-<i class="bi bi-building"></i> Company Profile
-</a>
-
+            <button type="submit" class="btn btn-post mt-5" id="postBtn">
+                <i class="bi bi-plus-circle me-2"></i> Publish Job
+            </button>
+        </form>
+    </div>
 </div>
-
-<div class="main-content">
-
-<div class="topbar">
-
-<h4>Post New Job</h4>
-
-<div class="topbar-icons">
-
-<!-- ✅ FIXED NOTIFICATION -->
-<div class="notification-wrapper"
-onclick="location.href='../employer-notification.html'"
-title="Notifications">
-
-<i class="bi bi-bell fs-5"></i>
-
-<span id="notificationCount"
-class="notification-badge"
-style="display:none;">
-0
-</span>
-
-</div>
-
-<!-- PROFILE -->
-<div id="profileInitial"
-class="profile-img"
-onclick="location.href='../company-profile.html'"
-title="Company Profile">
-E
-</div>
-
-</div>
-
-</div>
-
-<div class="header-box">
-<h5>Create New Job Posting</h5>
-<p class="text-muted mb-0">Fill job details to publish</p>
-</div>
-
-<div class="form-box">
-
-<form onsubmit="createJob(event)">
-
-<div class="row">
-<div class="col-md-6">
-
-<label>Job Title</label>
-<input type="text" id="title" class="form-control mb-3" required>
-
-<label>Skills Required</label>
-<input type="text" id="skills" class="form-control mb-3" required>
-
-<label>Experience</label>
-<input type="text" id="experience" class="form-control mb-3" required>
-
-<label>Education</label>
-<input type="text" id="education" class="form-control mb-3" required>
-
-</div>
-
-<div class="col-md-6">
-
-<label>Location</label>
-<input type="text" id="location" class="form-control mb-3" required>
-
-<label>Salary</label>
-<input type="text" id="salary" class="form-control mb-3" required>
-
-<label>Job Type</label>
-<select id="type" class="form-select mb-3">
-<option>Full Time</option>
-<option>Part Time</option>
-<option>Internship</option>
-<option>Contract</option>
-</select>
-
-<label>Application Deadline</label>
-<input type="date" id="deadline" class="form-control mb-3" required>
-
-</div>
-</div>
-
-<label>Description</label>
-<textarea id="description" class="form-control mb-4" rows="4" required></textarea>
-
-<button type="submit" class="btn btn-primary w-100">
-Post Job
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-<!-- ✅ VERY IMPORTANT FIX -->
-<script src="../../../static/js/employer.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function(){
+    async function handleCreate(event) {
+        event.preventDefault();
+        const userId = [[${session.loggedInUser.id}]]; // Securely from session
+        const btn = document.getElementById('postBtn');
+        btn.disabled = true;
 
-let profile =
-JSON.parse(localStorage.getItem("employerProfile")) || {};
+        const payload = {
+            title: document.getElementById('title').value,
+            location: document.getElementById('location').value,
+            jobType: document.getElementById('jobType').value,
+            salaryMin: parseFloat(document.getElementById('salaryMin').value),
+            salaryMax: parseFloat(document.getElementById('salaryMax').value),
+            experienceRequired: parseInt(document.getElementById('experienceRequired').value),
+            educationRequired: document.getElementById('educationRequired').value,
+            description: document.getElementById('description').value
+        };
 
-let profileInitial =
-document.getElementById("profileInitial");
+        const response = await fetch(`/jobs/create/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-if(profile.companyName){
-profileInitial.innerText =
-profile.companyName.charAt(0).toUpperCase();
-}
-
-let notifications =
-JSON.parse(localStorage.getItem("employerNotifications")) || [];
-
-let badge =
-document.getElementById("notificationCount");
-
-if(notifications.filter(n=>!n.read).length>0){
-badge.style.display="inline-block";
-badge.innerText=
-notifications.filter(n=>!n.read).length;
-}
-
-});
+        if (response.ok) {
+            alert("Job posted successfully!");
+            window.location.href = "/jobs/jobs/manage";
+        } else {
+            alert("Failed to post job.");
+            btn.disabled = false;
+        }
+    }
 </script>
-
 </body>
 </html>

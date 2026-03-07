@@ -1,307 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Company Profile | RevHire</title>
 
-<title>Company Profile - RevHire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root { --primary: #2563eb; --sidebar-bg: #0f172a; --bg-subtle: #f8fafc; --text-main: #0f172a; --border: #e2e8f0; }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+        /* Sidebar */
+        .sidebar { width: 250px; background: var(--sidebar-bg); color: white; position: fixed; height: 100vh; padding: 1.5rem 1rem; }
+        .nav-link { color: #94a3b8; padding: 0.8rem 1rem; border-radius: 12px; display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 5px; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
 
-<style>
-
-body{
-background:#f1f5f9;
-font-family:'Segoe UI',sans-serif;
-margin:0;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-height:100vh;
-width:240px;
-position:fixed;
-top:0;
-left:0;
-background:linear-gradient(180deg,#1e3a8a,#2563eb);
-padding-top:20px;
-}
-
-.logo{
-color:white;
-text-decoration:none;
-display:block;
-text-align:center;
-font-size:22px;
-font-weight:600;
-padding:10px;
-}
-
-.logo:hover{
-color:white;
-}
-
-.sidebar a{
-color:white;
-text-decoration:none;
-display:block;
-padding:12px 20px;
-margin:6px 10px;
-border-radius:8px;
-}
-
-.sidebar a.active{
-background:white;
-color:#2563eb;
-font-weight:600;
-}
-
-/* MAIN */
-
-.main-content{
-margin-left:240px;
-padding:30px;
-}
-
-/* TOPBAR */
-
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.topbar-icons{
-display:flex;
-align-items:center;
-gap:20px;
-}
-
-.icon-btn{
-font-size:20px;
-cursor:pointer;
-color:#1e3a8a;
-}
-
-.profile-circle{
-width:38px;
-height:38px;
-border-radius:50%;
-background:#2563eb;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:600;
-cursor:pointer;
-}
-
-/* PROFILE CARD */
-
-.profile-card{
-background:white;
-border-radius:12px;
-padding:40px;
-max-width:700px;
-margin:auto;
-box-shadow:0 4px 12px rgba(0,0,0,0.05);
-text-align:center;
-}
-
-/* COMPANY ICON */
-
-.company-icon{
-width:120px;
-height:120px;
-border-radius:50%;
-background:#e5e7eb;
-display:flex;
-align-items:center;
-justify-content:center;
-margin:auto;
-margin-bottom:20px;
-}
-
-.company-icon i{
-font-size:45px;
-color:#2563eb;
-}
-
-/* DETAILS */
-
-.profile-details{
-text-align:left;
-margin-top:25px;
-}
-
-.profile-details p{
-margin-bottom:10px;
-font-size:15px;
-}
-
-.profile-details b{
-width:140px;
-display:inline-block;
-}
-
-/* BUTTON */
-
-.btn-primary{
-background:#2563eb;
-border:none;
-padding:10px 25px;
-margin-top:20px;
-}
-
-</style>
-
+        /* Main */
+        .main-content { margin-left: 250px; flex: 1; padding: 3rem; }
+        .profile-card { background: white; border-radius: 20px; padding: 3rem; max-width: 650px; margin: 0 auto; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .company-icon { width: 100px; height: 100px; border-radius: 50%; background: #eff6ff; color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2.5rem; }
+        .detail-row { display: flex; padding: 1rem 0; border-bottom: 1px solid #f1f5f9; }
+        .label { width: 150px; font-weight: 700; color: #64748b; }
+    </style>
 </head>
-
 <body>
 
+<aside class="sidebar">
+    <div class="px-3 mb-4"><h3>RevHire</h3></div>
+    <nav>
+        <a th:href="@{/employer/dashboard/{id}(id=${session.userId})}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+    </nav>
+</aside>
 
-<!-- SIDEBAR -->
+<main class="main-content">
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="fw-800">Company Profile</h2>
+    </header>
 
-<div class="sidebar">
+    <div class="profile-card">
+        <div class="company-icon"><i class="bi bi-building"></i></div>
+        <h3 class="text-center fw-800 mb-4" th:text="${profile.companyName}">Company Name</h3>
 
-<a href="../index.html" class="logo">
-RevHire
-</a>
+        <div class="profile-details">
+            <div class="detail-row"><span class="label">Industry</span> <span th:text="${profile.industry}">-</span></div>
+            <div class="detail-row"><span class="label">Company Size</span> <span th:text="${profile.companySize}">-</span></div>
+            <div class="detail-row"><span class="label">Website</span> <span th:text="${profile.website}">-</span></div>
+            <div class="detail-row"><span class="label">Location</span> <span th:text="${profile.location}">-</span></div>
+            <div class="detail-row border-0"><span class="label">Description</span> <span th:text="${profile.description}">-</span></div>
+        </div>
 
-<a href="EmployeerDashboard.html">
-<i class="bi bi-speedometer2"></i> Dashboard
-</a>
-
-<a href="jobs/create-job.html">
-<i class="bi bi-plus-circle"></i> Post Job
-</a>
-
-<a href="jobs/manage-jobs.html">
-<i class="bi bi-briefcase"></i> Manage Jobs
-</a>
-
-<a href="applications/manage-applications.html">
-<i class="bi bi-file-earmark-text"></i> Applications
-</a>
-
-<a href="company-profile.html" class="active">
-<i class="bi bi-building"></i> Profile
-</a>
-
-</div>
-
-
-
-<!-- MAIN CONTENT -->
-
-<div class="main-content">
-
-<!-- TOPBAR -->
-
-<div class="topbar">
-
-<h3>Company Profile</h3>
-
-<div class="topbar-icons">
-
-<i class="bi bi-bell icon-btn"
-onclick="location.href='../jobseeker/notifications.html'"></i>
-
-<div class="profile-circle"
-onclick="location.href='company-profile.html'"
-id="profileInitial">
-E
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- PROFILE CARD -->
-
-<div class="profile-card">
-
-<div class="company-icon">
-<i class="bi bi-building"></i>
-</div>
-
-<h4 id="companyName">
-Company Name
-</h4>
-
-<div class="profile-details">
-
-<p><b>Industry:</b> <span id="industry">-</span></p>
-
-<p><b>Company Size:</b> <span id="size">-</span></p>
-
-<p><b>Website:</b> <span id="website">-</span></p>
-
-<p><b>Location:</b> <span id="location">-</span></p>
-
-<p><b>Description:</b> <span id="description">-</span></p>
-
-</div>
-
-<a href="edit-company-profile.html"
-class="btn btn-primary">
-Edit Profile
-</a>
-
-</div>
-
-</div>
-
-
-
-<script src="../../static/js/employer.js"></script>
-
-<script>
-
-/* LOAD PROFILE */
-
-document.addEventListener("DOMContentLoaded", function(){
-
-let profile =
-JSON.parse(localStorage.getItem("employerProfile")) || {};
-
-document.getElementById("companyName").innerText =
-profile.companyName || "Company Name";
-
-document.getElementById("industry").innerText =
-profile.industry || "-";
-
-document.getElementById("size").innerText =
-profile.size || "-";
-
-document.getElementById("website").innerText =
-profile.website || "-";
-
-document.getElementById("location").innerText =
-profile.location || "-";
-
-document.getElementById("description").innerText =
-profile.description || "-";
-
-/* PROFILE INITIAL */
-
-if(profile.companyName){
-
-document.getElementById("profileInitial").innerText =
-profile.companyName.charAt(0).toUpperCase();
-
-}
-
-});
-
-</script>
-
+        <div class="text-center mt-4">
+            <a th:href="@{/employer/profile/edit}" class="btn btn-primary px-4 rounded-pill">
+                <i class="bi bi-pencil-square me-2"></i>Edit Profile
+            </a>        </div>
+    </div>
+</main>
 
 </body>
 </html>
