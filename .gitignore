@@ -7,7 +7,6 @@ uploads/
 !**/src/main/**/dto/
 resources/application.properties
 src/main/java
-src/test
 target/
 *.log
 *.class
