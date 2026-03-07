@@ -34,4 +34,6 @@ public interface ResumeFileRepository extends JpaRepository<ResumeFile, Long> {
     @Query("DELETE FROM ResumeFile rf WHERE rf.fileId = :fileId")
     void deleteByFileId(@Param("fileId") Long fileId);
 
+    List<ResumeFile> findByResume_ResumeIdOrderByUploadedAtDesc(Long resumeId);
+
 }

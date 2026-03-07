@@ -48,7 +48,4 @@ public interface ResumeService {
     void deleteResumeFile(Long fileId);
 
     byte[] getResumeFileBytes(Long userId);
-
-    @Transactional
-    void saveResumeDetails(Long userId, Resume resumeData);
 }
