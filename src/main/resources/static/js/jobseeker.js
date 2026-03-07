@@ -264,47 +264,41 @@ function loadRecentNotifications(){
 DASHBOARD LOADER
 =========================== */
 
-function loadDashboard(){
+function loadDashboard() {
 
-    let profile = getProfile();
+    const userId = document.getElementById("userId").value;
 
-    let welcome =
-    document.getElementById("welcomeText");
+    fetch(`/api/jobseeker/dashboard/${userId}`)
+        .then(res => res.json())
+        .then(data => {
 
-    if(welcome){
+            document.getElementById("profileScore").innerText =
+                data.profileScore + "%";
 
-        welcome.innerText =
-        profile.name && profile.name.trim() !== ""
-        ? "Welcome Back, " + profile.name + " 👋"
-        : "Welcome Back 👋";
+            document.getElementById("totalApps").innerText =
+                data.totalApplications;
 
-    }
+            document.getElementById("savedJobs").innerText =
+                data.savedJobs;
 
-    let profileScore =
-    calculateProfileCompletion();
+            const table = document.getElementById("recentApplications");
+            table.innerHTML = "";
 
-    let profileElement =
-    document.getElementById("profileScore");
+            data.recentApplications.forEach(app => {
 
-    if(profileElement)
-        profileElement.innerText =
-        profileScore + "%";
+                const row = `
+                    <tr>
+                        <td>${app.jobTitle}</td>
+                        <td>${app.status}</td>
+                        <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                    </tr>
+                `;
 
-    let resumeScore =
-    calculateResumeScore();
+                table.innerHTML += row;
+            });
 
-    let resumeElement =
-    document.getElementById("resumeScore");
-
-    if(resumeElement)
-        resumeElement.innerText =
-        resumeScore + "%";
-
-    loadApplicationStats();
-    loadSavedJobsCount();
-    loadRecentNotifications();
-    loadRecentApplications();
-
+        })
+        .catch(err => console.error("Dashboard load failed", err));
 }
 
 

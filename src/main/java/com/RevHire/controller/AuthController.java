@@ -63,6 +63,7 @@ public class AuthController {
 
             session.setAttribute("loggedInUser", user);
             session.setAttribute("userId", user.getUserId());
+            session.setAttribute("role", user.getRole().name());
 
             System.out.println("ROLE FROM DB: [" + role + "]"); //
 

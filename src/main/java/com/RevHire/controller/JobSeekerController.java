@@ -1,5 +1,6 @@
     package com.RevHire.controller;
 
+    import com.RevHire.dto.ApplicationResponseDTO;
     import com.RevHire.dto.FavoriteJobDTO;
     import com.RevHire.dto.ProfileUpdateDTO;
     import com.RevHire.entity.*;
@@ -7,6 +8,7 @@
     import com.RevHire.service.JobSeekerService;
     import com.RevHire.service.ResumeService;
 
+    import com.RevHire.service.impl.ApplicationServiceImpl;
     import com.RevHire.service.impl.JobSeekerServiceImpl;
     import jakarta.servlet.http.HttpSession;
     import jakarta.transaction.Transactional;
@@ -26,6 +28,7 @@
 
         private final JobSeekerService jobSeekerService;
         private final ResumeService resumeService;
+        private final ApplicationServiceImpl applicationService;
         // Mark these as 'final' to ensure they are initialized
         private final ResumeRepository resumeRepo;
         private final FavoriteJobRepository favoriteJobRepo;
@@ -41,7 +44,8 @@
                 FavoriteJobRepository favoriteJobRepo,
                 JobSeekerProfileRepository profileRepo,
                 ResumeEducationRepository educationRepo,
-                ResumeExperienceRepository experienceRepo) {
+                ResumeExperienceRepository experienceRepo,
+                ApplicationServiceImpl applicationService) {
             this.jobSeekerService = jobSeekerService;
             this.resumeService = resumeService;
             this.resumeRepo = resumeRepo;
@@ -49,6 +53,7 @@
             this.profileRepo = profileRepo;
             this.educationRepo = educationRepo;
             this.experienceRepo = experienceRepo;
+            this.applicationService=applicationService;
         }
 
         // ========== PROFILE ==========
@@ -254,6 +259,41 @@
             }
 
             return ResponseEntity.ok(Map.of("message", "Resume saved successfully"));
+        }
+
+
+
+        @GetMapping("/dashboard/{userId}")
+        public ResponseEntity<?> getDashboard(@PathVariable Long userId) {
+
+            JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                    .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+            Long seekerId = profile.getSeekerId();
+
+            // Profile completion
+            Integer profileScore = profile.getProfileCompletion() != null
+                    ? profile.getProfileCompletion() : 0;
+
+            // Saved jobs
+            long savedJobs = favoriteJobRepo.countBySeekerSeekerId(seekerId);
+
+            // Applications
+            List<ApplicationResponseDTO> applications =
+                    applicationService.getApplicationsBySeeker(seekerId);
+
+            int totalApps = applications.size();
+
+            // Recent 5 applications
+            List<ApplicationResponseDTO> recent =
+                    applications.stream().limit(5).toList();
+
+            return ResponseEntity.ok(Map.of(
+                    "profileScore", profileScore,
+                    "totalApplications", totalApps,
+                    "savedJobs", savedJobs,
+                    "recentApplications", recent
+            ));
         }
 
     }

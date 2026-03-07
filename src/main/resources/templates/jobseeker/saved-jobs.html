@@ -147,10 +147,10 @@
                         <i class="bi bi-trash"></i> Remove
                     </button>
 
-                    <a th:href="@{/jobseeker/jobs/search}"
-                       class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                    <button class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm"
+                            th:onclick="'initiateApply(' + ${fav.jobId} + ')'">
                         Apply Now
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -294,6 +294,23 @@
             console.error("Apply Error:", error);
         }
     }
+
+    async function removeSavedJob(favId) {
+    try {
+        const response = await fetch(`/api/jobseeker/favorites/${favId}`, {
+            method: "DELETE"
+        });
+
+        if (response.ok) {
+            const card = document.getElementById("fav-card-" + favId);
+            if (card) card.remove();
+        } else {
+            alert("Failed to remove saved job.");
+        }
+    } catch (error) {
+        console.error("Remove error:", error);
+    }
+}
 </script>
 
 </body>
