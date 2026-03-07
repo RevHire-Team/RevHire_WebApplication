@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resume Builder | RevHire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --sidebar-bg: #0f172a;
+            --bg-subtle: #f8fafc;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px; height: 100vh; background: var(--sidebar-bg); color: white;
+            position: fixed; padding: 1.5rem 1rem; display: flex; flex-direction: column; z-index: 1000;
+        }
+        .logo {
+            font-size: 1.5rem; font-weight: 800; padding: 0 1rem 1.5rem;
+            display: flex; align-items: center; gap: 10px; color: white; text-decoration: none;
+        }
+        .nav-menu { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
+        .nav-link {
+            color: #94a3b8; text-decoration: none; padding: 0.7rem 1rem; border-radius: 10px;
+            display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.3s; margin-bottom: 2px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: var(--primary) !important;
+            color: white !important;
+        }
+
+        /* Main Content */
+        .main-content { margin-left: 250px; flex: 1; padding: 2.5rem; width: calc(100% - 250px); }
+
+        .form-card { background: white; border-radius: 20px; padding: 30px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .dynamic-row { background: #f1f5f9; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; border: 1px solid transparent; transition: 0.2s; }
+        .dynamic-row:hover { border-color: var(--primary); }
+
+        .btn-remove {
+            position: absolute; top: 10px; right: 10px; color: #ef4444;
+            background: white; border-radius: 50%; width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #fee2e2;
+        }
+
+        /* Modal Styling */
+        .modal-content { border-radius: 28px; border: none; padding: 1.5rem; }
+        .icon-box-success {
+            width: 80px; height: 80px; background: #dcfce7; color: #16a34a;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; font-size: 2.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; }
+            .sidebar span, .logo span { display: none; }
+            .main-content { margin-left: 80px; width: calc(100% - 80px); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <a th:href="@{/jobseeker/dashboard}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
+    <div class="nav-menu">
+        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+        <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
+            <i class="bi bi-pencil"></i> <span>Manage Profile</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">
+            <i class="bi bi-file-earmark-text"></i> <span>Resume Builder</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
+            <i class="bi bi-upload"></i> <span>Upload Resume</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/search}" class="nav-link">
+            <i class="bi bi-search"></i> <span>Search Jobs</span>
+        </a>
+        <a th:href="@{/jobseeker/applications}" class="nav-link ">
+            <i class="bi bi-briefcase"></i> <span>Applications</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+            <i class="bi bi-heart"></i> <span>Saved Jobs</span>
+        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+    </div>
+    <div class="mt-auto">
+        <a th:href="@{/}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</nav>
+
+<main class="main-content">
+    <div class="container-fluid" style="max-width: 900px;">
+        <div id="alertPlaceholder"></div>
+
+        <h2 class="fw-800 mb-4">Professional Resume Builder</h2>
+
+        <form id="resumeForm" class="form-card">
+            <input type="hidden" id="userId" th:value="${session.userId}">
+
+            <div class="mb-4">
+                <label class="form-label fw-700 text-muted small text-uppercase">Career Objective</label>
+                <textarea id="objective" class="form-control" rows="3" placeholder="Describe your career goals and what you bring to a company..."></textarea>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="form-label fw-700 text-muted small text-uppercase mb-0">Education</label>
+                    <button type="button" class="btn btn-outline-primary btn-sm fw-700" onclick="addRow('edu-container')">+ Add Education</button>
+                </div>
+                <div id="edu-container">
+                    <div class="dynamic-row">
+                        <input type="text" class="form-control mb-2 edu-inst" placeholder="Institution (e.g. Stanford University)">
+                        <input type="text" class="form-control edu-deg" placeholder="Degree (e.g. B.S. Computer Science)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="form-label fw-700 text-muted small text-uppercase mb-0">Experience</label>
+                    <button type="button" class="btn btn-outline-primary btn-sm fw-700" onclick="addRow('exp-container')">+ Add Experience</button>
+                </div>
+                <div id="exp-container">
+                    <div class="dynamic-row">
+                        <input type="text" class="form-control mb-2 exp-comp" placeholder="Company (e.g. Google)">
+                        <input type="text" class="form-control exp-role" placeholder="Role (e.g. Senior Developer)">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold py-3 rounded-3 shadow-sm">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Save Professional Resume
+            </button>
+        </form>
+    </div>
+</main>
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg text-center">
+            <div class="modal-body p-4">
+                <div class="icon-box-success">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <h4 class="fw-800 mb-2">Resume Saved Successfully!</h4>
+                <p class="text-muted mb-4">Your profile has been updated with your latest education and experience details.</p>
+                <button type="button" class="btn btn-primary w-100 py-2 fw-700 rounded-3" id="modalOkBtn">
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    const alertPlaceholder = document.getElementById('alertPlaceholder');
+
+    function showAlert(message, type) {
+        alertPlaceholder.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show border-0 shadow-sm rounded-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi ${type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} me-2 fs-5"></i>
+                    <span>${message}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+    }
+
+    function addRow(containerId) {
+        const container = document.getElementById(containerId);
+        const rowId = Date.now();
+        const html = containerId === 'edu-container' ?
+            `<div class="dynamic-row" id="row-${rowId}">
+                <div class="btn-remove" onclick="removeRow('row-${rowId}')"><i class="bi bi-x"></i></div>
+                <input type="text" class="form-control mb-2 edu-inst" placeholder="Institution">
+                <input type="text" class="form-control edu-deg" placeholder="Degree">
+            </div>` :
+            `<div class="dynamic-row" id="row-${rowId}">
+                <div class="btn-remove" onclick="removeRow('row-${rowId}')"><i class="bi bi-x"></i></div>
+                <input type="text" class="form-control mb-2 exp-comp" placeholder="Company">
+                <input type="text" class="form-control exp-role" placeholder="Role">
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeRow(rowId) {
+        document.getElementById(rowId).remove();
+    }
+
+    document.getElementById('resumeForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('userId').value;
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Loading State
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving Changes...';
+        submitBtn.disabled = true;
+
+        const resumeData = {
+            objective: document.getElementById('objective').value,
+            educations: Array.from(document.querySelectorAll('#edu-container .dynamic-row')).map(row => ({
+                institution: row.querySelector('.edu-inst').value,
+                degree: row.querySelector('.edu-deg').value
+            })).filter(item => item.institution || item.degree), // Filter empty
+            experiences: Array.from(document.querySelectorAll('#exp-container .dynamic-row')).map(row => ({
+                companyName: row.querySelector('.exp-comp').value,
+                role: row.querySelector('.exp-role').value
+            })).filter(item => item.companyName || item.role) // Filter empty
+        };
+
+        try {
+            const response = await fetch(`/api/jobseeker/resume/save/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resumeData)
+            });
+
+            if (response.ok) {
+                successModal.show();
+            } else {
+                showAlert("Error saving resume. Please check your network connection.", "danger");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            showAlert("An unexpected error occurred. Please try again later.", "danger");
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    };
+
+    document.getElementById('modalOkBtn').onclick = () => {
+        const userId = document.getElementById('userId').value;
+        window.location.href = '/jobseeker/dashboard/' + userId;
+    };
+</script>
+</body>
+</html>

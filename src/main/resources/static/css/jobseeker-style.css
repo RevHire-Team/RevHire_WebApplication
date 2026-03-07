@@ -1,0 +1,23 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.sidebar {
+    background: linear-gradient(to bottom, #4e73df, #224abe);
+    min-height: 100vh;
+}
+
+.sidebar .nav-link {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+}
+
+.welcome-banner {
+    background: linear-gradient(to right, #36d1dc, #5b86e5);
+    color: white;
+}

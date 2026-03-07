@@ -1,0 +1,20 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="jobChart"></canvas>
+
+<script>
+let apps=getApplicants();
+let shortlisted=apps.filter(a=>a.status==="SHORTLISTED").length;
+let rejected=apps.filter(a=>a.status==="REJECTED").length;
+let pending=apps.filter(a=>a.status==="PENDING").length;
+
+new Chart(document.getElementById("jobChart"),{
+ type:"doughnut",
+ data:{
+  labels:["Shortlisted","Rejected","Pending"],
+  datasets:[{
+   data:[shortlisted,rejected,pending],
+   backgroundColor:["green","red","orange"]
+  }]
+ }
+});
+</script>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>Employer Notifications - RevHire</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f1f5f9;
+font-family:'Segoe UI',sans-serif;
+margin:0;
+}
+
+.sidebar{
+height:100vh;
+background:linear-gradient(180deg,#1e3a8a,#2563eb);
+position:fixed;
+width:240px;
+padding-top:20px;
+}
+
+.logo{
+color:white;
+text-decoration:none;
+display:block;
+text-align:center;
+font-size:22px;
+font-weight:600;
+margin-bottom:20px;
+}
+
+.nav-link{
+color:white;
+padding:12px 20px;
+margin:6px 12px;
+border-radius:8px;
+display:block;
+text-decoration:none;
+}
+
+.nav-link:hover{
+background:rgba(255,255,255,0.15);
+}
+
+.nav-link.active{
+background:white;
+color:#2563eb;
+font-weight:600;
+}
+
+.main-content{
+margin-left:240px;
+padding:30px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.topbar-icons{
+display:flex;
+gap:20px;
+align-items:center;
+}
+
+.notification-wrapper{
+position:relative;
+}
+
+.notification-badge{
+position:absolute;
+top:-6px;
+right:-8px;
+background:red;
+color:white;
+font-size:11px;
+padding:2px 6px;
+border-radius:50px;
+font-weight:600;
+}
+
+.profile-img{
+width:38px;
+height:38px;
+border-radius:50%;
+background:#2563eb;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:600;
+cursor:pointer;
+}
+
+.container-box{
+background:white;
+border-radius:12px;
+padding:20px;
+max-width:750px;
+}
+
+.notification-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.notification-item{
+padding:12px;
+border-bottom:1px solid #e5e7eb;
+cursor:pointer;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.notification-item:hover{
+background:#f9fafb;
+}
+
+.notification-message{
+font-weight:500;
+}
+
+.notification-date{
+font-size:13px;
+color:#6b7280;
+}
+
+.unread-dot{
+width:8px;
+height:8px;
+background:#2563eb;
+border-radius:50%;
+}
+
+.empty-box{
+text-align:center;
+padding:30px;
+color:#6b7280;
+}
+
+.mark-read-btn{
+font-size:14px;
+cursor:pointer;
+color:#2563eb;
+border:none;
+background:none;
+}
+
+.mark-read-btn:hover{
+text-decoration:underline;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<div class="sidebar">
+
+<a href="../index.html" class="logo">RevHire</a>
+
+<a href="EmployeerDashboard.html" class="nav-link">Dashboard</a>
+
+<a href="jobs/manage-jobs.html" class="nav-link">Manage Jobs</a>
+
+<a href="applications/manage-applications.html" class="nav-link">Applications</a>
+
+<a href="company-profile.html" class="nav-link">Profile</a>
+
+<a href="employer-notification.html" class="nav-link active">
+Notifications
+</a>
+
+</div>
+
+
+
+<div class="main-content">
+
+<div class="topbar">
+
+<h4>Notifications</h4>
+
+<div class="topbar-icons">
+
+<div class="notification-wrapper">
+
+<i class="bi bi-bell fs-5"></i>
+
+<span id="notificationCount"
+class="notification-badge">
+0
+</span>
+
+</div>
+
+<div class="profile-img"
+id="profileInitial"
+onclick="location.href='company-profile.html'">
+E
+</div>
+
+</div>
+
+</div>
+
+
+
+<div class="container-box">
+
+<div class="notification-header">
+
+<h6>Recent Notifications</h6>
+
+<button class="mark-read-btn"
+onclick="markAllRead()">
+Mark all as read
+</button>
+
+</div>
+
+<div id="notificationList"></div>
+
+</div>
+
+</div>
+
+
+
+<script src="../../static/js/employer.js"></script>
+
+<script>
+
+/* LOAD EMPLOYER INITIAL */
+
+document.addEventListener("DOMContentLoaded", function(){
+
+let profile =
+JSON.parse(localStorage.getItem("employerProfile")) || {};
+
+if(profile.companyName){
+
+document.getElementById("profileInitial").innerText =
+profile.companyName.charAt(0).toUpperCase();
+
+}
+
+loadNotifications();
+
+loadNotificationBadge();
+
+});
+
+
+
+/* LOAD NOTIFICATIONS */
+
+function loadNotifications(){
+
+let notifications =
+JSON.parse(localStorage.getItem("employerNotifications")) || [];
+
+let container =
+document.getElementById("notificationList");
+
+container.innerHTML="";
+
+
+if(notifications.length===0){
+
+container.innerHTML=
+`<div class="empty-box">
+No notifications yet
+</div>`;
+
+return;
+
+}
+
+
+notifications
+.slice()
+.reverse()
+.forEach((note,index)=>{
+
+container.innerHTML+=`
+
+<div class="notification-item"
+onclick="markRead(${notifications.length-1-index})">
+
+<div>
+
+<div class="notification-message">
+${note.message}
+</div>
+
+<div class="notification-date">
+${note.date || ""} ${note.time || ""}
+</div>
+
+</div>
+
+${!note.read?
+`<div class="unread-dot"></div>`:""}
+
+</div>
+
+`;
+
+});
+
+}
+
+
+
+/* MARK SINGLE READ */
+
+function markRead(index){
+
+let notifications =
+JSON.parse(localStorage.getItem("employerNotifications")) || [];
+
+notifications[index].read=true;
+
+localStorage.setItem(
+"employerNotifications",
+JSON.stringify(notifications)
+);
+
+loadNotifications();
+
+loadNotificationBadge();
+
+}
+
+
+
+/* MARK ALL READ */
+
+function markAllRead(){
+
+let notifications =
+JSON.parse(localStorage.getItem("employerNotifications")) || [];
+
+notifications.forEach(n=>n.read=true);
+
+localStorage.setItem(
+"employerNotifications",
+JSON.stringify(notifications)
+);
+
+loadNotifications();
+
+loadNotificationBadge();
+
+}
+
+
+
+/* BADGE COUNT */
+
+function loadNotificationBadge(){
+
+let notifications =
+JSON.parse(localStorage.getItem("employerNotifications")) || [];
+
+let unread =
+notifications.filter(n=>!n.read).length;
+
+let badge =
+document.getElementById("notificationCount");
+
+if(unread>0){
+
+badge.innerText=unread;
+badge.style.display="inline-block";
+
+}else{
+
+badge.style.display="none";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
