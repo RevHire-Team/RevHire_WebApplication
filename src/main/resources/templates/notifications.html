@@ -144,19 +144,26 @@
 
     <!-- Header -->
     <div class="header-card">
-
         <div>
             <h4 class="fw-bold mb-0">Notifications</h4>
             <small class="text-muted">Stay updated with your application activity</small>
         </div>
 
-        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="btn-back">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
+            <a th:if="${session.role == 'JOB_SEEKER'}"
+               th:href="@{'/jobseeker/dashboard/' + ${session.userId}}"
+               class="back-btn">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
 
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
+            <a th:if="${session.role == 'EMPLOYER'}"
+               th:href="@{'/employer/dashboard/' + ${session.userId}}"
+               class="back-btn">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
 
+            <a th:if="${session.role == null}" href="/" class="back-btn">
+                <i class="bi bi-house"></i> Go Home
+            </a>
     </div>
 
     <!-- Notification List -->

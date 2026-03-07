@@ -119,5 +119,21 @@ public class ApplicationController {
         if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
         return "employer/applications/manage-applications"; // Path to your HTML file
     }
+
+    // API to fetch all applications for the logged-in employer
+    @GetMapping("/all")
+    @ResponseBody
+    public ResponseEntity<List<EmployerApplicationDTO>> getAllApplications(HttpSession session) {
+        Object userObj = session.getAttribute("loggedInUser");
+        if (userObj == null) return ResponseEntity.status(401).build();
+
+        com.RevHire.entity.User user = (com.RevHire.entity.User) userObj;  // cast to User
+        Long employerUserId = user.getUserId();                             // extract ID
+
+        List<EmployerApplicationDTO> applications = applicationService.getApplicationsByEmployer(employerUserId);
+        return ResponseEntity.ok(applications);
+    }
+
+
 }
 

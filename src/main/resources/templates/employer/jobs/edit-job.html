@@ -107,7 +107,7 @@
             <h2 class="fw-800 mb-1">Edit Job Posting ✍️</h2>
             <p class="text-muted mb-0">Modify the details of your listing below.</p>
         </div>
-        <a th:href="@{/jobs/jobs/manage}" class="btn btn-outline-secondary rounded-pill px-4">
+        <a th:href="@{/jobs/manage}" class="btn btn-outline-secondary rounded-pill px-4">
             <i class="bi bi-x-lg me-2"></i> Cancel
         </a>
     </div>
@@ -117,7 +117,7 @@
             <i class="bi bi-hash"></i> Job ID: <span th:text="${jobId}" id="displayJobId"></span>
         </div>
 
-        <form id="editJobForm" th:onsubmit="handleUpdate(event)">
+        <form id="editJobForm">
             <input type="hidden" id="jobId" th:value="${jobId}">
 
             <div class="section-header">
@@ -127,15 +127,16 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <label class="form-label">Job Title</label>
-                    <input type="text" id="title" class="form-control" required>
+                    <input type="text" id="title" class="form-control">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Location</label>
-                    <input type="text" id="location" class="form-control" required>
+                    <input type="text" id="location" class="form-control">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Job Type</label>
                     <select id="jobType" class="form-select">
+                        <option value="">Select</option>
                         <option value="Full-time">Full-time</option>
                         <option value="Part-time">Part-time</option>
                         <option value="Internship">Internship</option>
@@ -159,15 +160,15 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <label class="form-label">Experience (Years)</label>
-                    <input type="number" id="experienceRequired" class="form-control" required>
+                    <input type="number" id="experienceRequired" class="form-control">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Education</label>
-                    <input type="text" id="educationRequired" class="form-control" required>
+                    <input type="text" id="educationRequired" class="form-control">
                 </div>
                 <div class="col-md-12">
                     <label class="form-label">Job Description</label>
-                    <textarea id="description" class="form-control" rows="6" required></textarea>
+                    <textarea id="description" class="form-control" rows="6"></textarea>
                 </div>
             </div>
 
@@ -178,49 +179,55 @@
     </div>
 </div>
 
-<script th:inline="javascript">
+<!-- Toast for update notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="updateToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">Job updated successfully!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
     document.addEventListener('DOMContentLoaded', loadJobData);
 
     async function loadJobData() {
         const jobId = document.getElementById('jobId').value;
         try {
-            // Fetch current details from your API
             const response = await fetch(`/jobs/get/${jobId}`);
             const job = await response.json();
 
-            // Fill the form fields
-            document.getElementById('title').value = job.title;
-            document.getElementById('location').value = job.location;
-            document.getElementById('jobType').value = job.jobType;
-            document.getElementById('salaryMin').value = job.salaryMin;
-            document.getElementById('salaryMax').value = job.salaryMax;
-            document.getElementById('experienceRequired').value = job.experienceRequired || 0;
-            document.getElementById('educationRequired').value = job.educationRequired || 'N/A';
+            document.getElementById('title').value = job.title || '';
+            document.getElementById('location').value = job.location || '';
+            document.getElementById('jobType').value = job.jobType || '';
+            document.getElementById('salaryMin').value = job.salaryMin || '';
+            document.getElementById('salaryMax').value = job.salaryMax || '';
+            document.getElementById('experienceRequired').value = job.experienceRequired || '';
+            document.getElementById('educationRequired').value = job.educationRequired || '';
             document.getElementById('description').value = job.description || '';
-
         } catch (err) {
             console.error("Error loading job:", err);
-            alert("Could not load job details.");
         }
     }
 
-    async function handleUpdate(event) {
+    document.getElementById('editJobForm').addEventListener('submit', async function(event) {
         event.preventDefault();
-        const jobId = document.getElementById('jobId').value;
         const btn = document.getElementById('updateBtn');
-
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Updating...';
 
+        const jobId = document.getElementById('jobId').value;
         const payload = {
-            title: document.getElementById('title').value,
-            location: document.getElementById('location').value,
-            jobType: document.getElementById('jobType').value,
-            salaryMin: parseFloat(document.getElementById('salaryMin').value),
-            salaryMax: parseFloat(document.getElementById('salaryMax').value),
-            experienceRequired: parseInt(document.getElementById('experienceRequired').value),
-            educationRequired: document.getElementById('educationRequired').value,
-            description: document.getElementById('description').value
+            title: document.getElementById('title').value || null,
+            location: document.getElementById('location').value || null,
+            jobType: document.getElementById('jobType').value || null,
+            salaryMin: document.getElementById('salaryMin').value ? parseFloat(document.getElementById('salaryMin').value) : null,
+            salaryMax: document.getElementById('salaryMax').value ? parseFloat(document.getElementById('salaryMax').value) : null,
+            experienceRequired: document.getElementById('experienceRequired').value ? parseInt(document.getElementById('experienceRequired').value) : null,
+            educationRequired: document.getElementById('educationRequired').value || null,
+            description: document.getElementById('description').value || null
         };
 
         try {
@@ -231,10 +238,14 @@
             });
 
             if (response.ok) {
-                alert("Job updated successfully!");
-                window.location.href = "/jobs/jobs/manage";
-            } else {
-                alert("Update failed.");
+                // Show Bootstrap toast
+                const toastEl = document.getElementById('updateToast');
+                const toast = new bootstrap.Toast(toastEl);
+                document.getElementById('toastMessage').innerText = "Job updated successfully!";
+                toast.show();
+
+                // Redirect after 1.5 sec
+                setTimeout(() => { window.location.href = '/jobs/manage'; }, 1500);
             }
         } catch (err) {
             console.error(err);
@@ -242,7 +253,7 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-check-all me-2"></i> Save Changes';
         }
-    }
+    });
 </script>
 
 </body>

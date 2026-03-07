@@ -15,8 +15,31 @@
         body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar { width: 250px; background: var(--sidebar-bg); color: white; position: fixed; height: 100vh; padding: 1.5rem 1rem; }
-        .nav-link { color: #94a3b8; padding: 0.8rem 1rem; border-radius: 12px; display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 5px; transition: 0.3s; }
+.logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    padding: 0 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background: var(--sidebar-bg);
+    color: white;
+    position: fixed;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column; /* This keeps the logout button at the bottom */
+}
+
+.nav-menu {
+    flex-grow: 1; /* Pushes the logout button to the bottom */
+}        .nav-link { color: #94a3b8; padding: 0.8rem 1rem; border-radius: 12px; display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 5px; transition: 0.3s; }
         .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
 
         /* Main */
@@ -29,34 +52,83 @@
 </head>
 <body>
 
-<aside class="sidebar">
-    <div class="px-3 mb-4"><h3>RevHire</h3></div>
-    <nav>
-        <a th:href="@{/employer/dashboard/{id}(id=${session.userId})}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-    </nav>
-</aside>
+<nav class="sidebar">
+    <!-- Logo -->
+    <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
+
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="nav-link active">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+        <a th:href="@{/jobs/create}" class="nav-link">
+            <i class="bi bi-plus-lg"></i> <span>Post New Job</span>
+        </a>
+        <a th:href="@{/jobs/manage}" class="nav-link">
+            <i class="bi bi-building"></i> <span>Manage Jobs</span>
+        </a>
+        <a th:href="@{/applications/manage}" class="nav-link">
+            <i class="bi bi-file-earmark-person"></i> <span>Manage Applications</span>
+        </a>
+        <a th:href="@{/employer/profile}" class="nav-link">
+            <i class="bi bi-building"></i> <span>Company Profile</span>
+        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+    </div>
+
+    <!-- Logout -->
+    <div class="mt-auto">
+        <a th:href="@{/auth/logout}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</nav>
 
 <main class="main-content">
     <header class="d-flex justify-content-between align-items-center mb-5">
-        <h2 class="fw-800">Company Profile</h2>
+        <div>
+            <h2 class="fw-800">Company Profile</h2>
+            <p class="text-muted">Manage your public-facing company information.</p>
+        </div>
+        <a th:href="@{/employer/profile/edit}" class="btn btn-outline-primary px-4 rounded-pill">
+            <i class="bi bi-pencil-square me-2"></i>Edit Profile
+        </a>
     </header>
 
     <div class="profile-card">
-        <div class="company-icon"><i class="bi bi-building"></i></div>
-        <h3 class="text-center fw-800 mb-4" th:text="${profile.companyName}">Company Name</h3>
-
-        <div class="profile-details">
-            <div class="detail-row"><span class="label">Industry</span> <span th:text="${profile.industry}">-</span></div>
-            <div class="detail-row"><span class="label">Company Size</span> <span th:text="${profile.companySize}">-</span></div>
-            <div class="detail-row"><span class="label">Website</span> <span th:text="${profile.website}">-</span></div>
-            <div class="detail-row"><span class="label">Location</span> <span th:text="${profile.location}">-</span></div>
-            <div class="detail-row border-0"><span class="label">Description</span> <span th:text="${profile.description}">-</span></div>
+        <div class="text-center mb-5">
+            <div class="company-icon"><i class="bi bi-building"></i></div>
+            <h3 class="fw-800" th:text="${profile.companyName}">Company Name</h3>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mt-2"
+                  th:text="${profile.industry}">Industry</span>
         </div>
 
-        <div class="text-center mt-4">
-            <a th:href="@{/employer/profile/edit}" class="btn btn-primary px-4 rounded-pill">
-                <i class="bi bi-pencil-square me-2"></i>Edit Profile
-            </a>        </div>
+        <div class="row g-4">
+            <div class="col-sm-6">
+                <label class="text-muted small fw-bold text-uppercase">Company Size</label>
+                <div class="fw-600 fs-6" th:text="${profile.companySize}">-</div>
+            </div>
+            <div class="col-sm-6">
+                <label class="text-muted small fw-bold text-uppercase">Location</label>
+                <div class="fw-600 fs-6" th:text="${profile.location}">-</div>
+            </div>
+            <div class="col-12">
+                <label class="text-muted small fw-bold text-uppercase">Website</label>
+                <div class="text-primary fw-600" th:text="${profile.website}">-</div>
+            </div>
+            <div class="col-12">
+                <label class="text-muted small fw-bold text-uppercase">About Us</label>
+                <p class="mt-2 text-secondary lh-lg" th:text="${profile.description}">-</p>
+            </div>
+        </div>
     </div>
 </main>
 

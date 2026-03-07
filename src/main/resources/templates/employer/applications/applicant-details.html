@@ -1,372 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-
-<title>Applicant Details - RevHire</title>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-
-body{
-background:#f1f5f9;
-font-family:'Segoe UI',sans-serif;
-margin:0;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-height:100vh;
-width:240px;
-position:fixed;
-top:0;
-left:0;
-background:linear-gradient(180deg,#1e3a8a,#2563eb);
-padding-top:20px;
-}
-
-/* LOGO - NO HOVER EFFECT */
-
-.logo{
-text-decoration:none;
-color:white;
-display:block;
-text-align:center;
-font-size:22px;
-font-weight:600;
-padding:15px 0;
-cursor:pointer;
-}
-
-.logo:hover{
-background:transparent !important;
-color:white !important;
-}
-
-/* SIDEBAR LINKS */
-
-.sidebar a{
-color:white;
-text-decoration:none;
-display:block;
-padding:12px 20px;
-margin:6px 10px;
-border-radius:8px;
-}
-
-.sidebar a:hover{
-background:rgba(255,255,255,0.15);
-}
-
-.sidebar a.active{
-background:white;
-color:#2563eb;
-font-weight:600;
-}
-
-/* MAIN */
-
-.main-content{
-margin-left:240px;
-padding:30px;
-}
-
-/* TOPBAR */
-
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.topbar-icons{
-display:flex;
-gap:20px;
-align-items:center;
-}
-
-.notification-wrapper{
-position:relative;
-cursor:pointer;
-}
-
-.notification-badge{
-position:absolute;
-top:-6px;
-right:-8px;
-background:red;
-color:white;
-font-size:11px;
-padding:2px 6px;
-border-radius:50px;
-display:none;
-}
-
-.profile-img{
-width:38px;
-height:38px;
-border-radius:50%;
-background:#2563eb;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* DETAILS CARD */
-
-.details-card{
-background:white;
-padding:30px;
-border-radius:12px;
-box-shadow:0 4px 12px rgba(0,0,0,0.05);
-max-width:900px;
-}
-
-.section-title{
-font-weight:600;
-margin-top:20px;
-margin-bottom:10px;
-color:#2563eb;
-border-bottom:1px solid #e5e7eb;
-padding-bottom:5px;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <title>Manage Applications | RevHire</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        .table-card { background: #fff; border-radius: 20px; padding: 2rem; border: 1px solid #e2e8f0; }
+        .btn-action { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; }
+    </style>
 </head>
-
 <body>
 
-
-<!-- SIDEBAR -->
-
-<div class="sidebar">
-
-<a href="../../index.html" class="logo">
-RevHire
-</a>
-
-<a href="../EmployeerDashboard.html">
-<i class="bi bi-speedometer2"></i> Dashboard
-</a>
-
-<a href="../jobs/manage-jobs.html">
-<i class="bi bi-briefcase"></i> Manage Jobs
-</a>
-
-<a href="manage-applications.html" class="active">
-<i class="bi bi-file-earmark-text"></i> Applications
-</a>
-
-<a href="../company-profile.html">
-<i class="bi bi-building"></i> Profile
-</a>
-
-<a href="../employer-notification.html">
-<i class="bi bi-bell"></i> Notifications
-</a>
-
+<div class="container my-5">
+    <h2 class="fw-800 mb-4">Manage Applications</h2>
+    <div class="table-card">
+        <table class="table align-middle">
+            <thead>
+            <tr>
+                <th>Job Title</th>
+                <th>Applicant</th>
+                <th>Status</th>
+                <th>Applied On</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="app : ${applications}">
+                <td th:text="${app.jobTitle}">Job</td>
+                <td th:text="${app.seekerName}">Name</td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${app.status == 'ACCEPTED' ? 'bg-success' : (app.status == 'REJECTED' ? 'bg-danger' : 'bg-secondary')}"
+                          th:text="${app.status}">Status</span>
+                </td>
+                <td th:text="${#temporals.format(app.appliedOn, 'dd-MM-yyyy')}">Date</td>
+                <td class="text-end">
+                    <button class="btn btn-action btn-outline-primary"
+                            th:onclick="openStatusModal([[${app.applicationId}]], [[${app.status}]])">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
-
-
-<!-- MAIN -->
-
-<div class="main-content">
-
-<div class="topbar">
-
-<h4>Applicant Details</h4>
-
-<div class="topbar-icons">
-
-<div class="notification-wrapper"
-onclick="location.href='../employer-notification.html'">
-
-<i class="bi bi-bell fs-5"></i>
-
-<span id="notificationCount"
-class="notification-badge">
-0
-</span>
-
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <select id="statusSelect" class="form-select">
+                    <option value="PENDING">Pending</option>
+                    <option value="REVIEWED">Reviewed</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill" id="confirmStatusBtn">Update</button>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div id="profileInitial"
-class="profile-img"
-onclick="location.href='../company-profile.html'">
-E
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- DETAILS CONTAINER -->
-
-<div class="details-card" id="applicantDetails">
-
-Loading applicant details...
-
-</div>
-
-</div>
-
-
-
-<!-- SCRIPT -->
-
-<script src="../../../static/js/employer.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-
-/* ================= PROFILE INITIAL ================= */
-
-let employerProfile =
-JSON.parse(localStorage.getItem("employerProfile")) || {};
-
-let profileInitial =
-document.getElementById("profileInitial");
-
-if(employerProfile.companyName){
-
-profileInitial.innerText =
-employerProfile.companyName.charAt(0).toUpperCase();
-
-}
-
-
-/* ================= NOTIFICATION BADGE ================= */
-
-let notifications =
-JSON.parse(localStorage.getItem("employerNotifications")) || [];
-
-let unread =
-notifications.filter(n=>!n.read).length;
-
-let badge =
-document.getElementById("notificationCount");
-
-if(unread>0){
-
-badge.style.display="inline-block";
-
-badge.innerText=unread;
-
-}
-
-
-/* ================= LOAD APPLICANT DETAILS ================= */
-
-let index =
-localStorage.getItem("viewApplicantIndex");
-
-let applications =
-JSON.parse(localStorage.getItem("applications")) || [];
-
-let resume =
-JSON.parse(localStorage.getItem("resume")) || {};
-
-let container =
-document.getElementById("applicantDetails");
-
-if(index===null || !applications[index]){
-
-container.innerHTML =
-"<div class='text-danger'>Applicant not found</div>";
-
-}else{
-
-let app = applications[index];
-
-container.innerHTML = `
-
-<h4>${app.name}</h4>
-
-<hr>
-
-<div class="section-title">Contact Information</div>
-
-<p><b>Email:</b> ${app.email || "-"}</p>
-
-<p><b>Phone:</b> ${app.phone || "-"}</p>
-
-
-<div class="section-title">Application Details</div>
-
-<p><b>Job Title:</b> ${app.title || "-"}</p>
-
-<p><b>Status:</b> ${app.status || "-"}</p>
-
-<p><b>Date Applied:</b> ${app.date || "-"}</p>
-
-
-<div class="section-title">Skills</div>
-
-<p>${app.skills || "-"}</p>
-
-
-<div class="section-title">Education</div>
-
-<p>${app.education || "-"}</p>
-
-
-<div class="section-title">Experience</div>
-
-<p>${app.experience || "-"} years</p>
-
-
-<hr>
-
-
-<h5 class="mt-3">Resume Details</h5>
-
-
-<div class="section-title">Career Objective</div>
-
-<p>${resume.objective || "Not provided"}</p>
-
-
-<div class="section-title">Education</div>
-
-<p>${resume.education || "Not provided"}</p>
-
-
-<div class="section-title">Work Experience</div>
-
-<p>${resume.experience || "Not provided"}</p>
-
-
-<div class="section-title">Technical Skills</div>
-
-<p>${resume.skills || "Not provided"}</p>
-
-
-<div class="section-title">Projects</div>
-
-<p>${resume.projects || "Not provided"}</p>
-
-
-<div class="section-title">Certifications</div>
-
-<p>${resume.certifications || "Not provided"}</p>
-
-`;
-
-}
-
+    let selectedId = null;
+    let modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+
+    function openStatusModal(id, status) {
+        selectedId = id;
+        document.getElementById('statusSelect').value = status;
+        modal.show();
+    }
+
+    document.getElementById('confirmStatusBtn').addEventListener('click', async () => {
+        const status = document.getElementById('statusSelect').value;
+        await fetch(`/applications/update-status/${selectedId}?status=${status}`, { method: 'POST' });
+        window.location.reload(); // Refresh to see updated Thymeleaf-rendered table
+    });
 </script>
-
 </body>
 </html>

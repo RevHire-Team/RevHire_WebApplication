@@ -65,7 +65,7 @@
         }
 
         // 1. Add this explicit mapping for the HTML page
-        @GetMapping("/jobs/manage")
+        @GetMapping("/manage")
         public String showManageJobsPage(HttpSession session) {
             if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
             return "employer/jobs/manage-jobs"; // Points to your manage-jobs.html
@@ -78,7 +78,7 @@
             return ResponseEntity.ok(jobService.getJobsByUserId(userId));
         }
 
-        @DeleteMapping("/{jobId}")
+        @DeleteMapping("/jobs/{jobId}")
         public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
             jobService.deleteJob(jobId);
             return ResponseEntity.ok("Deleted successfully");
