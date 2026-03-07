@@ -42,3 +42,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+src/main/java/
+src/main/resources/
+src/main/resources/application.properties
+pom.xml
