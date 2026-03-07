@@ -91,26 +91,49 @@ public class EmployerServiceImpl implements EmployerService {
         return dto;
     }
 
-    @Override
     public EmployerDashboardDTO getDashboard(Long employerId) {
+        // 1. Log the incoming ID
+        System.out.println("DEBUG: Fetching dashboard for Employer ID: " + employerId);
 
+        // 2. Fetch data and log each step
         Long totalJobs = jobRepository.countByEmployerEmployerId(employerId);
+        System.out.println("DEBUG: Total Jobs Found: " + totalJobs);
 
-        Long activeJobs = jobRepository
-                .countByEmployerEmployerIdAndStatus(employerId, "OPEN");
+        Long activeJobs = jobRepository.countByEmployerEmployerIdAndStatus(employerId, "OPEN");
+        System.out.println("DEBUG: Active Jobs (Status 'OPEN'): " + activeJobs);
 
-        Long totalApplications = applicationRepository
-                .countByJobEmployerEmployerId(employerId);
+        Long totalApplications = applicationRepository.countByJob_Employer_EmployerId(employerId);
+        System.out.println("DEBUG: Total Applications Found: " + totalApplications);
 
-        Long pendingReviews = applicationRepository
-                .countByJobEmployerEmployerIdAndStatus(
-                        employerId, "PENDING");
+        Long pendingReviews = applicationRepository.countByJob_Employer_EmployerIdAndStatus(employerId, "PENDING");
+        System.out.println("DEBUG: Pending Reviews Found: " + pendingReviews);
 
-        return new EmployerDashboardDTO(
+        // 3. Log the profile calculation
+        double completion = calculateCompletion(employerId);
+        System.out.println("DEBUG: Calculated Profile Completion: " + completion + "%");
+
+        EmployerDashboardDTO dto = new EmployerDashboardDTO(
                 totalJobs,
                 activeJobs,
                 totalApplications,
-                pendingReviews
+                pendingReviews,
+                completion
         );
+
+        System.out.println("DEBUG: Returning DTO: " + dto.toString());
+        return dto;
+    }
+
+    private double calculateCompletion(Long employerId) {
+        EmployerProfile profile = employerProfileRepository.findByUserUserId(employerId).orElse(null);
+        if (profile == null) return 0.0;
+
+        int count = 0;
+        if (profile.getCompanyName() != null && !profile.getCompanyName().isEmpty()) count++;
+        if (profile.getIndustry() != null && !profile.getIndustry().isEmpty()) count++;
+        if (profile.getWebsite() != null && !profile.getWebsite().isEmpty()) count++;
+        if (profile.getDescription() != null && !profile.getDescription().isEmpty()) count++;
+
+        return (count / 4.0) * 100.0;
     }
 }

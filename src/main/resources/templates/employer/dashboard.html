@@ -115,16 +115,36 @@
             <h2 class="fw-800 m-0">Employer Dashboard</h2>
             <p class="text-muted">Monitor your hiring performance and job activity.</p>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="profile-circle"
-                 th:text="${#strings.substring(session.loggedInUser.email, 0, 1).toUpperCase()}">E</div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="content-card d-flex align-items-center justify-content-between">
+                    <div class="flex-grow-1 me-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="fw-bold m-0">Profile Completion</h6>
+                            <span class="text-primary fw-bold" th:text="${#numbers.formatDecimal(dashboard.profileCompletionPercentage, 0, 0) + '%'}">0%</span>
+                        </div>
+                        <div class="progress" style="height: 12px; border-radius: 6px; background-color: #e2e8f0;">
+                            <div class="progress-bar bg-primary" role="progressbar"
+                                 th:style="'width: ' + ${dashboard.profileCompletionPercentage} + '%'"
+                                 aria-valuenow="${dashboard.profileCompletionPercentage}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a th:href="@{/employer/profile/edit}" class="btn btn-primary btn-sm">Complete Profile</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
     <div class="row g-4 mb-5">
         <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3"><i class="bi bi-journal-text"></i></div>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3">
+                    <i class="bi bi-journal-text"></i>
+                </div>
                 <p class="text-muted small fw-bold text-uppercase mb-1">Total Jobs</p>
                 <h3 class="fw-800 m-0" th:text="${dashboard.totalJobs}">0</h3>
             </div>

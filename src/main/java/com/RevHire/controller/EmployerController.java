@@ -1,5 +1,6 @@
 package com.RevHire.controller;
 
+import com.RevHire.dto.EmployerDashboardDTO;
 import com.RevHire.dto.EmployerProfileDTO;
 import com.RevHire.entity.User;
 import com.RevHire.service.EmployerService;
@@ -58,21 +59,28 @@ public class EmployerController {
 
     @GetMapping("/dashboard/{employerId}")
     public String showDashboard(@PathVariable Long employerId, Model model) {
+        // Fetch the DTO
+        EmployerDashboardDTO dashboard = employerService.getDashboard(employerId);
 
-        model.addAttribute("dashboard",
-                employerService.getDashboard(employerId));
+        // Pass to the view
+        model.addAttribute("dashboard", dashboard);
 
-        return "employer/dashboard"; // Thymeleaf file name
+        return "employer/dashboard";
     }
 
-//    @GetMapping("/dashboard")
-//    public String redirectToDashboard(HttpSession session) {
-//        User user = (User) session.getAttribute("loggedInUser");
-//        if (user == null) {
-//            return "redirect:/auth/login";
-//        }
-//        // This takes the user to /employer/dashboard/5 (or whatever their ID is)
-//        return "redirect:/employer/dashboard/" + user.getUserId();
-//    }
+      @GetMapping("/employer/dashboard/{employerId}")
+      public String getDashboard(@PathVariable Long employerId, Model model) {
+          // Call the service
+          EmployerDashboardDTO dashboard = employerService.getDashboard(employerId);
+
+          // DEBUG: print to console
+          System.out.println("Dashboard: " + dashboard);
+
+          // Pass dashboard object to Thymeleaf
+          model.addAttribute("dashboard", dashboard);
+
+          // Return Thymeleaf template name (without .html)
+          return "employer/dashboard";
+      }
 
 }
