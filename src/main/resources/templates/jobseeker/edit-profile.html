@@ -30,7 +30,7 @@
         }
 
         .form-container{
-        max-width:850px;
+        max-width:900px;
         margin:40px auto;
         }
 
@@ -66,8 +66,6 @@
         background:var(--primary-dark);
         }
 
-        /* Skill badge */
-
         .skill-badge{
         background:#eff6ff;
         color:#2563eb;
@@ -81,8 +79,25 @@
 
         .skill-remove{
         cursor:pointer;
-        font-weight:bold;
         color:#dc2626;
+        font-weight:bold;
+        }
+
+        .cert-badge{
+        background:#ecfeff;
+        color:#0891b2;
+        padding:6px 12px;
+        border-radius:10px;
+        font-weight:600;
+        display:flex;
+        align-items:center;
+        gap:6px;
+        }
+
+        .cert-remove{
+        cursor:pointer;
+        color:#dc2626;
+        font-weight:bold;
         }
 
     </style>
@@ -146,21 +161,20 @@
                 </div>
 
                 <div class="col-md-6">
+
                     <label class="form-label">Employment Status</label>
 
                     <select id="employmentStatus" class="form-select">
-
                         <option value="0">Fresher</option>
                         <option value="1">0-2 Years Experience</option>
                         <option value="3">3-5 Years Experience</option>
                         <option value="6">6-10 Years Experience</option>
                         <option value="11">10+ Years Experience</option>
-
                     </select>
 
                 </div>
 
-                <!-- SKILLS SECTION -->
+                <!-- SKILLS -->
 
                 <div class="col-md-12">
 
@@ -180,9 +194,29 @@
 
                 </div>
 
+                <!-- CERTIFICATIONS -->
+
                 <div class="col-md-12">
 
-                    <label class="form-label">Experience Summary</label>
+                    <label class="form-label">Certifications</label>
+
+                    <div id="certContainer" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+                    <div class="input-group">
+
+                        <input type="text" id="certInput" class="form-control" placeholder="Enter certification">
+
+                        <button type="button" class="btn btn-primary" onclick="addCertification()">Add</button>
+
+                    </div>
+
+                    <input type="hidden" id="certifications">
+
+                </div>
+
+                <div class="col-md-12">
+
+                    <label class="form-label">Professional Summary</label>
 
                     <textarea id="experience" class="form-control" rows="4"></textarea>
 
@@ -191,9 +225,7 @@
             </div>
 
             <button type="submit" class="btn btn-save w-100 mt-4">
-
                 <i class="bi bi-check-circle"></i> Save Changes
-
             </button>
 
         </form>
@@ -205,6 +237,7 @@
 <script>
 
     let skillsList=[];
+    let certList=[];
 
     function renderSkills(){
 
@@ -225,7 +258,6 @@
     });
 
     document.getElementById("skills").value=skillsList.join(",");
-
     }
 
     function addSkill(){
@@ -243,7 +275,6 @@
     }
 
     input.value="";
-
     }
 
     function removeSkill(index){
@@ -251,121 +282,54 @@
     skillsList.splice(index,1);
 
     renderSkills();
-
     }
 
-    document.addEventListener("DOMContentLoaded",async()=>{
+    function renderCertifications(){
 
-    const userId=document.getElementById("userId").value;
+    const container=document.getElementById("certContainer");
 
-    const res=await fetch(`/api/jobseeker/profile/${userId}`);
+    container.innerHTML="";
 
-    if(res.ok){
+    certList.forEach((cert,index)=>{
 
-    const data=await res.json();
+    const badge=document.createElement("span");
 
-    document.getElementById("profileId").value=data.profileId;
+    badge.className="cert-badge";
 
-    document.getElementById("fullName").value=data.fullName||"";
+    badge.innerHTML=`${cert} <span class="cert-remove" onclick="removeCertification(${index})">✕</span>`;
 
-    document.getElementById("jobTitle").value=data.jobTitle||"";
-
-    document.getElementById("phone").value=data.phone||"";
-
-    document.getElementById("location").value=data.location||"";
-
-    document.getElementById("education").value=data.education||"";
-
-    document.getElementById("experience").value=data.experience||"";
-
-    document.getElementById("employmentStatus").value=data.totalExperience||0;
-
-    skillsList=data.skills ? data.skills.split(",") : [];
-
-    renderSkills();
-
-    }
+    container.appendChild(badge);
 
     });
 
-    async function handleUpdateProfile(e){
+    document.getElementById("certifications").value=certList.join(",");
+    }
 
-    e.preventDefault();
+    function addCertification(){
 
-    const userId=document.getElementById("userId").value;
+    const input=document.getElementById("certInput");
 
-    const pId=document.getElementById("profileId").value;
+    const cert=input.value.trim();
 
-    const profileData={
+    if(cert && !certList.includes(cert)){
 
-    fullName:document.getElementById("fullName").value,
+    certList.push(cert);
 
-    jobTitle:document.getElementById("jobTitle").value,
-
-    phone:document.getElementById("phone").value,
-
-    location:document.getElementById("location").value,
-
-    education:document.getElementById("education").value,
-
-    skills:document.getElementById("skills").value,
-
-    experience:document.getElementById("experience").value,
-
-    totalExperience:parseInt(document.getElementById("employmentStatus").value)
-
-    };
-
-    const url=pId?`/api/jobseeker/profile/${pId}`:`/api/jobseeker/profile/${userId}`;
-
-    const method=pId?"PUT":"POST";
-
-    const res=await fetch(url,{
-
-    method:method,
-
-    headers:{'Content-Type':'application/json'},
-
-    body:JSON.stringify(profileData)
-
-    });
-
-    if(res.ok){
-
-    Swal.fire({
-
-    icon:'success',
-
-    title:'Profile Updated',
-
-    timer:1500,
-
-    showConfirmButton:false
-
-    }).then(()=>{
-
-    window.location.href='/jobseeker/profile/manage';
-
-    });
+    renderCertifications();
 
     }
 
-    else{
-
-    Swal.fire({
-
-    icon:'error',
-
-    title:'Update Failed'
-
-    });
-
+    input.value="";
     }
 
+    function removeCertification(index){
+
+    certList.splice(index,1);
+
+    renderCertifications();
     }
 
 </script>
 
 </body>
-
 </html>
