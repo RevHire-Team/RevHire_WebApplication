@@ -74,11 +74,15 @@
         // 2. Keep this for API calls, but Spring will now check "/manage" first
         @GetMapping("/jobs/{userId}")
         @ResponseBody
-        public ResponseEntity<List<JobDTO>> getEmployerJobs(@PathVariable Long userId) {
-            return ResponseEntity.ok(jobService.getJobsByUserId(userId));
+        public ResponseEntity<List<JobDTO>> getEmployerJobs(
+                @PathVariable Long userId,
+                @RequestParam(required = false) String sort) {
+
+            return ResponseEntity.ok(jobService.getEmployerJobsSorted(userId, sort));
         }
 
         @DeleteMapping("/jobs/{jobId}")
+        @ResponseBody
         public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
             jobService.deleteJob(jobId);
             return ResponseEntity.ok("Deleted successfully");

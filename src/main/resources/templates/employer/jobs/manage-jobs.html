@@ -46,6 +46,7 @@
         .btn-action { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: none; transition: 0.2s; }
     </style>
 </head>
+
 <body>
 
 <nav class="sidebar">
@@ -95,6 +96,15 @@
             <i class="bi bi-plus-lg me-2"></i> Post New Job
         </a>
     </div>
+    <div class="d-flex justify-content-end mb-3">
+
+        <select id="sortJobs" class="form-select w-auto" onchange="fetchJobs()">
+            <option value="">Sort</option>
+            <option value="name">Sort by Name</option>
+            <option value="recent">Sort by Recent</option>
+        </select>
+
+    </div>
 
     <div class="table-card">
         <input type="hidden" id="employerId" th:value="${session.loggedInUser.userId}">
@@ -112,6 +122,10 @@
         </table>
     </div>
 </main>
+
+
+
+
 
 <!-- Add this modal at the end of your body -->
 <div class="modal fade" id="deleteJobModal" tabindex="-1" aria-labelledby="deleteJobModalLabel" aria-hidden="true">
@@ -132,33 +146,80 @@
     </div>
 </div>
 
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+
+    <div id="successToast" class="toast align-items-center text-bg-success border-0">
+        <div class="d-flex">
+            <div class="toast-body">
+                Job deleted successfully
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+
+    <div id="errorToast" class="toast align-items-center text-bg-danger border-0">
+        <div class="d-flex">
+            <div class="toast-body">
+                Failed to delete job
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+
+</div>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!--<script th:inline="javascript">-->
+
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', fetchJobs);
 
     async function fetchJobs() {
-        const userId = document.getElementById('employerId').value;
-        const tbody = document.getElementById('jobTableBody');
 
-        const response = await fetch(`/jobs/jobs/${userId}`);
-        const jobs = await response.json();
+    const userId = document.getElementById('employerId').value;
+    const sort = document.getElementById('sortJobs')?.value || "";
 
-        tbody.innerHTML = jobs.map(job => `
-            <tr>
-                <td>
-                    <div class="fw-bold">${job.title}</div>
-                    <small class="text-muted"><i class="bi bi-geo-alt"></i> ${job.location}</small>
-                </td>
-                <td>₹${job.salaryMin} - ₹${job.salaryMax}</td>
-                <td><span class="badge ${job.status === 'OPEN' ? 'bg-success' : 'bg-secondary'}">${job.status}</span></td>
-                <td class="text-end">
-                    <a href="/jobs/jobs/edit/${job.jobId}" class="btn btn-action btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                    <button onclick="toggleStatus(${job.jobId})" class="btn btn-action btn-outline-success"><i class="bi bi-power"></i></button>
-                    <button onclick="deleteJob(${job.jobId})" class="btn btn-action btn-outline-danger"><i class="bi bi-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
+    const tbody = document.getElementById('jobTableBody');
 
+    const response = await fetch(`/jobs/jobs/${userId}?sort=${sort}`);
+    const jobs = await response.json();
+
+    tbody.innerHTML = jobs.map(job => `
+        <tr>
+            <td>
+                <div class="fw-bold">${job.title}</div>
+                <small class="text-muted"><i class="bi bi-geo-alt"></i> ${job.location}</small>
+            </td>
+            <td>₹${job.salaryMin} - ₹${job.salaryMax}</td>
+            <td>
+                <span class="badge ${job.status === 'OPEN' ? 'bg-success' : 'bg-secondary'}">
+                    ${job.status}
+                </span>
+            </td>
+            <td class="text-end">
+                <a href="/jobs/jobs/edit/${job.jobId}" class="btn btn-action btn-outline-primary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+
+                <button onclick="toggleStatus(${job.jobId})"
+                    class="btn btn-action btn-outline-success">
+                    <i class="bi bi-power"></i>
+                </button>
+
+                <button onclick="deleteJob(${job.jobId})"
+                    class="btn btn-action btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
     // Add this variable at the top of your <script>
 let jobIdToDelete = null;
 
@@ -176,28 +237,40 @@ function deleteJob(id) {
 }
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+
     if (!jobIdToDelete) return;
 
     try {
+
         const response = await fetch(`/jobs/jobs/${jobIdToDelete}`, {
             method: 'DELETE'
         });
 
-        if (response.ok) {
-            // Close the modal correctly
-            const modalElement = document.getElementById('deleteJobModal');
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            modalInstance.hide();
+        const modalElement = document.getElementById('deleteJobModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        modalInstance.hide();
 
-            // Cleanup and Refresh
+        if (response.ok) {
+
+            showSuccessToast();
+
             jobIdToDelete = null;
-            fetchJobs();
+
+            fetchJobs(); // reload table
+
         } else {
-            console.error("Delete failed");
+
+            showErrorToast();
+
         }
+
     } catch (error) {
-        console.error("Error:", error);
+
+        console.error(error);
+        showErrorToast();
+
     }
+
 });
 
     async function toggleStatus(jobId) {
@@ -218,6 +291,22 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
         console.error("Error toggling status:", error);
     }
 }
+function showSuccessToast() {
+
+    const toastElement = document.getElementById('successToast');
+    const toast = new bootstrap.Toast(toastElement);
+
+    toast.show();
+}
+
+function showErrorToast() {
+
+    const toastElement = document.getElementById('errorToast');
+    const toast = new bootstrap.Toast(toastElement);
+
+    toast.show();
+}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

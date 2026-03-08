@@ -23,6 +23,8 @@ public interface JobService {
 
     JobDTO updateJob(Long jobId, Job updatedJob);
 
+    List<JobDTO> getEmployerJobsSorted(Long userId, String sort);
+
     List<JobDTO> searchJobs(String title,
                             String location,
                             Integer experience,
