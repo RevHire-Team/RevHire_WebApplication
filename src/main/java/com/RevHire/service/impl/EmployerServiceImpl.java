@@ -90,39 +90,37 @@ public class EmployerServiceImpl implements EmployerService {
 
         return dto;
     }
+    public EmployerDashboardDTO getDashboard(Long userId) {
 
-    public EmployerDashboardDTO getDashboard(Long employerId) {
-        // 1. Log the incoming ID
-        System.out.println("DEBUG: Fetching dashboard for Employer ID: " + employerId);
+        // 1 Get employer profile using userId
+        EmployerProfile profile = employerProfileRepository
+                .findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employer profile not found"));
 
-        // 2. Fetch data and log each step
+        Long employerId = profile.getEmployerId();
+
+        System.out.println("DEBUG EmployerId: " + employerId);
+
+        // 2 Fetch statistics using employerId
         Long totalJobs = jobRepository.countByEmployerEmployerId(employerId);
-        System.out.println("DEBUG: Total Jobs Found: " + totalJobs);
 
         Long activeJobs = jobRepository.countByEmployerEmployerIdAndStatus(employerId, "OPEN");
-        System.out.println("DEBUG: Active Jobs (Status 'OPEN'): " + activeJobs);
 
         Long totalApplications = applicationRepository.countByJob_Employer_EmployerId(employerId);
-        System.out.println("DEBUG: Total Applications Found: " + totalApplications);
 
         Long pendingReviews = applicationRepository.countByJob_Employer_EmployerIdAndStatus(employerId, "PENDING");
-        System.out.println("DEBUG: Pending Reviews Found: " + pendingReviews);
 
-        // 3. Log the profile calculation
-        double completion = calculateCompletion(employerId);
-        System.out.println("DEBUG: Calculated Profile Completion: " + completion + "%");
+        double completion = calculateCompletion(userId);
 
-        EmployerDashboardDTO dto = new EmployerDashboardDTO(
+        return new EmployerDashboardDTO(
                 totalJobs,
                 activeJobs,
                 totalApplications,
                 pendingReviews,
                 completion
         );
-
-        System.out.println("DEBUG: Returning DTO: " + dto.toString());
-        return dto;
     }
+
 
     private double calculateCompletion(Long employerId) {
         EmployerProfile profile = employerProfileRepository.findByUserUserId(employerId).orElse(null);
