@@ -137,6 +137,42 @@ public class JobServiceImpl implements JobService {
                 ))
                 .toList();
     }
+    @Override
+    public List<JobDTO> getEmployerJobsSorted(Long userId, String sort) {
+
+        com.RevHire.entity.EmployerProfile employer =
+                employerRepository.findByUserUserId(userId)
+                        .orElseThrow(() -> new RuntimeException("Employer Profile not found"));
+
+        List<Job> jobs;
+
+        if ("name".equalsIgnoreCase(sort)) {
+
+            jobs = jobRepository
+                    .findByEmployerEmployerIdOrderByTitleAsc(employer.getEmployerId());
+
+        } else if ("recent".equalsIgnoreCase(sort)) {
+
+            jobs = jobRepository
+                    .findByEmployerEmployerIdOrderByJobIdDesc(employer.getEmployerId());
+
+        } else {
+
+            jobs = jobRepository
+                    .findByEmployerEmployerId(employer.getEmployerId());
+        }
+
+        return jobs.stream().map(job -> new JobDTO(
+                job.getJobId(),
+                job.getTitle(),
+                job.getLocation(),
+                job.getSalaryMin(),
+                job.getSalaryMax(),
+                job.getJobType(),
+                job.getStatus(),
+                job.getEmployer().getCompanyName()
+        )).toList();
+    }
 
 
     @Override

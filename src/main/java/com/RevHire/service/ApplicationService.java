@@ -19,6 +19,7 @@ public interface ApplicationService {
 
     List<EmployerApplicationDTO> getApplicationsByEmployer(Long employerId);
 
+
     Application updateStatus(Long applicationId, String status);
 
     String addEmployerNotes(Long applicationId,

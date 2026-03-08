@@ -17,6 +17,7 @@ public class EmployerApplicationDTO {
     private String applicantEmail;
     private String status;
     private LocalDateTime appliedDate;
+    private Long resumeId;
 //
 //    // ADD THESE FIELDS FOR FILTRATION
 //    private String skills;

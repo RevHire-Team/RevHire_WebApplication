@@ -24,6 +24,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     Long countByEmployerEmployerIdAndStatus(Long employerId, String status);
 
+    List<Job> findByEmployerEmployerIdOrderByTitleAsc(Long employerId);
+
+    List<Job> findByEmployerEmployerIdOrderByJobIdDesc(Long employerId);
+
     List<Job> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndStatus(
             String title,
             String location,

@@ -145,7 +145,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                         app.getSeeker().getFullName(),
                         app.getSeeker().getUser().getEmail(),
                         app.getStatus(),
-                        app.getAppliedDate()
+                        app.getAppliedDate(),
+                        app.getResume().getResumeId()   // ✅ IMPORTANT
                 ))
                 .toList();
     }
@@ -171,4 +172,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return "Note added successfully";
     }
+
+
 }

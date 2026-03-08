@@ -78,6 +78,7 @@ public class ApplicationController {
 
     // Employer views all applications
     @GetMapping("/employer/{employerUserId}")
+    @ResponseBody
     public ResponseEntity<List<EmployerApplicationDTO>> getByEmployer(@PathVariable Long employerUserId) {
         return ResponseEntity.ok(applicationService.getApplicationsByEmployer(employerUserId));
     }
@@ -132,6 +133,21 @@ public class ApplicationController {
 
         List<EmployerApplicationDTO> applications = applicationService.getApplicationsByEmployer(employerUserId);
         return ResponseEntity.ok(applications);
+    }
+    @GetMapping("/details/{applicationId}")
+    @ResponseBody
+    public ResponseEntity<EmployerApplicationDTO> getApplicationDetails(
+            @PathVariable Long applicationId) {
+
+        List<EmployerApplicationDTO> apps =
+                applicationService.getApplicationsByEmployer(null);
+
+        EmployerApplicationDTO result = apps.stream()
+                .filter(a -> a.getApplicationId().equals(applicationId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        return ResponseEntity.ok(result);
     }
 
 
