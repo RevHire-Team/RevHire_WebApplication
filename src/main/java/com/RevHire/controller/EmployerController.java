@@ -68,19 +68,6 @@ public class EmployerController {
         return "employer/dashboard";
     }
 
-      @GetMapping("/employer/dashboard/{employerId}")
-      public String getDashboard(@PathVariable Long employerId, Model model) {
-          // Call the service
-          EmployerDashboardDTO dashboard = employerService.getDashboard(employerId);
 
-          // DEBUG: print to console
-          System.out.println("Dashboard: " + dashboard);
-
-          // Pass dashboard object to Thymeleaf
-          model.addAttribute("dashboard", dashboard);
-
-          // Return Thymeleaf template name (without .html)
-          return "employer/dashboard";
-      }
 
 }
