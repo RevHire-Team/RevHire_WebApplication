@@ -7,26 +7,27 @@ import java.util.List;
 
 public interface JobService {
 
-    Job createJob(Job job);
+    Job createJob(Job job, Long userId);
 
     List<JobDTO> getAllOpenJobs();
 
-    List<JobDTO> searchJobs(
-          String title,
-          String location,
-          Integer experience,
-          String companyName,
-          Double minSalary,
-          Double maxSalary,
-          String jobType
-   );
+    void closeJob(Long jobId);
 
-  void closeJob(Long jobId);
+    void deleteJob(Long jobId);
 
-  void deleteJob(Long jobId);
-
-  List<JobDTO> getEmployerJobs(Long employerId);
+    List<JobDTO> getJobsByUserId(Long userId);
 
     JobDTO toggleJobStatus(Long jobId);
 
+    JobDTO getJobById(Long jobId);
+
+    JobDTO updateJob(Long jobId, Job updatedJob);
+
+    List<JobDTO> searchJobs(String title,
+                            String location,
+                            Integer experience,
+                            String education,
+                            Double minSalary,
+                            Double maxSalary,
+                            String jobType);
 }

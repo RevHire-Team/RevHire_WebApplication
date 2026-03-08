@@ -3,6 +3,7 @@ package com.RevHire.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "USERS")
@@ -43,4 +44,14 @@ public class User {
             this.createdAt = LocalDateTime.now();
         }
     }
+
+    // Inside User.java
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private JobSeekerProfile seekerProfile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private EmployerProfile employerProfile;
 }

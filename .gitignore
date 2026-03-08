@@ -7,6 +7,7 @@ uploads/
 !**/src/main/**/dto/
 resources/application.properties
 src/main/java
+src/test
 target/
 *.log
 *.class
@@ -41,8 +42,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-src/main/java/
-src/main/resources/
-src/main/resources/application.properties
-pom.xml

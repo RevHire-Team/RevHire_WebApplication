@@ -63,4 +63,5 @@ public class Job {
     }
 
     private Boolean active;
+
 }

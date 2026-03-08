@@ -37,4 +37,6 @@ public class EmployerProfile {
 
     private String website;
     private String location;
+
+
 }

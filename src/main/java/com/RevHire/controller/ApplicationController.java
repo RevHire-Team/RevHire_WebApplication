@@ -4,7 +4,9 @@ import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
 import com.RevHire.entity.Application;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,22 +17,44 @@ import com.RevHire.service.ApplicationService;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/applications")
 public class ApplicationController {
 
     @Autowired
     private ApplicationService applicationService;
 
-    @PostMapping("/apply")
-    public ResponseEntity<String> apply(@RequestParam Long jobId,
-                                        @RequestParam Long seekerId,
-                                        @RequestParam Long resumeId,
-                                        @RequestParam(required = false) String coverLetter) {
+    @GetMapping("/jobseeker/jobs/apply/{jobId}")
+    public String showApplyPage(@PathVariable Long jobId, Model model, HttpSession session) {
+        // 1. Check if user is logged in
+        Object userId = session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
 
-        applicationService.applyJob(jobId, seekerId, resumeId, coverLetter);
+        // 2. Pass the jobId to the frontend
+        model.addAttribute("jobId", jobId);
+        model.addAttribute("userId", userId);
 
-        return ResponseEntity.ok("Application submitted successfully");
+        // 3. Return the name of your application form HTML file (apply-form.html)
+        return "jobseeker/applications";
+    }
+
+    @PostMapping("/submit-application")
+    public ResponseEntity<?> apply(@RequestParam Long jobId,
+                                   @RequestParam Long seekerId,
+                                   @RequestParam Long resumeId,
+                                   @RequestParam(required = false) String coverLetter) {
+        try {
+            applicationService.applyJob(jobId, seekerId, resumeId, coverLetter);
+            return ResponseEntity.ok("Application submitted successfully");
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Already applied")) {
+                // Return 409 Conflict so the frontend knows it's a duplicate
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+        }
     }
 
     @GetMapping("/seeker/{seekerId}")
@@ -53,13 +77,9 @@ public class ApplicationController {
     }
 
     // Employer views all applications
-    @GetMapping("/employer/{employerId}")
-    public ResponseEntity<List<EmployerApplicationDTO>>
-    getByEmployer(@PathVariable Long employerId) {
-
-        return ResponseEntity.ok(
-                applicationService.getApplicationsByEmployer(employerId)
-        );
+    @GetMapping("/employer/{employerUserId}")
+    public ResponseEntity<List<EmployerApplicationDTO>> getByEmployer(@PathVariable Long employerUserId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByEmployer(employerUserId));
     }
 
     @PostMapping("/withdraw/{id}")
@@ -91,4 +111,29 @@ public class ApplicationController {
                 )
         );
     }
+
+    // Add to ApplicationController.java
+
+    @GetMapping("/manage")
+    public String showManageApplicationsPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/applications/manage-applications"; // Path to your HTML file
+    }
+
+    // API to fetch all applications for the logged-in employer
+    @GetMapping("/all")
+    @ResponseBody
+    public ResponseEntity<List<EmployerApplicationDTO>> getAllApplications(HttpSession session) {
+        Object userObj = session.getAttribute("loggedInUser");
+        if (userObj == null) return ResponseEntity.status(401).build();
+
+        com.RevHire.entity.User user = (com.RevHire.entity.User) userObj;  // cast to User
+        Long employerUserId = user.getUserId();                             // extract ID
+
+        List<EmployerApplicationDTO> applications = applicationService.getApplicationsByEmployer(employerUserId);
+        return ResponseEntity.ok(applications);
+    }
+
+
 }
+

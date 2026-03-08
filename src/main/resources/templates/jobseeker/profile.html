@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Profile | RevHire</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+        --primary: #2563eb;
+        --sidebar-bg: #0f172a;
+        --bg-subtle: #f8fafc;
+        --border: #e2e8f0;
+        --text-main: #0f172a;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
+
+    /* Sidebar Navigation - MATCHED TO DASHBOARD */
+    .sidebar { width: 250px; height: 100vh; background: var(--sidebar-bg); color: white; position: fixed; padding: 1.5rem 1rem; display: flex; flex-direction: column; z-index: 1000; }
+    .logo { font-size: 1.5rem; font-weight: 800; padding: 0 1rem 1.5rem; display: flex; align-items: center; gap: 10px; color: white; text-decoration: none; }
+    .nav-menu { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
+    .nav-link { color: #94a3b8; text-decoration: none; padding: 0.7rem 1rem; border-radius: 10px; display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.2s; margin-bottom: 2px; }
+    .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.1); color: white; }
+    .nav-link.active { background: var(--primary); color: white; }
+
+    .main-content { margin-left: 250px; flex: 1; padding: 2.5rem; width: calc(100% - 250px); }
+    .profile-container { max-width: 1000px; margin: 0 auto; }
+
+    /* Profile Header */
+    .profile-header-card {
+        background: white; border-radius: 24px; border: 1px solid var(--border);
+        padding: 2.5rem; box-shadow: var(--card-shadow); margin-bottom: 2rem;
+        display: flex; align-items: center; gap: 2.5rem;
+    }
+
+    .profile-avatar-large {
+        width: 120px; height: 120px; border-radius: 24px; background: var(--primary);
+        color: white; display: flex; align-items: center; justify-content: center;
+        font-size: 3rem; font-weight: 800; box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Alignment Logic: Equal Height Cards */
+    .flex-row-stretch { display: flex; align-items: stretch; }
+    .info-card {
+        background: white; border-radius: 24px; border: 1px solid var(--border);
+        padding: 2rem; box-shadow: var(--card-shadow); height: 100%;
+        display: flex; flex-direction: column;
+    }
+
+    .section-title {
+        font-size: 0.8rem; font-weight: 800; color: #64748b;
+        text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1.5rem;
+        display: flex; align-items: center; gap: 10px;
+    }
+
+    .data-label { font-weight: 700; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 4px; }
+    .data-value { font-weight: 600; color: var(--text-main); margin-bottom: 1.5rem; font-size: 1rem; }
+
+    .skill-badge {
+        background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe;
+        padding: 8px 16px; border-radius: 12px; font-size: 0.85rem;
+        font-weight: 700; transition: 0.2s;
+    }
+    .skill-badge:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+
+    #view-summary { font-size: 0.95rem; line-height: 1.8; color: #475569; text-align: justify; }
+
+    @media (max-width: 1024px) { .sidebar { width: 80px; } .sidebar span, .logo span { display: none; } .main-content { margin-left: 80px; width: calc(100% - 80px); } }
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <a th:href="@{/jobseeker/dashboard}" class="logo">
+    <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+    <span>RevHire</span>
+  </a>
+  <div class="nav-menu">
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+      <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+    </a>
+    <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
+      <i class="bi bi-pencil"></i> <span>Manage Profile</span>
+    </a>
+    <a th:href="@{/jobseeker/resume/builder}" class="nav-link">
+      <i class="bi bi-file-earmark-text"></i> <span>Resume Builder</span>
+    </a>
+    <a th:href="@{/jobseeker/resume/view}" class="nav-link">
+      <i class="bi bi-eye"></i>
+      <span>View Resume</span>
+    </a>
+    <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
+      <i class="bi bi-upload"></i> <span>Upload Resume</span>
+    </a>
+    <a th:href="@{/jobseeker/jobs/search}" class="nav-link">
+      <i class="bi bi-search"></i> <span>Search Jobs</span>
+    </a>
+    <a th:href="@{/jobseeker/applications}" class="nav-link ">
+      <i class="bi bi-briefcase"></i> <span>Applications</span>
+    </a>
+    <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+      <i class="bi bi-heart"></i> <span>Saved Jobs</span>
+    </a>
+    <a th:href="@{/notifications/notification}" class="nav-link">
+      <i class="bi bi-bell"></i> <span>Notifications</span>
+    </a>
+    <a th:href="@{/auth/reset-password}" class="nav-link">
+      <i class="bi bi-key"></i> <span>Reset Password</span>
+    </a>
+  </div>
+  <div class="mt-auto">
+    <a th:href="@{/}" class="nav-link text-danger">
+      <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+    </a>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="profile-container">
+
+    <div class="profile-header-card">
+      <div class="profile-avatar-large" th:text="${session.userInitial ?: 'U'}">U</div>
+      <div class="flex-grow-1">
+        <h1 class="fw-800 mb-1" id="display-name" th:text="${session.userName ?: 'New Seeker'}">User Name</h1>
+        <p class="fs-5 text-muted mb-3" id="display-title">Software Professional</p>
+        <div class="d-flex gap-2">
+          <a th:href="@{/jobseeker/edit-profile}" class="btn btn-primary rounded-pill px-4 fw-bold">
+            <i class="bi bi-pencil-square me-2"></i> Edit Profile
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 flex-row-stretch">
+      <div class="col-md-7">
+        <div class="info-card">
+          <h6 class="section-title"><i class="bi bi-person-vcard text-primary"></i> Personal Details</h6>
+          <div class="row">
+            <div class="col-sm-6">
+              <p class="data-label">Email Address</p>
+              <p class="data-value text-truncate" th:text="${session.userEmail}">email@domain.com</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="data-label">Phone Number</p>
+              <p class="data-value" id="view-phone">Not Provided</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="data-label">Current Location</p>
+              <p class="data-value" id="view-location">Not Set</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="data-label">Work Experience</p>
+              <p class="data-value" id="view-experience">Fresher</p>
+            </div>
+          </div>
+
+          <hr class="my-4" style="border-top: 2px dashed #f1f5f9;">
+
+          <h6 class="section-title"><i class="bi bi-mortarboard text-primary"></i> Education</h6>
+          <div class="bg-light p-3 rounded-4">
+            <p class="fw-700 mb-1" id="view-education">Education Details</p>
+            <p class="text-muted small mb-0">Verified Academic Qualification</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-5">
+        <div class="d-flex flex-column gap-4 h-100">
+          <div class="info-card" style="height: auto;">
+            <h6 class="section-title"><i class="bi bi-lightning-charge text-primary"></i> Top Skills</h6>
+            <div id="skills-container" class="d-flex flex-wrap gap-2">
+              <span class="text-muted small">No skills added yet.</span>
+            </div>
+          </div>
+
+          <div class="info-card flex-grow-1">
+            <h6 class="section-title"><i class="bi bi-chat-left-quote text-primary"></i> Professional Summary</h6>
+            <p id="view-summary" class="mb-0">
+              Professional details have not been updated yet. Click edit to complete your profile.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="hidden" id="userId" th:value="${session.userId}">
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+      const userId = document.getElementById('userId').value;
+      if(!userId) return;
+
+      try {
+          const response = await fetch(`/api/jobseeker/profile/${userId}`);
+          if (response.ok) {
+              const profile = await response.json();
+
+              document.getElementById('display-name').innerText = profile.fullName || 'User Name';
+              document.getElementById('display-title').innerText = profile.jobTitle || 'Job Seeker';
+              document.getElementById('view-phone').innerText = profile.phone || 'Not Provided';
+              document.getElementById('view-location').innerText = profile.location || 'Not Set';
+              document.getElementById('view-education').innerText = profile.education || 'Click edit to add education';
+              document.getElementById('view-summary').innerText = profile.experience || 'No summary provided yet.';
+
+              const expVal = profile.totalExperience;
+              document.getElementById('view-experience').innerText = expVal ? (expVal + (expVal === 1 ? ' Year' : ' Years')) : 'Fresher';
+
+              const skillsContainer = document.getElementById('skills-container');
+              if (profile.skills && profile.skills.trim() !== "") {
+                  skillsContainer.innerHTML = '';
+                  profile.skills.split(',').forEach(skill => {
+                      const span = document.createElement('span');
+                      span.className = 'skill-badge';
+                      span.innerText = skill.trim();
+                      skillsContainer.appendChild(span);
+                  });
+              }
+          }
+      } catch (error) {
+          console.error("Error loading profile:", error);
+      }
+  });
+</script>
+
+</body>
+</html>

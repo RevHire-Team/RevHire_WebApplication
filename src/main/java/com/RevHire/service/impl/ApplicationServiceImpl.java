@@ -129,10 +129,14 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public List<EmployerApplicationDTO> getApplicationsByEmployer(Long employerId) {
+    public List<EmployerApplicationDTO> getApplicationsByEmployer(Long userId) {
+        // 1. First, find the Employer Profile linked to this User ID
+        com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employer Profile not found for User ID: " + userId));
 
+        // 2. Now use that Employer's ID to fetch applications
         return applicationRepository
-                .findByJobEmployerEmployerId(employerId)
+                .findByJobEmployerEmployerId(employer.getEmployerId())
                 .stream()
                 .map(app -> new EmployerApplicationDTO(
                         app.getApplicationId(),

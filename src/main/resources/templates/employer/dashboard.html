@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Employer Dashboard | RevHire</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --sidebar-bg: #0f172a;
+            --bg-subtle: #f8fafc;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --card-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px; height: 100vh; background: var(--sidebar-bg); color: white;
+            position: fixed; padding: 1.5rem 1rem; display: flex; flex-direction: column; z-index: 1000;
+        }
+        .logo {
+            font-size: 1.5rem; font-weight: 800; padding: 0 1rem 1.5rem;
+            display: flex; align-items: center; gap: 10px; color: white; text-decoration: none;
+        }
+        .nav-link {
+            color: #94a3b8; text-decoration: none; padding: 0.7rem 1rem; border-radius: 10px;
+            display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.3s; margin-bottom: 2px;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+
+        /* Main Content */
+        .main-content { margin-left: 250px; flex: 1; padding: 3rem; width: calc(100% - 250px); }
+
+        .stat-card {
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            padding: 1.5rem; box-shadow: var(--card-shadow);
+        }
+
+        .stat-icon {
+            width: 44px; height: 44px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+        }
+
+        .content-card {
+            background: white; border-radius: 20px; border: 1px solid var(--border);
+            padding: 2rem; box-shadow: var(--card-shadow); height: 100%;
+        }
+
+        .btn-action {
+            padding: 0.8rem; border-radius: 12px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;
+        }
+
+        .profile-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--primary); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <!-- Logo -->
+    <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
+
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="nav-link active">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+        <a th:href="@{/jobs/create}" class="nav-link">
+            <i class="bi bi-plus-lg"></i> <span>Post New Job</span>
+        </a>
+        <a th:href="@{/jobs/manage}" class="nav-link">
+            <i class="bi bi-building"></i> <span>Manage Jobs</span>
+        </a>
+        <a th:href="@{/applications/manage}" class="nav-link">
+            <i class="bi bi-file-earmark-person"></i> <span>Manage Applications</span>
+        </a>
+        <a th:href="@{/employer/profile}" class="nav-link">
+            <i class="bi bi-building"></i> <span>Company Profile</span>
+        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+    </div>
+
+    <!-- Logout -->
+    <div class="mt-auto">
+        <a th:href="@{/auth/logout}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</nav>
+
+<main class="main-content">
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-800 m-0">Employer Dashboard</h2>
+            <p class="text-muted">Monitor your hiring performance and job activity.</p>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="content-card d-flex align-items-center justify-content-between">
+                    <div class="flex-grow-1 me-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="fw-bold m-0">Profile Completion</h6>
+                            <span class="text-primary fw-bold" th:text="${#numbers.formatDecimal(dashboard.profileCompletionPercentage, 0, 0) + '%'}">0%</span>
+                        </div>
+                        <div class="progress" style="height: 12px; border-radius: 6px; background-color: #e2e8f0;">
+                            <div class="progress-bar bg-primary" role="progressbar"
+                                 th:style="'width: ' + ${dashboard.profileCompletionPercentage} + '%'"
+                                 aria-valuenow="${dashboard.profileCompletionPercentage}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a th:href="@{/employer/profile/edit}" class="btn btn-primary btn-sm">Complete Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <p class="text-muted small fw-bold text-uppercase mb-1">Total Jobs</p>
+                <h3 class="fw-800 m-0" th:text="${dashboard.totalJobs}">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success bg-opacity-10 text-success mb-3"><i class="bi bi-unlock"></i></div>
+                <p class="text-muted small fw-bold text-uppercase mb-1">Active Jobs</p>
+                <h3 class="fw-800 m-0" th:text="${dashboard.activeJobs}">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info bg-opacity-10 text-info mb-3"><i class="bi bi-people"></i></div>
+                <p class="text-muted small fw-bold text-uppercase mb-1">Total Applications</p>
+                <h3 class="fw-800 m-0" th:text="${dashboard.totalApplications}">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning mb-3"><i class="bi bi-clock-history"></i></div>
+                <p class="text-muted small fw-bold text-uppercase mb-1">Pending Reviews</p>
+                <h3 class="fw-800 m-0" th:text="${dashboard.pendingReviews}">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-800 m-0">Recruitment Summary</h5>
+                    <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2">Live Updates</span>
+                </div>
+                <div class="p-4 bg-light rounded-4 text-center border">
+                    <i class="bi bi-graph-up-arrow text-primary fs-1 mb-3"></i>
+                    <h6 class="fw-700">Analytics are active</h6>
+                    <p class="text-muted small">You currently have <strong th:text="${dashboard.activeJobs}">0</strong> active job openings.
+                        Review your <span th:text="${dashboard.pendingReviews}">0</span> pending applications to keep your hiring pipeline moving.</p>
+                </div>
+                <div class="mt-4">
+                    <div class="d-flex gap-3 align-items-center p-3 border-bottom">
+                        <div class="bg-primary-subtle p-2 rounded-3 text-primary"><i class="bi bi-lightning-charge"></i></div>
+                        <div>
+                            <p class="mb-0 fw-600">Fast-track Hiring</p>
+                            <small class="text-muted">Applications have increased by 15% this week.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="content-card">
+                <h5 class="fw-800 mb-4">Quick Actions</h5>
+                <div class="d-grid gap-3">
+                    <a th:href="@{/employer/jobs/create}" class="btn btn-primary btn-action">
+                        <i class="bi bi-plus-lg"></i> Post New Job
+                    </a>
+                    <a th:href="@{/employer/jobs/manage}" class="btn btn-outline-primary btn-action">
+                        <i class="bi bi-gear"></i> Manage Jobs
+                    </a>
+                    <a th:href="@{/employer/applications/all}" class="btn btn-outline-dark btn-action">
+                        <i class="bi bi-eye"></i> View Applications
+                    </a>
+                </div>
+                <div class="mt-5 p-3 rounded-4 bg-primary bg-opacity-10 border border-primary-subtle">
+                    <small class="text-primary fw-bold d-block mb-1">Need help?</small>
+                    <small class="text-muted">Check our employer guide for tips on finding the best talent.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

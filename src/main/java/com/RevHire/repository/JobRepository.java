@@ -1,5 +1,6 @@
 package com.RevHire.repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,36 +26,42 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     Long countByEmployerEmployerIdAndStatus(Long employerId, String status);
 
-    @Query("""
-SELECT new com.RevHire.dto.JobDTO(
-    j.jobId,
-    j.title,
-    j.location,
-    j.salaryMin,
-    j.salaryMax,
-    j.jobType,
-    j.status,
-    e.companyName
-)
-FROM Job j
-JOIN j.employer e
-WHERE (:title IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', TRIM(:title), '%')))
-AND (:location IS NULL OR LOWER(j.location) LIKE LOWER(CONCAT('%', TRIM(:location), '%')))
-AND (:experience IS NULL OR j.experienceRequired <= :experience)
-AND (:companyName IS NULL OR LOWER(e.companyName) LIKE LOWER(CONCAT('%', TRIM(:companyName), '%')))
-AND (:minSalary IS NULL OR j.salaryMin >= :minSalary)
-AND (:maxSalary IS NULL OR j.salaryMax <= :maxSalary)
-AND (:jobType IS NULL OR j.jobType = :jobType)
-AND j.status = 'OPEN'
-""")
-    List<JobDTO> advancedSearch(
-            @Param("title") String title,
-            @Param("location") String location,
-            @Param("experience") Integer experience,
-            @Param("companyName") String companyName,
-            @Param("minSalary") Double minSalary,
-            @Param("maxSalary") Double maxSalary,
-            @Param("jobType") String jobType
+    List<Job> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndStatus(
+            String title,
+            String location,
+            String status
     );
 
+    @Query("SELECT j FROM Job j WHERE " +
+            "j.title LIKE :title AND " +
+            "j.location LIKE :loc AND " +
+            "j.experienceRequired >= :exp AND " +
+            "j.educationRequired LIKE :edu AND " +
+            "j.salaryMin >= :minSal AND " +
+            "j.salaryMax <= :maxSal AND " +
+            "j.jobType LIKE :type AND " +
+            "j.status = :status")
+    List<Job> findAdvanced(String title, String loc, Integer exp, String edu,
+                           BigDecimal minSal, BigDecimal maxSal, String type, String status);
+
+    @Query("""
+SELECT j FROM Job j
+WHERE (:title IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :title, '%')))
+AND (:location IS NULL OR LOWER(j.location) LIKE LOWER(CONCAT('%', :location, '%')))
+AND (:experience IS NULL OR j.experienceRequired >= :experience)
+AND (:education IS NULL OR LOWER(j.educationRequired) LIKE LOWER(CONCAT('%', :education, '%')))
+AND (:minSalary IS NULL OR j.salaryMin >= :minSalary)
+AND (:maxSalary IS NULL OR j.salaryMax <= :maxSalary)
+AND (:jobType IS NULL OR LOWER(j.jobType) LIKE LOWER(CONCAT('%', :jobType, '%')))
+AND j.status = 'OPEN'
+""")
+    List<Job> advancedSearch(
+            String title,
+            String location,
+            Integer experience,
+            String education,
+            Double minSalary,
+            Double maxSalary,
+            String jobType
+    );
 }

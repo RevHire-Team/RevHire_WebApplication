@@ -15,10 +15,13 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
+    public void AuthService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     public User registerUser(User user) {
 
-        if(userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
 
@@ -50,5 +53,28 @@ public class AuthServiceImpl implements AuthService {
         }
 
         throw new RuntimeException("Security answer incorrect");
+    }
+
+    @Override
+    public void updatePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User session expired or user not found"));
+
+        // Check if the provided current password matches what's in the DB
+        if (!user.getPasswordHash().equals(currentPassword)) {
+            throw new RuntimeException("The current password you entered is incorrect");
+        }
+
+        user.setPasswordHash(newPassword);
+        userRepository.save(user);
+    }
+
+    // Inside AuthService.java
+    public void deleteUser(Long userId) {
+        if (userRepository.existsById(userId)) {
+            userRepository.deleteById(userId);
+        } else {
+            throw new RuntimeException("User not found");
+        }
     }
 }
