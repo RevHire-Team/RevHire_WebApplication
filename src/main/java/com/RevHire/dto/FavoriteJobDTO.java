@@ -18,6 +18,6 @@ public class FavoriteJobDTO {
     private String status;
     private String companyName;
 
-    public FavoriteJobDTO(long favId, long jobId, String javaDeveloper, String abcCompany, BigDecimal salaryMin, BigDecimal salaryMax, String bangalore, String fullTime) {
-    }
+//    public FavoriteJobDTO(long favId, long jobId, String javaDeveloper, String abcCompany, BigDecimal salaryMin, BigDecimal salaryMax, String bangalore, String fullTime) {
+//    }
 }

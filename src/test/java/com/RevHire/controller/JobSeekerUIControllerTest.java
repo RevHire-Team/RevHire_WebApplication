@@ -33,7 +33,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(JobSeekerUIController.class)
@@ -207,7 +206,8 @@ class JobSeekerUIControllerTest {
                 new BigDecimal("50000"),
                 new BigDecimal("80000"),
                 "Bangalore",
-                "FULL_TIME"
+                "FULL_TIME",
+                "OPEN"
         );
 
         when(jobSeekerService.getProfile(1L)).thenReturn(Optional.of(profile));
