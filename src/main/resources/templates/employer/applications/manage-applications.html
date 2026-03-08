@@ -314,27 +314,28 @@ async function updateStatus(appId, status) {
 
         if (response.ok) {
 
-            alert("Application status updated successfully");
+            showToast(
+                status === "SHORTLISTED"
+                ? "✔ Candidate Shortlisted Successfully"
+                : "❌ Candidate Rejected"
+            );
 
-            fetchAndDisplayApplications(); // reload table
-
-            const modal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
-            modal.hide();
+            fetchAndDisplayApplications();
 
         } else {
 
-            alert("Failed to update status");
+            showToast("⚠ Failed to update status", "danger");
 
         }
 
     } catch (error) {
 
         console.error(error);
-        alert("Error updating status");
+        showToast("⚠ Error updating status", "danger");
 
     }
-}
 
+}
     function renderApplications(applications) {
 
     const tableBody = document.getElementById('appTable');
@@ -372,9 +373,41 @@ async function updateStatus(appId, status) {
     `).join('');
 
 }
+
+    function showToast(message, type="success") {
+
+    const toastElement = document.getElementById("statusToast");
+    const toastMessage = document.getElementById("toastMessage");
+
+    toastMessage.innerText = message;
+
+    toastElement.classList.remove("text-bg-success","text-bg-danger");
+
+    if(type === "danger"){
+        toastElement.classList.add("text-bg-danger");
+    } else {
+        toastElement.classList.add("text-bg-success");
+    }
+
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/employer.js}"></script>
+
+<!-- Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="statusToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                Status Updated
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
