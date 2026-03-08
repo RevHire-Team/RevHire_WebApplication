@@ -21,10 +21,11 @@ public class JobServiceImpl implements JobService {
     @Autowired
     private com.RevHire.repository.EmployerProfileRepository employerRepository;
 
+
     @Override
     @Transactional
     public Job createJob(Job job, Long userId) {
-        // DEBUG: Print to console to see if fields are null
+
         System.out.println("Creating job: " + job.getTitle() + " for user: " + userId);
 
         com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
@@ -34,13 +35,14 @@ public class JobServiceImpl implements JobService {
         job.setStatus("OPEN");
         job.setActive(true);
 
-        // The result of this save is what actually goes to the DB
         Job savedJob = jobRepository.save(job);
         System.out.println("Job saved with ID: " + savedJob.getJobId());
 
         return savedJob;
     }
 
+
+    @Override
     public List<JobDTO> getAllOpenJobs() {
 
         return jobRepository.findByStatus("OPEN")
@@ -57,6 +59,7 @@ public class JobServiceImpl implements JobService {
                 ))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<JobDTO> searchJobs(String title,
@@ -75,7 +78,8 @@ public class JobServiceImpl implements JobService {
                         minSalary,
                         maxSalary,
                         jobType
-                ).stream()
+                )
+                .stream()
                 .map(job -> new JobDTO(
                         job.getJobId(),
                         job.getTitle(),
@@ -89,14 +93,18 @@ public class JobServiceImpl implements JobService {
                 .toList();
     }
 
-  @Override
-  public void closeJob(Long jobId) {
+
+    @Override
+    public void closeJob(Long jobId) {
+
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
         job.setStatus("CLOSED");
+
         jobRepository.save(job);
     }
+
 
     @Override
     @Transactional
@@ -108,13 +116,13 @@ public class JobServiceImpl implements JobService {
         jobRepository.delete(job);
     }
 
+
     @Override
     public List<JobDTO> getJobsByUserId(Long userId) {
-        // 1. Find the employer profile first
+
         com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Employer Profile not found"));
 
-        // 2. Now fetch jobs using the actual Employer ID
         return jobRepository.findByEmployerEmployerId(employer.getEmployerId())
                 .stream()
                 .map(job -> new JobDTO(
@@ -166,17 +174,16 @@ public class JobServiceImpl implements JobService {
         )).toList();
     }
 
+
     @Override
     public JobDTO toggleJobStatus(Long jobId) {
+
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        // 1. Toggle the boolean
         boolean newActiveState = !job.getActive();
         job.setActive(newActiveState);
 
-        // 2. Synchronize the Status string
-        // If active is true -> OPEN, if false -> CLOSED
         job.setStatus(newActiveState ? "OPEN" : "CLOSED");
 
         Job savedJob = jobRepository.save(job);
@@ -193,12 +200,13 @@ public class JobServiceImpl implements JobService {
         );
     }
 
+
     @Override
     public JobDTO getJobById(Long jobId) {
+
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
 
-        // Convert Entity to DTO
         return new JobDTO(
                 job.getJobId(),
                 job.getTitle(),
@@ -208,18 +216,17 @@ public class JobServiceImpl implements JobService {
                 job.getJobType(),
                 job.getStatus(),
                 job.getEmployer().getCompanyName()
-                // If your JobDTO has description/experience, add them here
         );
     }
+
 
     @Override
     @Transactional
     public JobDTO updateJob(Long jobId, Job updatedJob) {
-        // 1. Fetch existing job
+
         Job existingJob = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
-        // 2. Update the fields
         existingJob.setTitle(updatedJob.getTitle());
         existingJob.setLocation(updatedJob.getLocation());
         existingJob.setJobType(updatedJob.getJobType());
@@ -229,12 +236,8 @@ public class JobServiceImpl implements JobService {
         existingJob.setExperienceRequired(updatedJob.getExperienceRequired());
         existingJob.setEducationRequired(updatedJob.getEducationRequired());
 
-        // Note: We usually don't update the Employer or JobID
-
-        // 3. Save the changes
         Job savedJob = jobRepository.save(existingJob);
 
-        // 4. Return updated DTO
         return new JobDTO(
                 savedJob.getJobId(),
                 savedJob.getTitle(),
@@ -246,5 +249,28 @@ public class JobServiceImpl implements JobService {
                 savedJob.getEmployer().getCompanyName()
         );
     }
+
+
+// ================= RECOMMENDED JOBS =================
+
+    @Override
+    public List<JobDTO> getRecommendedJobs(String skill) {
+
+        List<Job> jobs = jobRepository.findRecommendedJobs(skill);
+
+        return jobs.stream()
+                .map(job -> new JobDTO(
+                        job.getJobId(),
+                        job.getTitle(),
+                        job.getLocation(),
+                        job.getSalaryMin(),
+                        job.getSalaryMax(),
+                        job.getJobType(),
+                        job.getStatus(),
+                        job.getEmployer().getCompanyName()
+                ))
+                .toList();
+    }
+
 
 }

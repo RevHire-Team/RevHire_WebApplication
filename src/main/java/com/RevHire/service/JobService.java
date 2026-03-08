@@ -6,6 +6,7 @@ import com.RevHire.entity.Job;
 import java.util.List;
 
 public interface JobService {
+    List<JobDTO> getRecommendedJobs(String skill);
 
     Job createJob(Job job, Long userId);
 
