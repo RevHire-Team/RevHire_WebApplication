@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.RevHire.service.NotificationService;
 
 import com.RevHire.service.ApplicationService;
 
@@ -35,6 +36,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Autowired
     private ResumeRepository resumeRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private EmployerProfileRepository employerRepository;
@@ -80,11 +84,22 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setCoverLetter(coverLetter);
         application.setStatus("APPLIED");
 
-        Application savedApplication = applicationRepository.save(application);
+        Application saved = applicationRepository.save(application);
 
-        logger.info("Application submitted successfully. ApplicationId: {}", savedApplication.getApplicationId());
+        /* SEND NOTIFICATION TO EMPLOYER */
 
-        return savedApplication;
+        Long employerUserId = job.getEmployer().getUser().getUserId();
+
+        String message =
+                seeker.getFullName() +
+                        " applied for " +
+                        job.getTitle();
+
+        notificationService.sendNotification(employerUserId, message);
+
+        return saved;
+
+
     }
 
     public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId) {
@@ -145,6 +160,34 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         app.setStatus(status);
+
+        Application updated = applicationRepository.save(app);
+
+        /* SEND NOTIFICATION TO JOB SEEKER */
+
+        Long seekerUserId = app.getSeeker().getUser().getUserId();
+
+        String message;
+
+        if(status.equals("SHORTLISTED")){
+
+            message = "Your application for "
+                    + app.getJob().getTitle()
+                    + " was SHORTLISTED";
+
+        }else if(status.equals("REJECTED")){
+
+            message = "Your application for "
+                    + app.getJob().getTitle()
+                    + " was REJECTED";
+
+        }else{
+            message = "Your application status updated to " + status;
+        }
+
+        notificationService.sendNotification(seekerUserId, message);
+
+        return updated;
 
         Application updatedApplication = applicationRepository.save(app);
 
