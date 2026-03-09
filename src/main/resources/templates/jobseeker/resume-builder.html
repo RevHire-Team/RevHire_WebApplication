@@ -10,40 +10,30 @@
     <title>Resume Builder | RevHire</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
 
         :root{
         --primary:#2563eb;
-        --sidebar-bg:#0f172a;
-        --bg-subtle:#f8fafc;
+        --sidebar:#0f172a;
+        --bg:#f8fafc;
         --border:#e2e8f0;
-        --text-main:#0f172a;
-        }
-
-        *{
-        margin:0;
-        padding:0;
-        box-sizing:border-box;
-        font-family:'Plus Jakarta Sans',sans-serif;
         }
 
         body{
-        background:var(--bg-subtle);
-        color:var(--text-main);
+        background:var(--bg);
+        font-family:'Plus Jakarta Sans',sans-serif;
         display:flex;
-        min-height:100vh;
         }
-
-        /* Sidebar */
 
         .sidebar{
         width:250px;
         height:100vh;
-        background:var(--sidebar-bg);
-        color:white;
+        background:var(--sidebar);
         position:fixed;
         padding:1.5rem 1rem;
         display:flex;
@@ -51,33 +41,26 @@
         }
 
         .logo{
-        font-size:1.5rem;
+        font-size:1.4rem;
         font-weight:800;
-        padding:0 1rem 1.5rem;
-        display:flex;
-        align-items:center;
-        gap:10px;
         color:white;
+        display:flex;
+        gap:10px;
+        align-items:center;
+        margin-bottom:25px;
         text-decoration:none;
-        }
-
-        .nav-menu{
-        list-style:none;
-        padding:0;
-        flex-grow:1;
         }
 
         .nav-link{
         color:#94a3b8;
-        text-decoration:none;
-        padding:0.7rem 1rem;
+        padding:10px 14px;
         border-radius:10px;
         display:flex;
+        gap:10px;
         align-items:center;
-        gap:12px;
-        font-weight:500;
-        transition:0.3s;
-        margin-bottom:2px;
+        margin-bottom:5px;
+        transition:.25s;
+        text-decoration:none;
         }
 
         .nav-link:hover,
@@ -86,18 +69,18 @@
         color:white;
         }
 
-        .main-content{
+        .main{
         margin-left:250px;
-        flex:1;
-        padding:2.5rem;
+        width:100%;
+        padding:40px;
         }
 
-        .form-card{
+        .card-box{
         background:white;
+        padding:25px;
         border-radius:20px;
-        padding:30px;
         border:1px solid var(--border);
-        box-shadow:0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom:25px;
         }
 
         .dynamic-row{
@@ -124,18 +107,11 @@
         border:1px solid #fee2e2;
         }
 
-        .edit-highlight{
-        border:2px solid #2563eb !important;
-        background:#eff6ff;
-        }
-
     </style>
 
 </head>
 
 <body>
-
-<!-- Sidebar -->
 
 <nav class="sidebar">
 
@@ -147,349 +123,316 @@
     <div class="nav-menu">
 
         <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
-            <i class="bi bi-speedometer2"></i>
-            <span>Dashboard</span>
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
         </a>
 
         <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
-            <i class="bi bi-pencil"></i>
-            <span>Manage Profile</span>
+            <i class="bi bi-pencil"></i> <span>Manage Profile</span>
         </a>
 
         <a th:href="@{/jobseeker/resume/builder}" class="nav-link active">
-            <i class="bi bi-file-earmark-text"></i>
-            <span>Resume Builder</span>
+            <i class="bi bi-file-earmark-text"></i> <span>Resume Builder</span>
         </a>
 
         <a th:href="@{/jobseeker/resume/view}" class="nav-link">
-            <i class="bi bi-eye"></i>
-            <span>View Resume</span>
+            <i class="bi bi-eye"></i> <span>View Resume</span>
         </a>
 
         <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
-            <i class="bi bi-upload"></i>
-            <span>Upload Resume</span>
+            <i class="bi bi-upload"></i> <span>Upload Resume</span>
         </a>
 
+        <a th:href="@{/jobseeker/jobs/search}" class="nav-link">
+            <i class="bi bi-search"></i> <span>Search Jobs</span>
+        </a>
+
+        <a th:href="@{/jobseeker/applications}" class="nav-link">
+            <i class="bi bi-briefcase"></i> <span>Applications</span>
+        </a>
+
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+            <i class="bi bi-heart"></i> <span>Saved Jobs</span>
+        </a>
+
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+
+    </div>
+
+    <div class="mt-auto">
+        <a th:href="@{/}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
     </div>
 
 </nav>
 
-<main class="main-content">
+<div class="main">
 
-    <div class="container-fluid" style="max-width:900px;">
+    <h2 class="fw-bold mb-4">Professional Resume Builder</h2>
 
-        <h2 class="fw-bold mb-4">Professional Resume Builder</h2>
+    <form id="resumeForm">
 
-        <form class="form-card">
+        <input type="hidden" id="userId" th:value="${session.userId}">
 
-            <!-- Career Objective -->
+        <div class="card-box">
+            <label class="fw-bold mb-2">Career Objective</label>
+            <textarea id="objective" class="form-control" rows="3"></textarea>
+        </div>
 
-            <div class="mb-4">
+        <!-- Education -->
 
-                <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="card-box">
 
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Career Objective
-                    </label>
+            <div class="d-flex justify-content-between mb-2">
 
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-sm"
-                            onclick="editField('objective')"> <i class="bi bi-pencil"></i> Edit </button>
+                <h5>Education</h5>
 
-                </div>
+                <div>
 
-                <textarea id="objective" class="form-control" rows="3" disabled></textarea>
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                            onclick="enableEdit('edu-container')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
 
-            </div>
-
-            <!-- Education -->
-
-            <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Education</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('edu-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('edu-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div id="edu-container">
-
-                    <div class="dynamic-row">
-
-                        <input type="text" class="form-control mb-2" placeholder="Institution" disabled>
-
-                        <input type="text" class="form-control" placeholder="Degree" disabled>
-
-                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            onclick="addRow('edu-container')">
+                        + Add
+                    </button>
 
                 </div>
 
             </div>
 
-            <!-- Experience -->
+            <div id="edu-container">
 
-            <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Experience</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('exp-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('exp-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
+                <div class="dynamic-row">
+                    <input type="text" class="form-control mb-2 edu-inst" placeholder="Institution" disabled>
+                    <input type="text" class="form-control edu-deg" placeholder="Degree" disabled>
                 </div>
 
-                <div id="exp-container">
+            </div>
 
-                    <div class="dynamic-row">
+        </div>
 
-                        <input type="text" class="form-control mb-2" placeholder="Company" disabled>
+        <!-- Experience -->
 
-                        <input type="text" class="form-control" placeholder="Role" disabled>
+        <div class="card-box">
 
-                    </div>
+            <div class="d-flex justify-content-between mb-2">
+
+                <h5>Experience</h5>
+
+                <div>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                            onclick="enableEdit('exp-container')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            onclick="addRow('exp-container')">
+                        + Add
+                    </button>
 
                 </div>
 
             </div>
 
-            <!-- Skills -->
+            <div id="exp-container">
 
-            <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Skills</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('skills-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('skills-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
+                <div class="dynamic-row">
+                    <input type="text" class="form-control mb-2 exp-comp" placeholder="Company" disabled>
+                    <input type="text" class="form-control exp-role" placeholder="Role" disabled>
                 </div>
 
-                <div id="skills-container">
+            </div>
 
-                    <div class="dynamic-row">
+        </div>
 
-                        <input type="text" class="form-control" placeholder="Skill" disabled>
+        <!-- Projects -->
 
-                    </div>
+        <div class="card-box">
+
+            <div class="d-flex justify-content-between mb-2">
+
+                <h5>Projects</h5>
+
+                <div>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                            onclick="enableEdit('project-container')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            onclick="addRow('project-container')">
+                        + Add
+                    </button>
 
                 </div>
 
             </div>
 
-            <!-- Projects -->
+            <div id="project-container">
 
-            <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-2">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Projects
-                    </label>
-
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-sm"
-                            onclick="editField('projects')"> <i class="bi bi-pencil"></i> Edit </button>
-
+                <div class="dynamic-row">
+                    <input type="text" class="form-control mb-2 proj-title" placeholder="Project Title" disabled>
+                    <input type="text" class="form-control proj-desc" placeholder="Description" disabled>
                 </div>
-
-                <textarea id="projects" class="form-control" rows="3" disabled></textarea>
 
             </div>
 
-            <!-- Certifications -->
+        </div>
 
-            <div class="mb-4">
+        <!-- Certifications -->
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="card-box">
 
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Certifications
-                    </label>
+            <div class="d-flex justify-content-between mb-2">
 
-                    <div>
+                <h5>Certifications</h5>
 
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('cert-container')"> <i class="bi bi-pencil"></i> Edit </button>
+                <div>
 
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('cert-container')">
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                            onclick="enableEdit('cert-container')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
 
-                            * Add
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div id="cert-container">
-
-                    <div class="dynamic-row">
-
-                        <input type="text" class="form-control" placeholder="Certification" disabled>
-
-                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm"
+                            onclick="addRow('cert-container')">
+                        + Add
+                    </button>
 
                 </div>
 
             </div>
 
-            <button class="btn btn-primary w-100 fw-bold py-3">
-                Save Resume
-            </button>
+            <div id="cert-container">
 
-        </form>
+                <div class="dynamic-row">
+                    <input type="text" class="form-control mb-2 cert-name" placeholder="Certification" disabled>
+                    <input type="text" class="form-control cert-org" placeholder="Organization" disabled>
+                </div>
 
-    </div>
+            </div>
 
-</main>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-3">
+            Save Resume
+        </button>
+
+    </form>
+
+</div>
 
 <script>
 
-    function editField(id){
-
-    const field=document.getElementById(id)
-
-    field.disabled=false
-    field.classList.add("edit-highlight")
-    field.focus()
-
-    }
-
-    function editSection(containerId){
-
-    const container=document.getElementById(containerId)
-
-    const inputs=container.querySelectorAll("input")
-
-    inputs.forEach(input=>{
-    input.disabled=false
-    input.classList.add("edit-highlight")
-    })
-
+    function enableEdit(containerId){
+    document.querySelectorAll("#"+containerId+" input").forEach(i=>i.removeAttribute("disabled"));
     }
 
     function addRow(containerId){
 
-    const container=document.getElementById(containerId)
-
-    const rowId=Date.now()
-
-    let html=""
+    const container=document.getElementById(containerId);
+    const id=Date.now();
+    let html="";
 
     if(containerId==="edu-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control mb-2 edit-highlight"
-    placeholder="Institution">
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Degree">
-
-    </div>
-    `
-
+    html=`<div class="dynamic-row" id="row-${id}">
+    <div class="btn-remove" onclick="removeRow('row-${id}')">x</div>
+    <input type="text" class="form-control mb-2 edu-inst" placeholder="Institution">
+    <input type="text" class="form-control edu-deg" placeholder="Degree">
+    </div>`;
     }
 
     else if(containerId==="exp-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control mb-2 edit-highlight"
-    placeholder="Company">
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Role">
-
-    </div>
-    `
-
+    html=`<div class="dynamic-row" id="row-${id}">
+    <div class="btn-remove" onclick="removeRow('row-${id}')">x</div>
+    <input type="text" class="form-control mb-2 exp-comp" placeholder="Company">
+    <input type="text" class="form-control exp-role" placeholder="Role">
+    </div>`;
     }
 
-    else if(containerId==="skills-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Skill">
-
-    </div>
-    `
-
+    else if(containerId==="project-container"){
+    html=`<div class="dynamic-row" id="row-${id}">
+    <div class="btn-remove" onclick="removeRow('row-${id}')">x</div>
+    <input type="text" class="form-control mb-2 proj-title" placeholder="Project Title">
+    <input type="text" class="form-control proj-desc" placeholder="Description">
+    </div>`;
     }
 
     else if(containerId==="cert-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Certification">
-
-    </div>
-    `
-
+    html=`<div class="dynamic-row" id="row-${id}">
+    <div class="btn-remove" onclick="removeRow('row-${id}')">x</div>
+    <input type="text" class="form-control mb-2 cert-name" placeholder="Certification">
+    <input type="text" class="form-control cert-org" placeholder="Organization">
+    </div>`;
     }
 
-    container.insertAdjacentHTML("beforeend",html)
+    container.insertAdjacentHTML("beforeend",html);
 
     }
 
     function removeRow(id){
-    document.getElementById(id).remove()
+    document.getElementById(id).remove();
+    }
+
+    /* ENABLE EMPTY FIELDS AUTOMATICALLY */
+
+    window.addEventListener("DOMContentLoaded",()=>{
+
+    document.querySelectorAll(".dynamic-row input").forEach(input=>{
+
+    if(input.value.trim()===""){
+    input.removeAttribute("disabled");
+    }
+
+    });
+
+    });
+
+    document.getElementById("resumeForm").onsubmit=async(e)=>{
+
+    e.preventDefault();
+
+    const userId=document.getElementById("userId").value;
+
+    const resumeData={
+
+    objective:document.getElementById("objective").value,
+
+    educations:[
+    ...Array.from(document.querySelectorAll("#edu-container .dynamic-row")).map(r=>({
+    institution:r.querySelector(".edu-inst").value,
+    degree:r.querySelector(".edu-deg").value
+    }))
+    ],
+
+    experiences:[
+    ...Array.from(document.querySelectorAll("#exp-container .dynamic-row")).map(r=>({
+    companyName:r.querySelector(".exp-comp").value,
+    role:r.querySelector(".exp-role").value
+    }))
+    ]
+
+    };
+
+    await fetch(`/api/jobseeker/resume/save/${userId}`,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(resumeData)
+    });
+
+    alert("Resume Saved Successfully");
+
     }
 
 </script>

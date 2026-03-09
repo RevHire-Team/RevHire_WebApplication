@@ -2,6 +2,7 @@
 
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,13 +13,13 @@
 
     <style>
 
-        :root {
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
-        --bg-subtle: #f8fafc;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --border: #e2e8f0;
+        :root{
+        --primary:#2563eb;
+        --primary-dark:#1d4ed8;
+        --bg-subtle:#f8fafc;
+        --text-main:#0f172a;
+        --text-muted:#64748b;
+        --border:#e2e8f0;
         }
 
         *{
@@ -138,51 +139,6 @@
         background:var(--primary-dark);
         }
 
-        .social-login{
-        display:flex;
-        gap:12px;
-        margin-top:1.5rem;
-        }
-
-        .social-btn{
-        flex:1;
-        padding:10px;
-        border:1px solid var(--border);
-        background:white;
-        border-radius:8px;
-        cursor:pointer;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:10px;
-        font-weight:600;
-        font-size:0.9rem;
-        transition:background 0.2s;
-        }
-
-        .social-btn:hover{
-        background:var(--bg-subtle);
-        }
-
-        .divider{
-        display:flex;
-        align-items:center;
-        text-align:center;
-        margin:1.5rem 0;
-        color:var(--text-muted);
-        font-size:0.85rem;
-        }
-
-        .divider::before,
-        .divider::after{
-        content:'';
-        flex:1;
-        border-bottom:1px solid var(--border);
-        }
-
-        .divider:not(:empty)::before{margin-right:1em;}
-        .divider:not(:empty)::after{margin-left:1em;}
-
         .back-link{
         margin-top:1rem;
         display:flex;
@@ -204,7 +160,7 @@
         text-decoration:underline !important;
         }
 
-        @media (max-width:1024px){
+        @media(max-width:1024px){
         .brand-side{display:none;}
         }
 
@@ -215,14 +171,20 @@
 <body>
 
 <div class="brand-side">
+
     <div>
+
         <h1>Welcome Back</h1>
+
         <p>
             Log in to access your applications, manage job postings,
             and stay updated with real-time notifications.
         </p>
+
     </div>
+
 </div>
+
 
 <div class="form-side">
 
@@ -242,16 +204,20 @@
         <form th:action="@{/auth/login}" method="post">
 
             <div class="form-group">
+
                 <label>
                     <i class="fas fa-envelope" style="margin-right:8px;color:var(--primary);"></i>
                     Email Address
                 </label>
+
                 <input type="email" name="email" placeholder="Enter your email" required th:value="${email}">
+
             </div>
 
             <div class="form-group">
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+
                     <label style="margin-bottom:0;">
                         <i class="fas fa-lock" style="margin-right:8px;color:var(--primary);"></i>
                         Password
@@ -260,6 +226,7 @@
                     <a th:href="@{/auth/forgot-password}" style="font-size:0.8rem;color:var(--primary);font-weight:600;text-decoration:none;">
                         Forgot?
                     </a>
+
                 </div>
 
                 <div class="password-wrapper">
@@ -277,36 +244,24 @@
             </button>
 
             <div class="back-link">
+
                 <a th:href="@{/}">
                     <i class="fas fa-arrow-left"></i>
                     Back to Home
                 </a>
+
             </div>
 
             <p th:if="${error}" th:text="${error}"
                style="color:#991b1b;background:#fee2e2;padding:10px;border-radius:8px;border:1px solid #fecaca;text-align:center;margin-top:1.5rem;font-size:0.875rem;">
             </p>
 
-            <div class="divider">or continue with</div>
-
-            <div class="social-login">
-
-                <button type="button" class="social-btn">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
-                    Google
-                </button>
-
-                <button type="button" class="social-btn">
-                    <i class="fab fa-linkedin" style="color:#0A66C2;font-size:1.1rem;"></i>
-                    LinkedIn
-                </button>
-
-            </div>
-
         </form>
 
     </div>
+
 </div>
+
 
 <script>
 
