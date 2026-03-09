@@ -31,7 +31,6 @@ target/
 # Application properties (contains DB credentials)
 
 src/main/resources/application.properties
-
 # ===============================
 
 # Uploads / generated files
