@@ -36,6 +36,7 @@ public class ApplicationController {
         model.addAttribute("jobId", jobId);
         model.addAttribute("userId", userId);
 
+        model.addAttribute("applications", List.of());
         // 3. Return the name of your application form HTML file (apply-form.html)
         return "jobseeker/applications";
     }

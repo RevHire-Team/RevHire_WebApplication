@@ -40,4 +40,7 @@ public interface JobSeekerService {
                             Double minSal,
                             Double maxSal,
                             String type);
+
+    // ========== RECOMMENDED JOBS ==========
+    List<Job> getRecommendedJobs(List<String> skills);
 }

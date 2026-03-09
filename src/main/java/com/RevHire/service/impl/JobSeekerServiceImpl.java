@@ -258,4 +258,26 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                 companyName
         );
     }
+    // ========================= RECOMMENDED JOBS =========================
+
+    @Override
+    public List<Job> getRecommendedJobs(List<String> skills) {
+
+        if (skills == null || skills.isEmpty()) {
+            return List.of();
+        }
+
+        List<Job> allJobs = jobRepo.findAll();
+
+        return allJobs.stream()
+                .filter(job ->
+                        skills.stream().anyMatch(skill ->
+                                job.getTitle() != null &&
+                                        job.getTitle().toLowerCase().contains(skill.toLowerCase())
+                        )
+                )
+                .limit(10)
+                .toList();
+    }
+
 }

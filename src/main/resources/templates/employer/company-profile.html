@@ -61,7 +61,7 @@
 
     <!-- Navigation Menu -->
     <div class="nav-menu">
-        <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="nav-link active">
+        <a th:href="@{/employer/dashboard/{id}(id=${session.loggedInUser.userId})}" class="nav-link">
             <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
         </a>
         <a th:href="@{/jobs/create}" class="nav-link">
@@ -86,7 +86,7 @@
 
     <!-- Logout -->
     <div class="mt-auto">
-        <a th:href="@{/auth/logout}" class="nav-link text-danger">
+        <a th:href="@{/}" class="nav-link text-danger">
             <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
         </a>
     </div>
