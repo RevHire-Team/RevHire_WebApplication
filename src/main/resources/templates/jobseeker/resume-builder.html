@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 
 <head>
@@ -10,123 +9,82 @@
     <title>Resume Builder | RevHire</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
 
         :root{
-        --primary:#2563eb;
-        --sidebar-bg:#0f172a;
-        --bg-subtle:#f8fafc;
-        --border:#e2e8f0;
-        --text-main:#0f172a;
-        }
-
-        *{
-        margin:0;
-        padding:0;
-        box-sizing:border-box;
-        font-family:'Plus Jakarta Sans',sans-serif;
+            --primary:#2563eb;
+            --sidebar-bg:#0f172a;
+            --bg-subtle:#f8fafc;
+            --border:#e2e8f0;
         }
 
         body{
-        background:var(--bg-subtle);
-        color:var(--text-main);
-        display:flex;
-        min-height:100vh;
+            background:var(--bg-subtle);
+            font-family:'Plus Jakarta Sans',sans-serif;
+            display:flex;
         }
 
-        /* Sidebar */
-
         .sidebar{
-        width:250px;
-        height:100vh;
-        background:var(--sidebar-bg);
-        color:white;
-        position:fixed;
-        padding:1.5rem 1rem;
-        display:flex;
-        flex-direction:column;
+            width:250px;
+            background:var(--sidebar-bg);
+            color:white;
+            height:100vh;
+            position:fixed;
+            padding:1.5rem 1rem;
         }
 
         .logo{
-        font-size:1.5rem;
-        font-weight:800;
-        padding:0 1rem 1.5rem;
-        display:flex;
-        align-items:center;
-        gap:10px;
-        color:white;
-        text-decoration:none;
-        }
-
-        .nav-menu{
-        list-style:none;
-        padding:0;
-        flex-grow:1;
+            font-size:1.4rem;
+            font-weight:700;
+            color:white;
+            text-decoration:none;
         }
 
         .nav-link{
-        color:#94a3b8;
-        text-decoration:none;
-        padding:0.7rem 1rem;
-        border-radius:10px;
-        display:flex;
-        align-items:center;
-        gap:12px;
-        font-weight:500;
-        transition:0.3s;
-        margin-bottom:2px;
+            color:#94a3b8;
+            display:block;
+            padding:.7rem 1rem;
+            border-radius:10px;
+            margin-bottom:4px;
+            text-decoration:none;
         }
 
-        .nav-link:hover,
-        .nav-link.active{
-        background:var(--primary);
-        color:white;
+        .nav-link:hover{
+            background:#2563eb;
+            color:white;
         }
 
         .main-content{
-        margin-left:250px;
-        flex:1;
-        padding:2.5rem;
+            margin-left:250px;
+            padding:2.5rem;
+            width:100%;
         }
 
         .form-card{
-        background:white;
-        border-radius:20px;
-        padding:30px;
-        border:1px solid var(--border);
-        box-shadow:0 4px 6px rgba(0,0,0,0.1);
+            background:white;
+            border-radius:18px;
+            padding:30px;
+            border:1px solid var(--border);
         }
 
         .dynamic-row{
-        background:#f1f5f9;
-        border-radius:12px;
-        padding:15px;
-        margin-bottom:15px;
-        position:relative;
+            background:#f1f5f9;
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:12px;
+            position:relative;
         }
 
         .btn-remove{
-        position:absolute;
-        top:10px;
-        right:10px;
-        color:#ef4444;
-        background:white;
-        border-radius:50%;
-        width:24px;
-        height:24px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        cursor:pointer;
-        border:1px solid #fee2e2;
-        }
-
-        .edit-highlight{
-        border:2px solid #2563eb !important;
-        background:#eff6ff;
+            position:absolute;
+            right:10px;
+            top:10px;
+            color:red;
+            cursor:pointer;
+            font-weight:bold;
         }
 
     </style>
@@ -135,247 +93,131 @@
 
 <body>
 
-<!-- Sidebar -->
-
 <nav class="sidebar">
 
-    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
-        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
-        <span>RevHire</span>
-    </a>
+    <a th:href="@{/jobseeker/dashboard}" class="logo">RevHire</a>
 
-    <div class="nav-menu">
-
-        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
-            <i class="bi bi-speedometer2"></i>
-            <span>Dashboard</span>
-        </a>
-
-        <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
-            <i class="bi bi-pencil"></i>
-            <span>Manage Profile</span>
-        </a>
-
-        <a th:href="@{/jobseeker/resume/builder}" class="nav-link active">
-            <i class="bi bi-file-earmark-text"></i>
-            <span>Resume Builder</span>
-        </a>
-
-        <a th:href="@{/jobseeker/resume/view}" class="nav-link">
-            <i class="bi bi-eye"></i>
-            <span>View Resume</span>
-        </a>
-
-        <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
-            <i class="bi bi-upload"></i>
-            <span>Upload Resume</span>
-        </a>
-
+    <div class="mt-4">
+        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">Resume Builder</a>
+        <a th:href="@{/jobseeker/resume/view}" class="nav-link">View Resume</a>
     </div>
 
 </nav>
 
+
 <main class="main-content">
 
-    <div class="container-fluid" style="max-width:900px;">
+    <div class="container" style="max-width:900px">
 
-        <h2 class="fw-bold mb-4">Professional Resume Builder</h2>
+        <h2 class="mb-4">Professional Resume Builder</h2>
 
-        <form class="form-card">
+        <form id="resumeForm" class="form-card">
 
-            <!-- Career Objective -->
+            <input type="hidden" id="userId" th:value="${session.userId}">
+
+            <!-- Objective -->
 
             <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-2">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Career Objective
-                    </label>
-
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-sm"
-                            onclick="editField('objective')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                </div>
-
-                <textarea id="objective" class="form-control" rows="3" disabled></textarea>
-
+                <label class="form-label">Career Objective *</label>
+                <textarea id="objective" class="form-control" rows="3" required></textarea>
             </div>
+
 
             <!-- Education -->
 
             <div class="mb-4">
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Education</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('edu-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('edu-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
+                <div class="d-flex justify-content-between mb-2">
+                    <label>Education</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow('edu-container')">+ Add</button>
                 </div>
 
                 <div id="edu-container">
 
                     <div class="dynamic-row">
-
-                        <input type="text" class="form-control mb-2" placeholder="Institution" disabled>
-
-                        <input type="text" class="form-control" placeholder="Degree" disabled>
-
+                        <input class="form-control mb-2 edu-inst" placeholder="Institution">
+                        <input class="form-control edu-deg" placeholder="Degree">
                     </div>
 
                 </div>
 
             </div>
+
 
             <!-- Experience -->
 
             <div class="mb-4">
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Experience</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('exp-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('exp-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
+                <div class="d-flex justify-content-between mb-2">
+                    <label>Experience</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow('exp-container')">+ Add</button>
                 </div>
 
                 <div id="exp-container">
 
                     <div class="dynamic-row">
-
-                        <input type="text" class="form-control mb-2" placeholder="Company" disabled>
-
-                        <input type="text" class="form-control" placeholder="Role" disabled>
-
+                        <input class="form-control mb-2 exp-comp" placeholder="Company">
+                        <input class="form-control exp-role" placeholder="Role">
                     </div>
 
                 </div>
 
             </div>
 
-            <!-- Skills -->
-
-            <div class="mb-4">
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">Skills</label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('skills-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('skills-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div id="skills-container">
-
-                    <div class="dynamic-row">
-
-                        <input type="text" class="form-control" placeholder="Skill" disabled>
-
-                    </div>
-
-                </div>
-
-            </div>
 
             <!-- Projects -->
 
             <div class="mb-4">
 
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between mb-2">
+                    <label>Projects</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow('proj-container')">+ Add</button>
+                </div>
 
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Projects
-                    </label>
+                <div id="proj-container">
 
-                    <button type="button"
-                            class="btn btn-outline-secondary btn-sm"
-                            onclick="editField('projects')"> <i class="bi bi-pencil"></i> Edit </button>
+                    <div class="dynamic-row">
+                        <input class="form-control mb-2 proj-title" placeholder="Project Title">
+                        <input class="form-control mb-2 proj-tech" placeholder="Technologies">
+                        <input class="form-control mb-2 proj-link" placeholder="Project Link">
+                        <textarea class="form-control proj-desc" rows="3" placeholder="Project Description"></textarea>
+                    </div>
 
                 </div>
 
-                <textarea id="projects" class="form-control" rows="3" disabled></textarea>
-
             </div>
+
 
             <!-- Certifications -->
 
             <div class="mb-4">
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <label class="form-label fw-bold text-muted small text-uppercase">
-                        Certifications
-                    </label>
-
-                    <div>
-
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
-                                onclick="editSection('cert-container')"> <i class="bi bi-pencil"></i> Edit </button>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                onclick="addRow('cert-container')">
-
-                            * Add
-
-                        </button>
-
-                    </div>
-
+                <div class="d-flex justify-content-between mb-2">
+                    <label>Certifications</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow('cert-container')">+ Add</button>
                 </div>
 
                 <div id="cert-container">
 
                     <div class="dynamic-row">
-
-                        <input type="text" class="form-control" placeholder="Certification" disabled>
-
+                        <input class="form-control mb-2 cert-name" placeholder="Certification Name">
+                        <input class="form-control mb-2 cert-company" placeholder="Company">
+                        <input class="form-control cert-tech" placeholder="Technologies">
                     </div>
 
                 </div>
 
             </div>
 
-            <button class="btn btn-primary w-100 fw-bold py-3">
-                Save Resume
-            </button>
+
+            <!-- Skills -->
+
+            <div class="mb-4">
+                <label>Skills *</label>
+                <input id="skillsInput" class="form-control" placeholder="Java, Spring Boot, React" required>
+            </div>
+
+            <button class="btn btn-primary w-100 py-2">Save Resume</button>
 
         </form>
 
@@ -383,113 +225,135 @@
 
 </main>
 
+
 <script>
-
-    function editField(id){
-
-    const field=document.getElementById(id)
-
-    field.disabled=false
-    field.classList.add("edit-highlight")
-    field.focus()
-
-    }
-
-    function editSection(containerId){
-
-    const container=document.getElementById(containerId)
-
-    const inputs=container.querySelectorAll("input")
-
-    inputs.forEach(input=>{
-    input.disabled=false
-    input.classList.add("edit-highlight")
-    })
-
-    }
 
     function addRow(containerId){
 
-    const container=document.getElementById(containerId)
+        const container=document.getElementById(containerId)
 
-    const rowId=Date.now()
+        const id=Date.now()
 
-    let html=""
+        let html=""
 
-    if(containerId==="edu-container"){
+        if(containerId==="edu-container"){
+            html=`<div class="dynamic-row" id="${id}">
+<div class="btn-remove" onclick="removeRow('${id}')">✕</div>
+<input class="form-control mb-2 edu-inst" placeholder="Institution">
+<input class="form-control edu-deg" placeholder="Degree">
+</div>`
+        }
 
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
+        if(containerId==="exp-container"){
+            html=`<div class="dynamic-row" id="${id}">
+<div class="btn-remove" onclick="removeRow('${id}')">✕</div>
+<input class="form-control mb-2 exp-comp" placeholder="Company">
+<input class="form-control exp-role" placeholder="Role">
+</div>`
+        }
 
-    <input type="text"
-    class="form-control mb-2 edit-highlight"
-    placeholder="Institution">
+        if(containerId==="proj-container"){
+            html=`<div class="dynamic-row" id="${id}">
+<div class="btn-remove" onclick="removeRow('${id}')">✕</div>
+<input class="form-control mb-2 proj-title" placeholder="Project Title">
+<input class="form-control mb-2 proj-tech" placeholder="Technologies">
+<input class="form-control mb-2 proj-link" placeholder="Project Link">
+<textarea class="form-control proj-desc" rows="3" placeholder="Project Description"></textarea>
+</div>`
+        }
 
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Degree">
+        if(containerId==="cert-container"){
+            html=`<div class="dynamic-row" id="${id}">
+<div class="btn-remove" onclick="removeRow('${id}')">✕</div>
+<input class="form-control mb-2 cert-name" placeholder="Certification Name">
+<input class="form-control mb-2 cert-company" placeholder="Company">
+<input class="form-control cert-tech" placeholder="Technologies">
+</div>`
+        }
 
-    </div>
-    `
-
-    }
-
-    else if(containerId==="exp-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control mb-2 edit-highlight"
-    placeholder="Company">
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Role">
-
-    </div>
-    `
-
-    }
-
-    else if(containerId==="skills-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Skill">
-
-    </div>
-    `
-
-    }
-
-    else if(containerId==="cert-container"){
-
-    html=`
-    <div class="dynamic-row" id="row-${rowId}">
-    <div class="btn-remove" onclick="removeRow('row-${rowId}')">x</div>
-
-    <input type="text"
-    class="form-control edit-highlight"
-    placeholder="Certification">
-
-    </div>
-    `
-
-    }
-
-    container.insertAdjacentHTML("beforeend",html)
+        container.insertAdjacentHTML("beforeend",html)
 
     }
 
     function removeRow(id){
-    document.getElementById(id).remove()
+        document.getElementById(id).remove()
+    }
+
+
+    /* SAVE RESUME */
+
+    document.getElementById("resumeForm").onsubmit=async(e)=>{
+
+        e.preventDefault()
+
+        const userId=document.getElementById("userId").value
+        const objective=document.getElementById("objective").value.trim()
+        const skills=document.getElementById("skillsInput").value.trim()
+
+        if(objective==="" || skills===""){
+            alert("Please enter all required fields")
+            return
+        }
+
+        const resumeData={
+
+            objective:objective,
+
+            educations:Array.from(document.querySelectorAll("#edu-container .dynamic-row")).map(r=>({
+                institution:r.querySelector(".edu-inst").value,
+                degree:r.querySelector(".edu-deg").value
+            })),
+
+            experiences:Array.from(document.querySelectorAll("#exp-container .dynamic-row")).map(r=>({
+                companyName:r.querySelector(".exp-comp").value,
+                role:r.querySelector(".exp-role").value
+            })),
+
+            projects:Array.from(document.querySelectorAll("#proj-container .dynamic-row")).map(r=>({
+                projectTitle:r.querySelector(".proj-title").value,
+                technologies:r.querySelector(".proj-tech").value,
+                projectLink:r.querySelector(".proj-link").value,
+                description:r.querySelector(".proj-desc").value
+            })),
+
+            certifications:Array.from(document.querySelectorAll("#cert-container .dynamic-row")).map(r=>({
+                certificationName:r.querySelector(".cert-name").value,
+                company:r.querySelector(".cert-company").value,
+                technologies:r.querySelector(".cert-tech").value
+            })),
+
+            skills:skills.split(",").map(s=>s.trim())
+
+        }
+
+        try{
+
+            const response=await fetch(`/api/jobseeker/resume/save/${userId}`,{
+                method:"POST",
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(resumeData)
+            })
+
+            const result=await response.json()
+
+            if(response.ok){
+
+                alert("Resume Saved Successfully")
+
+                window.location.href="/jobseeker/resume/view"
+
+            }else{
+
+                alert(result.error || "Error saving resume")
+
+            }
+
+        }catch(err){
+
+            alert("Server error while saving resume")
+
+        }
+
     }
 
 </script>
