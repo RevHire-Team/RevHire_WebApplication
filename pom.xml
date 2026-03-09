@@ -23,8 +23,17 @@
         <sonar.projectKey>RevHire</sonar.projectKey>
         <sonar.projectName>RevHire_WebApplication</sonar.projectName>
         <sonar.host.url>http://localhost:9000</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
+        <sonar.coverage.jacoco.xmlReportPaths>
+            target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+
+        <sonar.coverage.exclusions>
+            **/entity/**,
+            **/dto/**,
+            **/config/**,
+            **/RevHireWebApplication.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -67,6 +76,39 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+<<<<<<< HEAD
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Exclude default Spring Boot logging -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Log4j2 Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+=======
+>>>>>>> d461ac4c150b2ae46da3d67c866af1b262b79eba
     </dependencies>
 
 
@@ -108,30 +150,34 @@
                 <version>0.8.11</version>
 
                 <executions>
-
+                    <!-- Attach JaCoCo agent -->
                     <execution>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
 
+                    <!-- Generate report -->
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <!--  Exclude DAO layer -->
+                                <exclude>com/RevHire/dto/**</exclude>
+
+                                <!--  Exclude menu / console UI -->
+                                <exclude>com/RevHire/entity/**</exclude>
+
+                                <!--  Exclude main class -->
+                                <exclude>com/RevHire/util/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
-
                 </executions>
-
-                <configuration>
-                    <formats>
-                        <format>XML</format>
-                        <format>HTML</format>
-                    </formats>
-                </configuration>
-
             </plugin>
 
             <plugin>
@@ -142,5 +188,7 @@
 
         </plugins>
     </build>
+
+
 
 </project>

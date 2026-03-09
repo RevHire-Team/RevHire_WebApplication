@@ -98,6 +98,13 @@
             color: white !important;
             cursor: not-allowed;
         }
+
+        .btn-saved{
+    background:#ef4444 !important;
+    border-color:#ef4444 !important;
+    color:white !important;
+}
+
     </style>
 </head>
 
@@ -216,9 +223,21 @@
                     <span class="company-name" th:text="${job.companyName}"></span>
                     <h5 class="job-title" th:text="${job.title}"></h5>
                 </div>
-                <button th:id="'applyBtn-' + ${job.jobId}"
-                        th:onclick="'handleApply(' + ${job.jobId} + ')'"
-                        class="btn btn-primary rounded-pill px-4">Apply Now</button>
+                <div class="d-flex gap-2">
+
+                    <button th:id="'saveBtn-' + ${job.jobId}"
+                            th:onclick="'saveJob(' + ${job.jobId} + ')'"
+                            class="btn btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-heart"></i>
+                    </button>
+
+                    <button th:id="'applyBtn-' + ${job.jobId}"
+                            th:onclick="'handleApply(' + ${job.jobId} + ')'"
+                            class="btn btn-primary rounded-pill px-4">
+                        Apply Now
+                    </button>
+
+                </div>
             </div>
 
             <div class="job-meta">
@@ -402,6 +421,52 @@
             }
         } catch (e) { console.log("Applied status check failed."); }
     });
+
+    async function saveJob(jobId) {
+
+    const userId = document.getElementById("sessionUserId").value;
+    const btn = document.getElementById(`saveBtn-${jobId}`);
+
+    if(!userId){
+        Swal.fire("Login Required","Please login first","warning");
+        return;
+    }
+
+    try{
+
+        const response = await fetch(`/api/jobseeker/favorites/${userId}/${jobId}`,{
+            method:"POST"
+        });
+
+        if(response.ok){
+
+            Swal.fire({
+                icon:'success',
+                title:'Job Saved!',
+                timer:1200,
+                showConfirmButton:false
+            });
+
+            btn.classList.add("btn-saved");
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+            btn.disabled = true;
+
+        }
+        else if(response.status === 409){
+
+            Swal.fire("Info","Job already saved","info");
+
+            btn.classList.add("btn-saved");
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+            btn.disabled = true;
+
+        }
+
+    }catch(e){
+        console.log("Save error",e);
+    }
+
+}
 </script>
 </body>
 </html>
