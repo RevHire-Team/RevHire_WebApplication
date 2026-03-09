@@ -159,7 +159,11 @@ public class JobSeekerControllerTest {
     @Test
     void testAddFavorite() throws Exception {
 
-        doNothing().when(jobSeekerService).addFavoriteJob(1L, 2L);
+        FavoriteJob mockFav = new FavoriteJob();
+        mockFav.setFavId(1L);
+
+        when(jobSeekerService.addFavoriteJob(1L, 2L))
+                .thenReturn(mockFav);
 
         mockMvc.perform(post("/api/jobseeker/favorites/1/2"))
                 .andExpect(status().isOk());

@@ -63,8 +63,10 @@ class AuthControllerTest {
 
     @Test
     void registerUser_ShouldRedirectToLogin_WhenSuccess() throws Exception {
+        User mockUser = new User();
+        mockUser.setUserId(1L);
 
-        doNothing().when(authService).registerUser(any(User.class));
+        when(authService.registerUser(any(User.class))).thenReturn(mockUser);
 
         mockMvc.perform(post("/auth/register")
                         .param("email", "test@example.com")
@@ -147,9 +149,8 @@ class AuthControllerTest {
 
     @Test
     void resetPassword_ShouldReturnLoginPage_WhenSuccess() throws Exception {
-
-        doNothing().when(authService)
-                .resetPassword("test@test.com", "answer", "new123");
+        when(authService.resetPassword("test@test.com", "answer", "new123"))
+                .thenReturn("Password updated successfully");
 
         mockMvc.perform(post("/auth/forgot-password")
                         .param("email", "test@test.com")
