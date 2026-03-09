@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public interface ResumeFileRepository extends JpaRepository<ResumeFile, Long> {
 
-    List<ResumeFile> findByResume_ResumeId(Long resumeId);
+    List<ResumeFile> findByResumeResumeId(Long resumeId);
 
     // To get the file using the Seeker's ID
     Optional<ResumeFile> findByResume_Seeker_SeekerId(Long seekerId);
