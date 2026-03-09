@@ -18,7 +18,6 @@ import com.RevHire.service.ResumeService;
 import com.RevHire.service.impl.JobServiceImpl;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Controller // This is the key! It allows returning HTML templates.
 @RequestMapping("/jobseeker") // Matches the redirect in AuthController
@@ -179,14 +179,17 @@ public class JobSeekerUIController {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) return "redirect:/auth/login";
 
-        // We fetch the profile first to get the seekerId needed for the application service
+        final List<ApplicationResponseDTO>[] apps = new List[]{List.of()}; // default empty list
+
+        // Fetch profile and applications if available
         jobSeekerService.getProfile(userId).ifPresent(profile -> {
-            List<ApplicationResponseDTO> apps = applicationService.getApplicationsBySeeker(profile.getSeekerId());
-            model.addAttribute("applications", apps);
-            model.addAttribute("activePage", "applications");
+            apps[0] = applicationService.getApplicationsBySeeker(profile.getSeekerId());
         });
 
-        return "jobseeker/applications"; // Points to a new applications.html or the dashboard
+        model.addAttribute("applications", apps[0]); // Now it's a List, Thymeleaf can iterate
+        model.addAttribute("activePage", "applications");
+
+        return "jobseeker/applications";
     }
 
     @GetMapping("/jobs/saved")

@@ -166,6 +166,7 @@ public class ResumeController {
             throw new RuntimeException("Could not read file: " + e.getMessage());
         }
     }
+
     @GetMapping("/view/{fileId}")
     public ResponseEntity<Resource> viewResume(@PathVariable Long fileId) {
 

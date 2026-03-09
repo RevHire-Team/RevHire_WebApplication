@@ -187,8 +187,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         notificationService.sendNotification(seekerUserId, message);
 
-        return updated;
-
         Application updatedApplication = applicationRepository.save(app);
 
         logger.info("Application status updated successfully for applicationId: {}", applicationId);

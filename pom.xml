@@ -76,13 +76,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-<<<<<<< HEAD
+
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -107,8 +108,11 @@
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-=======
->>>>>>> d461ac4c150b2ae46da3d67c866af1b262b79eba
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <version>6.2.5</version> <!-- use compatible version -->
+        </dependency>
     </dependencies>
 
 
