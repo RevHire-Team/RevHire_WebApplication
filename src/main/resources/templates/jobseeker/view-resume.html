@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
@@ -164,4 +164,244 @@
 </main>
 
 </body>
+</html>-->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <meta charset="UTF-8">
+    <title>View Resume | RevHire</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body{
+            background:#f8fafc;
+            font-family: 'Plus Jakarta Sans',sans-serif;
+        }
+
+        .resume-paper{
+            background:white;
+            padding:50px;
+            border-radius:15px;
+            max-width:900px;
+            margin:auto;
+            box-shadow:0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        .section-title{
+            font-size:14px;
+            font-weight:800;
+            letter-spacing:1px;
+            color:#2563eb;
+            border-bottom:2px solid #e5e7eb;
+            padding-bottom:6px;
+            margin-top:30px;
+            margin-bottom:15px;
+        }
+
+        .skill-tag{
+            background:#eff6ff;
+            color:#2563eb;
+            padding:6px 12px;
+            border-radius:6px;
+            font-size:13px;
+            font-weight:600;
+        }
+
+        .project-card{
+            background:#f8fafc;
+            border:1px solid #e2e8f0;
+            padding:15px;
+            border-radius:10px;
+            margin-bottom:10px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+<div class="container mt-5">
+
+    <div class="resume-paper" th:if="${resume!=null}">
+
+        <!-- HEADER -->
+
+        <div class="text-center mb-4">
+
+            <h2 th:text="${profile.fullName}">Candidate Name</h2>
+
+            <p class="text-muted">
+                <span th:text="${profile.location}"></span> |
+                <span th:text="${profile.phone}"></span>
+            </p>
+
+        </div>
+
+
+        <!-- OBJECTIVE -->
+
+        <div>
+
+            <div class="section-title">Professional Summary</div>
+
+            <p th:text="${resume.objective}"></p>
+
+        </div>
+
+
+
+        <!-- EDUCATION -->
+
+        <div th:if="${educations!=null}">
+
+            <div class="section-title">Education</div>
+
+            <div th:each="edu : ${educations}">
+
+                <strong th:text="${edu.institution}"></strong>
+
+                <p class="text-muted" th:text="${edu.degree}"></p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- EXPERIENCE -->
+
+        <div th:if="${experiences!=null}">
+
+            <div class="section-title">Experience</div>
+
+            <div th:each="exp : ${experiences}">
+
+                <strong th:text="${exp.role}"></strong>
+
+                <p class="text-muted" th:text="${exp.companyName}"></p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PROJECTS -->
+
+        <div th:if="${projects!=null}">
+
+            <div class="section-title">Projects</div>
+
+            <div th:each="proj : ${projects}" class="project-card">
+
+                <h6 th:text="${proj.projectTitle}"></h6>
+
+                <p class="text-muted">
+                    Tech: <span th:text="${proj.technologies}"></span>
+                </p>
+
+                <p th:text="${proj.description}"></p>
+
+                <a th:href="${proj.projectLink}" target="_blank">Project Link</a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- CERTIFICATIONS -->
+
+        <div th:if="${certifications!=null}">
+
+            <div class="section-title">Certifications</div>
+
+            <div th:each="cert : ${certifications}">
+
+                <strong th:text="${cert.certificationName}"></strong>
+
+                <p class="text-muted">
+                    <span th:text="${cert.company}"></span> |
+                    <span th:text="${cert.technologies}"></span>
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- SKILLS -->
+
+        <div th:if="${skills!=null}">
+
+            <div class="section-title">Technical Skills</div>
+
+            <div class="d-flex flex-wrap gap-2">
+
+<span th:each="skill : ${skills}" class="skill-tag"
+      th:text="${skill.skillName}"></span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- UPLOADED RESUME -->
+
+        <div th:if="${resumeFiles!=null}">
+
+            <div class="section-title">Uploaded Resume</div>
+
+            <div th:each="file : ${resumeFiles}" class="border p-3 rounded">
+
+                <strong th:text="${file.fileName}"></strong>
+
+                <div class="mt-2">
+
+                    <a class="btn btn-primary btn-sm"
+                       th:href="@{'/api/resume/download/' + ${file.fileId}}">
+
+                        Download Resume
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- IF NO RESUME -->
+
+    <div class="text-center mt-5" th:if="${resume==null}">
+
+        <h4>No Resume Found</h4>
+
+        <a th:href="@{/jobseeker/resume/builder}" class="btn btn-primary mt-3">
+
+            Create Resume
+
+        </a>
+
+    </div>
+
+
+</div>
+
+
+</body>
 </html>
+
