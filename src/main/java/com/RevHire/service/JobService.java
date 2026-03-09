@@ -6,6 +6,7 @@ import com.RevHire.entity.Job;
 import java.util.List;
 
 public interface JobService {
+    List<JobDTO> getRecommendedJobs(String skill);
 
     Job createJob(Job job, Long userId);
 
@@ -22,6 +23,8 @@ public interface JobService {
     JobDTO getJobById(Long jobId);
 
     JobDTO updateJob(Long jobId, Job updatedJob);
+
+    List<JobDTO> getEmployerJobsSorted(Long userId, String sort);
 
     List<JobDTO> searchJobs(String title,
                             String location,

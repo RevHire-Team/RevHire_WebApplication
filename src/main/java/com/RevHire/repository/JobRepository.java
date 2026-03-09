@@ -1,10 +1,8 @@
 package com.RevHire.repository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
-import com.RevHire.dto.JobDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import com.RevHire.entity.Job;
@@ -25,6 +23,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     Long countByEmployerEmployerId(Long employerId);
 
     Long countByEmployerEmployerIdAndStatus(Long employerId, String status);
+
+    List<Job> findByEmployerEmployerIdOrderByTitleAsc(Long employerId);
+
+    List<Job> findByEmployerEmployerIdOrderByJobIdDesc(Long employerId);
 
     List<Job> findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCaseAndStatus(
             String title,
@@ -64,4 +66,17 @@ AND j.status = 'OPEN'
             Double maxSalary,
             String jobType
     );
+
+    // Recommended Jobs based on skill
+    @Query("""
+
+SELECT j FROM Job j
+WHERE (
+LOWER(j.title) LIKE LOWER(CONCAT('%', :skill, '%'))
+OR LOWER(j.educationRequired) LIKE LOWER(CONCAT('%', :skill, '%'))
+)
+AND j.status = 'OPEN'
+ORDER BY j.createdAt DESC
+""")
+    List<Job> findRecommendedJobs(@Param("skill") String skill);
 }

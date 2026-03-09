@@ -133,41 +133,65 @@ public class ResumeController {
         }
     }
 
-  @GetMapping("/download/{fileId}")
-  public ResponseEntity<Resource> downloadResumeFile(@PathVariable Long fileId) {
-    // 1. Fetch file metadata
-    ResumeFile resumeFile =
-        resumeFileRepo
-            .findById(fileId)
-            .orElseThrow(() -> new RuntimeException("File record not found"));
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Resource> downloadResumeFile(@PathVariable Long fileId) {
 
-    try {
-      // 2. Get the physical path
-      Path path = Paths.get(resumeFile.getFilePath());
+        // 1. Fetch file metadata from DB
+        ResumeFile resumeFile = resumeFileRepo
+                .findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File record not found"));
 
-      if (!Files.exists(path)) {
-        throw new RuntimeException("Physical file missing at: " + path.toAbsolutePath());
-      }
+        try {
 
-      // 3. Load as Spring Resource
-      Resource resource = new UrlResource(path.toUri());
+            // 2. Get physical file path
+            Path path = Paths.get(resumeFile.getFilePath());
 
-      // 4. Determine MIME type
-      String contentType =
-          (resumeFile.getFileType() != null && resumeFile.getFileType().equalsIgnoreCase("PDF"))
-              ? "application/pdf"
-              : "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            if (!Files.exists(path)) {
+                throw new RuntimeException("Physical file missing at: " + path.toAbsolutePath());
+            }
 
-      return ResponseEntity.ok()
-          .contentType(MediaType.parseMediaType(contentType))
-          .header(
-              HttpHeaders.CONTENT_DISPOSITION,
-              "attachment; filename=\"" + resumeFile.getFileName() + "\"")
-          .body(resource); // No casting needed now that imports are correct!
+            // 3. Load as resource
+            Resource resource = new UrlResource(path.toUri());
 
-    } catch (IOException e) {
-      throw new RuntimeException("Could not read file: " + e.getMessage());
+            // 4. Always return PDF type for browser preview
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + resumeFile.getFileName() + "\""
+                    )
+                    .body(resource);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read file: " + e.getMessage());
+        }
     }
+    @GetMapping("/view/{fileId}")
+    public ResponseEntity<Resource> viewResume(@PathVariable Long fileId) {
+
+        ResumeFile resumeFile = resumeFileRepo
+                .findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File record not found"));
+
+        try {
+
+            Path path = Paths.get(resumeFile.getFilePath());
+
+            if (!Files.exists(path)) {
+                throw new RuntimeException("File missing: " + path.toAbsolutePath());
+            }
+
+            Resource resource = new UrlResource(path.toUri());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"" + resumeFile.getFileName() + "\"")
+                    .body(resource);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read file: " + e.getMessage());
+        }
     }
 
 

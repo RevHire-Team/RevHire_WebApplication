@@ -1,67 +1,93 @@
-    package com.RevHire.controller;
+package com.RevHire.controller;
 
-    import java.util.List;
+import java.util.List;
 
-    import com.RevHire.dto.JobDTO;
-    import jakarta.servlet.http.HttpSession;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.http.ResponseEntity;
-    import org.springframework.stereotype.Controller;
-    import org.springframework.ui.Model;
-    import org.springframework.web.bind.annotation.*;
+import com.RevHire.dto.JobDTO;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-    import com.RevHire.entity.Job;
-    import com.RevHire.service.JobService;
+import com.RevHire.entity.Job;
+import com.RevHire.service.JobService;
 
-    @Controller
-    @RequestMapping("/jobs")
-    public class JobController {
+@Controller
+@RequestMapping("/jobs")
+public class JobController {
 
-        @Autowired
-        private JobService jobService;
+    @Autowired
+    private JobService jobService;
 
-        @GetMapping
-        public List<JobDTO> viewAllJobs() {
-            return jobService.getAllOpenJobs();
-        }
+    @GetMapping
+    @ResponseBody
+    public List<JobDTO> viewAllJobs() {
+        return jobService.getAllOpenJobs();
+    }
 
-        @GetMapping("/create")
-        public String showCreateJobPage(HttpSession session, Model model) {
-            if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
-            return "employer/jobs/create-job";
-        }
+    @GetMapping("/create")
+    public String showCreateJobPage(HttpSession session, Model model) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/jobs/create-job";
+    }
 
-        @PostMapping("/create/{userId}")
-        @ResponseBody // Add this so Spring treats the return as JSON, not a HTML view name
-        public ResponseEntity<?> createJob(@PathVariable Long userId, @RequestBody Job job) {
-            return ResponseEntity.ok(jobService.createJob(job, userId));
-        }
+    @PostMapping("/create/{userId}")
+    @ResponseBody
+    public ResponseEntity<?> createJob(@PathVariable Long userId, @RequestBody Job job) {
+        return ResponseEntity.ok(jobService.createJob(job, userId));
+    }
 
-        @GetMapping("/search")
-        public List<JobDTO> searchJobs(
-                @RequestParam(required = false) String title,
-                @RequestParam(required = false) String location,
-                @RequestParam(required = false) Integer experience,
-                @RequestParam(required = false) String companyName,
-                @RequestParam(required = false) Double minSalary,
-                @RequestParam(required = false) Double maxSalary,
-                @RequestParam(required = false) String jobType
-        ) {
-            return jobService.searchJobs(
-                    title,
-                    location,
-                    experience,
-                    companyName,
-                    minSalary,
-                    maxSalary,
-                    jobType
-            );
-        }
+// ========================= SEARCH JOBS =========================
 
-        @PutMapping("/close/{id}")
-        public String closeJob(@PathVariable Long id) {
-            jobService.closeJob(id);
-            return "Job Closed Successfully";
+    @GetMapping("/search")
+    public String searchJobs(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Integer experience,
+            @RequestParam(required = false) String companyName,
+            @RequestParam(required = false) Double minSalary,
+            @RequestParam(required = false) Double maxSalary,
+            @RequestParam(required = false) String jobType,
+            @RequestParam(required = false) String sort,
+            Model model
+    ) {
+
+        List<JobDTO> jobs = new java.util.ArrayList<>(jobService.searchJobs(
+                title,
+                location,
+                experience,
+                companyName,
+                minSalary,
+                maxSalary,
+                jobType
+        ));
+
+        if (sort != null) {
+
+            switch (sort) {
+
+                case "company":
+                    jobs.sort((a, b) ->
+                            a.getCompanyName().compareToIgnoreCase(b.getCompanyName())
+                    );
+                    break;
+
+                case "salary":
+                    jobs.sort((a, b) -> {
+                        if (a.getSalaryMax() == null && b.getSalaryMax() == null) return 0;
+                        if (a.getSalaryMax() == null) return -1;
+                        if (b.getSalaryMax() == null) return 1;
+                        return a.getSalaryMax().compareTo(b.getSalaryMax());
+                    });
+                    break;
+
+                case "jobType":
+                    jobs.sort((a, b) ->
+                            a.getJobType().compareToIgnoreCase(b.getJobType())
+                    );
+                    break;
+            }
         }
 
         // 1. Add this explicit mapping for the HTML page
@@ -74,11 +100,15 @@
         // 2. Keep this for API calls, but Spring will now check "/manage" first
         @GetMapping("/jobs/{userId}")
         @ResponseBody
-        public ResponseEntity<List<JobDTO>> getEmployerJobs(@PathVariable Long userId) {
-            return ResponseEntity.ok(jobService.getJobsByUserId(userId));
+        public ResponseEntity<List<JobDTO>> getEmployerJobs(
+                @PathVariable Long userId,
+                @RequestParam(required = false) String sort) {
+
+            return ResponseEntity.ok(jobService.getEmployerJobsSorted(userId, sort));
         }
 
         @DeleteMapping("/jobs/{jobId}")
+        @ResponseBody
         public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
             jobService.deleteJob(jobId);
             return ResponseEntity.ok("Deleted successfully");
