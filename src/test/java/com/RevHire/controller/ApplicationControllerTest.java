@@ -137,7 +137,8 @@ class ApplicationControllerTest {
                         "John Doe",
                         "john@example.com",
                         "APPLIED",
-                        LocalDateTime.now()
+                        LocalDateTime.now(),
+                        1L
                 )
         );
 
@@ -165,6 +166,7 @@ class ApplicationControllerTest {
 
     @Test
     void updateStatus_ShouldReturnSuccessMessage() throws Exception {
+
         Application updatedApp = new Application();
         updatedApp.setApplicationId(1L);
         updatedApp.setStatus("APPROVED");
@@ -177,6 +179,7 @@ class ApplicationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Application status updated successfully"));
     }
+
     // ---------- addNotes ----------
 
     @Test
@@ -240,7 +243,8 @@ class ApplicationControllerTest {
                         "John Doe",
                         "john@example.com",
                         "APPLIED",
-                        LocalDateTime.now()
+                        LocalDateTime.now(),
+                        1L
                 )
         );
 
@@ -257,6 +261,4 @@ class ApplicationControllerTest {
         mockMvc.perform(get("/applications/all"))
                 .andExpect(status().isUnauthorized());
     }
-
-
 }

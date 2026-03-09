@@ -20,12 +20,14 @@ public class JobController {
     @Autowired
     private JobService jobService;
 
+    // ========================= VIEW ALL JOBS =========================
     @GetMapping
     @ResponseBody
     public List<JobDTO> viewAllJobs() {
         return jobService.getAllOpenJobs();
     }
 
+    // ========================= CREATE JOB =========================
     @GetMapping("/create")
     public String showCreateJobPage(HttpSession session, Model model) {
         if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
@@ -38,8 +40,7 @@ public class JobController {
         return ResponseEntity.ok(jobService.createJob(job, userId));
     }
 
-// ========================= SEARCH JOBS =========================
-
+    // ========================= SEARCH JOBS =========================
     @GetMapping("/search")
     public String searchJobs(
             @RequestParam(required = false) String title,
@@ -52,7 +53,6 @@ public class JobController {
             @RequestParam(required = false) String sort,
             Model model
     ) {
-
         List<JobDTO> jobs = new java.util.ArrayList<>(jobService.searchJobs(
                 title,
                 location,
@@ -64,9 +64,7 @@ public class JobController {
         ));
 
         if (sort != null) {
-
             switch (sort) {
-
                 case "company":
                     jobs.sort((a, b) ->
                             a.getCompanyName().compareToIgnoreCase(b.getCompanyName())
@@ -90,54 +88,60 @@ public class JobController {
             }
         }
 
-        // 1. Add this explicit mapping for the HTML page
-        @GetMapping("/manage")
-        public String showManageJobsPage(HttpSession session) {
-            if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
-            return "employer/jobs/manage-jobs"; // Points to your manage-jobs.html
-        }
-
-        // 2. Keep this for API calls, but Spring will now check "/manage" first
-        @GetMapping("/jobs/{userId}")
-        @ResponseBody
-        public ResponseEntity<List<JobDTO>> getEmployerJobs(
-                @PathVariable Long userId,
-                @RequestParam(required = false) String sort) {
-
-            return ResponseEntity.ok(jobService.getEmployerJobsSorted(userId, sort));
-        }
-
-        @DeleteMapping("/jobs/{jobId}")
-        @ResponseBody
-        public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
-            jobService.deleteJob(jobId);
-            return ResponseEntity.ok("Deleted successfully");
-        }
-
-        @PutMapping("/jobs/toggle/{jobId}")
-        public ResponseEntity<JobDTO> toggleJob(@PathVariable Long jobId) {
-            return ResponseEntity.ok(jobService.toggleJobStatus(jobId));
-        }
-
-        // Add to JobController.java
-
-        @GetMapping("/jobs/edit/{jobId}")
-        public String showEditJobPage(@PathVariable Long jobId, Model model, HttpSession session) {
-            if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
-            model.addAttribute("jobId", jobId); // Pass ID to the view for the JS to use
-            return "employer/jobs/edit-job";
-        }
-
-        @GetMapping("/get/{jobId}")
-        @ResponseBody
-        public ResponseEntity<JobDTO> getJobById(@PathVariable Long jobId) {
-            // You'll need to implement getJobById in your Service
-            return ResponseEntity.ok(jobService.getJobById(jobId));
-        }
-
-        @PutMapping("/update/{jobId}")
-        @ResponseBody
-        public ResponseEntity<?> updateJob(@PathVariable Long jobId, @RequestBody Job job) {
-            return ResponseEntity.ok(jobService.updateJob(jobId, job));
-        }
+        model.addAttribute("jobs", jobs);
+        return "jobs/search-results"; // You may map this to your search results page
     }
+
+    // ========================= MANAGE JOBS PAGE =========================
+    @GetMapping("/manage")
+    public String showManageJobsPage(HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        return "employer/jobs/manage-jobs";
+    }
+
+    // ========================= EMPLOYER JOBS API =========================
+    @GetMapping("/jobs/{userId}")
+    @ResponseBody
+    public ResponseEntity<List<JobDTO>> getEmployerJobs(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(jobService.getEmployerJobsSorted(userId, sort));
+    }
+
+    // ========================= DELETE JOB =========================
+    @DeleteMapping("/jobs/{jobId}")
+    @ResponseBody
+    public ResponseEntity<?> deleteJob(@PathVariable Long jobId) {
+        jobService.deleteJob(jobId);
+        return ResponseEntity.ok("Deleted successfully");
+    }
+
+    // ========================= TOGGLE JOB STATUS =========================
+    @PutMapping("/jobs/toggle/{jobId}")
+    @ResponseBody
+    public ResponseEntity<JobDTO> toggleJob(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.toggleJobStatus(jobId));
+    }
+
+    // ========================= EDIT JOB PAGE =========================
+    @GetMapping("/jobs/edit/{jobId}")
+    public String showEditJobPage(@PathVariable Long jobId, Model model, HttpSession session) {
+        if (session.getAttribute("loggedInUser") == null) return "redirect:/auth/login";
+        model.addAttribute("jobId", jobId);
+        return "employer/jobs/edit-job";
+    }
+
+    // ========================= GET JOB BY ID =========================
+    @GetMapping("/get/{jobId}")
+    @ResponseBody
+    public ResponseEntity<JobDTO> getJobById(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.getJobById(jobId));
+    }
+
+    // ========================= UPDATE JOB =========================
+    @PutMapping("/update/{jobId}")
+    @ResponseBody
+    public ResponseEntity<?> updateJob(@PathVariable Long jobId, @RequestBody Job job) {
+        return ResponseEntity.ok(jobService.updateJob(jobId, job));
+    }
+}
