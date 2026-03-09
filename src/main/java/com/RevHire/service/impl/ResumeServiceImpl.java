@@ -4,45 +4,48 @@ import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.ResumeService;
 
-import org.springframework.core.io.Resource;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.*;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Comparator;
+import java.io.IOException;
 import java.util.List;
-import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class ResumeServiceImpl implements ResumeService {
 
     @Autowired
-    private final ResumeRepository resumeRepo;
-    private final ResumeEducationRepository educationRepo;
-    private final ResumeExperienceRepository experienceRepo;
-    private final ResumeSkillRepository skillRepo;
-    private final ResumeFileRepository resumeFileRepo; // Add this repository
+    private ResumeRepository resumeRepo;
 
-    public ResumeServiceImpl(ResumeRepository resumeRepo,
-                             ResumeEducationRepository educationRepo,
-                             ResumeExperienceRepository experienceRepo,
-                             ResumeSkillRepository skillRepo, ResumeFileRepository resumeFileRepo) {
-        this.resumeRepo = resumeRepo;
-        this.educationRepo = educationRepo;
-        this.experienceRepo = experienceRepo;
-        this.skillRepo = skillRepo;
-        this.resumeFileRepo = resumeFileRepo;
-    }
+    @Autowired
+    private ResumeEducationRepository educationRepo;
 
-    // ================= RESUME =================
+    @Autowired
+    private ResumeExperienceRepository experienceRepo;
+
+    @Autowired
+    private ResumeSkillRepository skillRepo;
+
+    @Autowired
+    private ResumeCertificationRepository certRepo;
+
+    @Autowired
+    private ResumeProjectRepository projectRepo;
+
+    @Autowired
+    private ResumeFileRepository fileRepo;
+
+    @Autowired
+    private JobSeekerProfileRepository profileRepo;
+
+    /* ================= RESUME ================= */
 
     @Override
     public Resume createResume(Resume resume) {
@@ -50,11 +53,17 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
-    public Resume updateResume(Long resumeId, Resume updatedResume) {
-        Resume existing = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+    public Resume updateResume(Long resumeId, Resume resume) {
 
-        existing.setObjective(updatedResume.getObjective());
+        Optional<Resume> existingOpt = resumeRepo.findById(resumeId);
+
+        if (existingOpt.isEmpty()) {
+            throw new RuntimeException("Resume not found");
+        }
+
+        Resume existing = existingOpt.get();
+        existing.setObjective(resume.getObjective());
+
         return resumeRepo.save(existing);
     }
 
@@ -64,20 +73,22 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
-    public Resume getResumeByUserId(Long seekerId) {
+    public Resume getResumeByUserId(Long userId) {
 
-        Resume resume = resumeRepo.findBySeeker_SeekerId(seekerId)
+        Optional<JobSeekerProfile> profileOpt =
+                profileRepo.findByUserUserId(userId);
+
+        if (profileOpt.isEmpty()) {
+            throw new RuntimeException("Profile not found");
+        }
+
+        JobSeekerProfile profile = profileOpt.get();
+
+        return resumeRepo.findBySeekerSeekerId(profile.getSeekerId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
-
-        List<ResumeFile> orderedFiles =
-                resumeFileRepo.findByResume_ResumeIdOrderByUploadedAtDesc(resume.getResumeId());
-
-        resume.setFiles(orderedFiles);
-
-        return resume;
     }
 
-    // ================= EDUCATION =================
+    /* ================= EDUCATION ================= */
 
     @Override
     public ResumeEducation addEducation(ResumeEducation education) {
@@ -86,7 +97,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public List<ResumeEducation> getEducationByResume(Long resumeId) {
-        return educationRepo.findByResume_ResumeId(resumeId);
+        return educationRepo.findByResumeResumeId(resumeId);
     }
 
     @Override
@@ -94,7 +105,7 @@ public class ResumeServiceImpl implements ResumeService {
         educationRepo.deleteById(educationId);
     }
 
-    // ================= EXPERIENCE =================
+    /* ================= EXPERIENCE ================= */
 
     @Override
     public ResumeExperience addExperience(ResumeExperience experience) {
@@ -103,7 +114,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public List<ResumeExperience> getExperienceByResume(Long resumeId) {
-        return experienceRepo.findByResume_ResumeId(resumeId);
+        return experienceRepo.findByResumeResumeId(resumeId);
     }
 
     @Override
@@ -111,7 +122,7 @@ public class ResumeServiceImpl implements ResumeService {
         experienceRepo.deleteById(experienceId);
     }
 
-    // ================= SKILLS =================
+    /* ================= SKILLS ================= */
 
     @Override
     public ResumeSkill addSkill(ResumeSkill skill) {
@@ -120,7 +131,7 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public List<ResumeSkill> getSkillsByResume(Long resumeId) {
-        return skillRepo.findByResume_ResumeId(resumeId);
+        return skillRepo.findByResumeResumeId(resumeId);
     }
 
     @Override
@@ -129,106 +140,143 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
-    @Transactional
     public void saveSkills(Long resumeId, List<ResumeSkill> skills) {
+
         Resume resume = resumeRepo.findById(resumeId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-        skillRepo.deleteByResume(resume);
-
         for (ResumeSkill skill : skills) {
             skill.setResume(resume);
+            skillRepo.save(skill);
         }
-
-        skillRepo.saveAll(skills);
     }
 
-    // ================= FILE UPLOAD =================
-
-    // ================= FILE UPLOAD & MANAGEMENT =================
+    /* ================= CERTIFICATIONS ================= */
 
     @Override
-    @Transactional
+    public ResumeCertification addCertification(Long resumeId, ResumeCertification cert) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        cert.setResume(resume);
+
+        return certRepo.save(cert);
+    }
+
+    @Override
+    public List<ResumeCertification> getCertifications(Long resumeId) {
+        return certRepo.findByResumeResumeId(resumeId);
+    }
+
+    @Override
+    public void deleteCertification(Long certificationId) {
+        certRepo.deleteById(certificationId);
+    }
+
+    /* ================= PROJECTS ================= */
+
+    @Override
+    public ResumeProject addProject(Long resumeId, ResumeProject project) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        project.setResume(resume);
+
+        return projectRepo.save(project);
+    }
+
+    @Override
+    public List<ResumeProject> getProjects(Long resumeId) {
+        return projectRepo.findByResumeResumeId(resumeId);
+    }
+
+    @Override
+    public void deleteProject(Long projectId) {
+        projectRepo.deleteById(projectId);
+    }
+
+    /* ================= FILE MANAGEMENT ================= */
+
+    @Override
     public void saveResumeFile(Long userId, MultipartFile file) throws IOException {
+
         Resume resume = resumeRepo.findBySeeker_User_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Resume profile not found"));
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-        // 1. Create the directory if it doesn't exist
-        Path uploadPath = Paths.get("uploads");
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        String uploadDir = "uploads/";
 
-        // 2. Create unique filename to avoid overwriting
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        Path filePath = uploadPath.resolve(fileName);
+        Files.createDirectories(Paths.get(uploadDir));
 
-        // 3. PHYSICALLY save the file to the disk
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        Path filePath = Paths.get(uploadDir + file.getOriginalFilename());
 
-        // 4. Save metadata to DB
+        Files.write(filePath, file.getBytes());
+
         ResumeFile resumeFile = new ResumeFile();
-        resumeFile.setFileName(file.getOriginalFilename());
-        resumeFile.setFileSize(file.getSize());
         resumeFile.setResume(resume);
-        resumeFile.setUploadedAt(LocalDateTime.now());
-        resumeFile.setFilePath(filePath.toString()); // Store the full relative path
+        resumeFile.setFileName(file.getOriginalFilename());
+        resumeFile.setFilePath(filePath.toString());
+        resumeFile.setFileSize(file.getSize());
+        resumeFile.setFileType(file.getContentType());
 
-        resumeFile.setFileType(file.getContentType().contains("pdf") ? "PDF" : "DOCX");
-
-        resumeFileRepo.save(resumeFile);
+        fileRepo.save(resumeFile);
     }
 
     @Override
-    @Transactional
+    public ResponseEntity<Resource> downloadResumeFile(Long userId) {
+
+        try {
+
+            Optional<ResumeFile> fileOpt =
+                    fileRepo.findByResume_Seeker_User_UserId(userId);
+
+            if (fileOpt.isEmpty()) {
+                throw new RuntimeException("Resume file not found");
+            }
+
+            ResumeFile file = fileOpt.get();
+
+            Path path = Paths.get(file.getFilePath());
+
+            Resource resource = new UrlResource(path.toUri());
+
+            return ResponseEntity.ok().body(resource);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Download failed");
+        }
+    }
+
+    @Override
+    public byte[] getResumeFileBytes(Long userId) {
+
+        try {
+
+            Optional<ResumeFile> fileOpt =
+                    fileRepo.findByResume_Seeker_User_UserId(userId);
+
+            if (fileOpt.isEmpty()) {
+                throw new RuntimeException("Resume file not found");
+            }
+
+            ResumeFile file = fileOpt.get();
+
+            return Files.readAllBytes(Paths.get(file.getFilePath()));
+
+        } catch (Exception e) {
+            throw new RuntimeException("File read error");
+        }
+    }
+
+    @Override
+    public ResumeFile getResumeFile(Long fileId) {
+        return fileRepo.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+    }
+
+    @Override
     public void deleteResumeFile(Long fileId) {
-        if (resumeFileRepo.existsById(fileId)) {
-            resumeFileRepo.deleteById(fileId);
-            // Force the DB to commit the change immediately
-            // before the frontend calls loadResumes() again
-            resumeFileRepo.flush();
-        }
-    }
-
-    @Override
-    public byte[] getResumeFileBytes(Long seekerId) {
-        Resume resume = resumeRepo.findBySeeker_SeekerId(seekerId)
-                .orElseThrow(() -> new RuntimeException("No resume found"));
-
-        ResumeFile latestFile = resume.getFiles().stream()
-                .max(Comparator.comparing(ResumeFile::getFileId))
-                .orElseThrow(() -> new RuntimeException("No resume file uploaded"));
-
-        try {
-            return Files.readAllBytes(Paths.get(latestFile.getFilePath()));
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read resume file");
-        }
-    }
-
-    public ResponseEntity<jakarta.annotation.Resource> downloadResumeFile(Long userId) {
-
-        Resume resume = resumeRepo.findBySeekerSeekerId(userId)
-                .orElseThrow(() -> new RuntimeException("No resume found"));
-
-        ResumeFile latestFile = resume.getFiles().stream()
-                .max(Comparator.comparing(ResumeFile::getFileId))
-                .orElseThrow(() -> new RuntimeException("No file metadata found"));
-
-        try {
-            Path filePath = Paths.get(latestFile.getFilePath());
-
-            ByteArrayResource resource =
-                    new ByteArrayResource(Files.readAllBytes(filePath));
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(latestFile.getFileType()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + latestFile.getFileName() + "\"")
-                    .body((jakarta.annotation.Resource) resource);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Could not download file");
-        }
+        fileRepo.deleteByFileId(fileId);
     }
 }
