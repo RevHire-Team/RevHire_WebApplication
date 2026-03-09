@@ -3,6 +3,7 @@ package com.RevHire.controller;
 import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
+import com.RevHire.entity.Application;
 import com.RevHire.entity.User;
 import com.RevHire.service.ApplicationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,9 +65,11 @@ class ApplicationControllerTest {
 
     @Test
     void apply_ShouldReturnSuccessMessage() throws Exception {
+        Application mockApp = new Application();
+        mockApp.setApplicationId(1L);
 
-        doNothing().when(applicationService)
-                .applyJob(1L, 2L, 3L, "Cover letter");
+        when(applicationService.applyJob(1L, 2L, 3L, "Cover letter"))
+                .thenReturn(mockApp);
 
         mockMvc.perform(post("/applications/submit-application")
                         .param("jobId", "1")
@@ -162,16 +165,18 @@ class ApplicationControllerTest {
 
     @Test
     void updateStatus_ShouldReturnSuccessMessage() throws Exception {
+        Application updatedApp = new Application();
+        updatedApp.setApplicationId(1L);
+        updatedApp.setStatus("APPROVED");
 
-        doNothing().when(applicationService)
-                .updateStatus(1L, "APPROVED");
+        when(applicationService.updateStatus(1L, "APPROVED"))
+                .thenReturn(updatedApp);
 
         mockMvc.perform(post("/applications/update-status/1")
                         .param("status", "APPROVED"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Application status updated successfully"));
     }
-
     // ---------- addNotes ----------
 
     @Test
@@ -252,4 +257,6 @@ class ApplicationControllerTest {
         mockMvc.perform(get("/applications/all"))
                 .andExpect(status().isUnauthorized());
     }
+
+
 }
