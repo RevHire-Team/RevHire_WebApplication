@@ -199,7 +199,14 @@ tableBody.innerHTML = applications.map(app => `
 }
 
 function getStatusColor(status) {
-    const colors = { 'APPLIED': 'info', 'SHORTLISTED': 'primary', 'REJECTED': 'danger' };
+
+    const colors = {
+        'APPLIED': 'info',
+        'SHORTLISTED': 'primary',
+        'REJECTED': 'danger',
+        'WITHDRAWN': 'secondary'
+    };
+
     return colors[status] || 'secondary';
 }
 
@@ -259,17 +266,22 @@ function viewDetails(appId) {
                 <strong>Update Application Status</strong>
                 <div class="mt-2">
 
-                    <button class="btn btn-success me-2"
-                        onclick="updateStatus(${app.applicationId}, 'SHORTLISTED')">
+                   ${app.status === 'WITHDRAWN'
+                   ? `<div class="alert alert-warning mt-2">
+                   Candidate has withdrawn this application.
+                   </div>`
+                   : `
+                   <button class="btn btn-success me-2"
+                   onclick="updateStatus(${app.applicationId}, 'SHORTLISTED')">
+                   ✔ Shortlist
+                   </button>
 
-                        ✔ Shortlist
-                    </button>
-
-                    <button class="btn btn-danger"
-                        onclick="updateStatus(${app.applicationId}, 'REJECTED')">
-
-                        ❌ Reject
-                    </button>
+                   <button class="btn btn-danger"
+                   onclick="updateStatus(${app.applicationId}, 'REJECTED')">
+                   ❌ Reject
+                   </button>
+                   `
+                   }
 
                 </div>
             </div>
