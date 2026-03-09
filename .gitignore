@@ -1,35 +1,86 @@
-HELP.md
+# ===============================
+
+# Spring Boot / Maven .gitignore
+
+# ===============================
+
+# Maven build folder
+
 target/
-uploads/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-!**/src/main/**/dto/
-resources/application.properties
 
-target/
+# Maven wrapper
+
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+
 *.log
-*.class
-.idea/
-*.iml
-.DS_Store
 
-### STS ###
+# Compiled class files
+
+*.class
+
+# ===============================
+
+# Sensitive configuration files
+
+# ===============================
+
+# Application properties (contains DB credentials)
+
+src/main/resources/application.properties
+
+# ===============================
+
+# Uploads / generated files
+
+# ===============================
+
+uploads/
+
+# ===============================
+
+# OS files
+
+# ===============================
+
+.DS_Store
+Thumbs.db
+
+# ===============================
+
+# IntelliJ IDEA
+
+# ===============================
+
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===============================
+
+# Eclipse / STS
+
+# ===============================
+
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# ===============================
 
-### NetBeans ###
+# NetBeans
+
+# ===============================
+
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -39,8 +90,29 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# ===============================
+
+# VS Code
+
+# ===============================
+
 .vscode/
 
+# ===============================
 
-src/main/resources/application.properties
+# Temporary files
+
+# ===============================
+
+*.swp
+*.tmp
+*.bak
+*.orig
+
+# ===============================
+
+# Misc
+
+# ===============================
+
+HELP.md
