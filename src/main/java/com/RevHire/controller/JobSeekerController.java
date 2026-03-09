@@ -305,5 +305,36 @@ public class JobSeekerController {
 
         return "jobseeker/view-resume"; // loads view-resume.html
     }
+    // ========== RECOMMENDED JOBS ==========
+    @GetMapping("/recommended-jobs/{userId}")
+    public ResponseEntity<?> getRecommendedJobs(@PathVariable Long userId) {
+
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+        Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
+
+        if (resumeOpt.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        Resume resume = resumeOpt.get();
+
+        // Get user skills
+        List<ResumeSkill> skills = resumeService.getSkillsByResume(resume.getResumeId());
+
+        if (skills.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<String> skillNames = skills.stream()
+                .map(ResumeSkill::getSkillName)
+                .toList();
+
+        // Get recommended jobs using service
+        List<Job> recommendedJobs = jobSeekerService.getRecommendedJobs(skillNames);
+
+        return ResponseEntity.ok(recommendedJobs);
+    }
 
 }
