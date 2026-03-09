@@ -93,7 +93,7 @@ public class JobSeekerUIController {
     }
 
     @GetMapping("/profile/manage")
-    public String manageProfile(HttpSession session,Model model) {
+    public String manageProfile(HttpSession session, Model model) {
         // Security check: ensure user is logged in
         if (session.getAttribute("userId") == null) return "redirect:/auth/login";
         model.addAttribute("activePage", "profile");
@@ -107,7 +107,7 @@ public class JobSeekerUIController {
     }
 
     @GetMapping("/resume/builder")
-    public String showResumeBuilder(HttpSession session,Model model) {
+    public String showResumeBuilder(HttpSession session, Model model) {
         if (session.getAttribute("userId") == null) return "redirect:/auth/login";
         model.addAttribute("activePage", "builder");
 
@@ -115,7 +115,7 @@ public class JobSeekerUIController {
     }
 
     @GetMapping("/resume/upload")
-    public String showUploadPage(HttpSession session,Model model) {
+    public String showUploadPage(HttpSession session, Model model) {
         // Simple security check: redirect to login if session is empty
         if (session.getAttribute("userId") == null) {
             return "redirect:/auth/login";
@@ -125,6 +125,8 @@ public class JobSeekerUIController {
         return "jobseeker/resume-upload";
     }
 
+
+/*
     @GetMapping("/resume/view")
     public String viewResume(HttpSession session, Model model) {
         Long userId = (Long) session.getAttribute("userId");
@@ -148,7 +150,60 @@ public class JobSeekerUIController {
         });
 
         return "jobseeker/view-resume";
+    }*/
+
+    @GetMapping("/resume/view")
+    public String viewResume(HttpSession session, Model model) {
+
+        Long userId = (Long) session.getAttribute("userId");
+
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
+
+        // 1️⃣ Get Job Seeker Profile
+        Optional<JobSeekerProfile> profileOpt = jobSeekerService.getProfile(userId);
+
+        if (profileOpt.isEmpty()) {
+            model.addAttribute("resume", null);
+            return "jobseeker/view-resume";
+        }
+
+        JobSeekerProfile profile = profileOpt.get();
+        model.addAttribute("profile", profile);
+
+        // 2️⃣ Get Resume
+        Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
+
+        if (resumeOpt.isEmpty()) {
+            model.addAttribute("resume", null);
+            return "jobseeker/view-resume";
+        }
+
+        Resume resume = resumeOpt.get();
+        model.addAttribute("resume", resume);
+
+        Long resumeId = resume.getResumeId();
+
+        // 3️⃣ Load Resume Sections
+        model.addAttribute("educations",
+                resumeService.getEducationByResume(resumeId));
+
+        model.addAttribute("experiences",
+                resumeService.getExperienceByResume(resumeId));
+
+        model.addAttribute("projects",
+                resumeService.getProjects(resumeId));
+
+        model.addAttribute("certifications",
+                resumeService.getCertifications(resumeId));
+
+        model.addAttribute("skills",
+                resumeService.getSkillsByResume(resumeId));
+
+        return "jobseeker/view-resume";
     }
+
 
     @GetMapping("/jobs/search")
     public String showSearchPage(
@@ -230,7 +285,7 @@ public class JobSeekerUIController {
 
         // 4. Update Skills (Relational Table)
         // Delete existing skills first to avoid duplicates
-        resumeSkillRepo.deleteByResume(resume);
+        resumeSkillRepo.deleteByResumeResumeId(resume.getResumeId());
 
         if (dto.getSkills() != null && !dto.getSkills().trim().isEmpty()) {
             String[] skillNames = dto.getSkills().split(",");
@@ -251,16 +306,20 @@ public class JobSeekerUIController {
     }
 
     private int calculateCompletion(JobSeekerProfile p, Resume r) {
+
         int count = 0;
-        if(p.getFullName() != null) count += 20;
-        if(p.getPhone() != null) count += 20;
-        if(p.getLocation() != null) count += 20;
-        if(r.getObjective() != null) count += 20;
+
+        if (p.getFullName() != null) count += 20;
+        if (p.getPhone() != null) count += 20;
+        if (p.getLocation() != null) count += 20;
+        if (r.getObjective() != null) count += 20;
+
         // Check if skills exist
-        if(!resumeSkillRepo.findByResume(r).isEmpty()) count += 20;
+        if (!resumeSkillRepo.findByResumeResumeId(r.getResumeId()).isEmpty()) {
+            count += 20;
+        }
+
         return count;
     }
-
-
 
 }
