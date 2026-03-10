@@ -93,13 +93,66 @@ resume-builder.html code <!DOCTYPE html>
 
 <body>
 
+<!-- SIDEBAR -->
+
 <nav class="sidebar">
 
-    <a th:href="@{/jobseeker/dashboard}" class="logo">RevHire</a>
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
 
-    <div class="mt-4">
-        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">Resume Builder</a>
-        <a th:href="@{/jobseeker/resume/view}" class="nav-link">View Resume</a>
+    <div class="nav-menu">
+
+        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+
+        <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
+            <i class="bi bi-pencil"></i> <span>Manage Profile</span>
+        </a>
+
+        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">
+            <i class="bi bi-file-earmark-text"></i> <span>Resume Builder</span>
+        </a>
+
+        <a th:href="@{/jobseeker/resume/view}" class="nav-link">
+            <i class="bi bi-eye"></i>
+            <span>View Resume</span>
+        </a>
+
+        <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
+            <i class="bi bi-upload"></i> <span>Upload Resume</span>
+        </a>
+
+        <a th:href="@{/jobseeker/jobs/search}" class="nav-link">
+            <i class="bi bi-search"></i> <span>Search Jobs</span>
+        </a>
+
+        <a th:href="@{/jobseeker/applications}" class="nav-link">
+            <i class="bi bi-briefcase"></i> <span>Applications</span>
+        </a>
+
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+            <i class="bi bi-heart"></i> <span>Saved Jobs</span>
+        </a>
+
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+
+    </div>
+
+    <div class="mt-auto">
+
+        <a th:href="@{/}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+
     </div>
 
 </nav>
