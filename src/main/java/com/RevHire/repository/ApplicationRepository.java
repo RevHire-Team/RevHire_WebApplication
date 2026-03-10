@@ -9,7 +9,9 @@ import com.RevHire.entity.Application;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
     Logger logger = LogManager.getLogger(ApplicationRepository.class);

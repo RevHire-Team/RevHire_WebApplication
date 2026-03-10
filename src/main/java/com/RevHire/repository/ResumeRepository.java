@@ -8,7 +8,9 @@ import com.RevHire.entity.Resume;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
     Logger logger = LogManager.getLogger(ResumeRepository.class);

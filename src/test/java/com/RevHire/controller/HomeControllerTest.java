@@ -1,6 +1,5 @@
 package com.RevHire.controller;
 
-import com.RevHire.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;

@@ -4,7 +4,6 @@ import com.RevHire.dto.EmployerDashboardDTO;
 import com.RevHire.dto.EmployerProfileDTO;
 import com.RevHire.entity.User;
 import com.RevHire.service.EmployerService;
-import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

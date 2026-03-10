@@ -8,7 +8,9 @@ import com.RevHire.entity.FavoriteJob;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface FavoriteJobRepository extends JpaRepository<FavoriteJob, Long> {
 
     Logger logger = LogManager.getLogger(FavoriteJobRepository.class);

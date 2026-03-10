@@ -9,8 +9,6 @@ import com.RevHire.service.ResumeService;
 import com.RevHire.service.impl.ApplicationServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

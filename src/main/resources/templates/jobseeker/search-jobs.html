@@ -91,20 +91,25 @@
             margin-right:5px;
         }
 
-        /* Styling for the applied state */
-        .btn-applied {
-            background-color: #64748b !important;
-            border-color: #64748b !important;
-            color: white !important;
-            cursor: not-allowed;
+        /* Applied Label Styling */
+        .applied-badge {
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .btn-saved{
-    background:#ef4444 !important;
-    border-color:#ef4444 !important;
-    color:white !important;
-}
-
+            background:#ef4444 !important;
+            border-color:#ef4444 !important;
+            color:white !important;
+        }
     </style>
 </head>
 
@@ -200,7 +205,9 @@
                 <select id="sortJobs" class="form-select">
                     <option value="">Sort Jobs</option>
                     <option value="company">Company</option>
-                    <option value="salary">Salary (High to Low)</option>
+                    <option value="salaryLow">Salary (Low to High)</option>
+                    <option value="salaryHigh">Salary (High to Low)</option>
+
                 </select>
             </div>
         </div>
@@ -223,7 +230,7 @@
                     <span class="company-name" th:text="${job.companyName}"></span>
                     <h5 class="job-title" th:text="${job.title}"></h5>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center" th:id="'actionContainer-' + ${job.jobId}">
 
                     <button th:id="'saveBtn-' + ${job.jobId}"
                             th:onclick="'saveJob(' + ${job.jobId} + ')'"
@@ -252,7 +259,6 @@
 </main>
 
 <script>
-    // 1. Existing Filtering Functionality
     const filterIds = ["titleFilter", "locationFilter", "companyFilter", "minSalary", "maxSalary", "jobTypeFilter"];
 
     filterIds.forEach(id => {
@@ -317,6 +323,7 @@
         }
     }
 
+    // UPDATED SORTING LOGIC
     document.getElementById("sortJobs").addEventListener("change", function() {
         const criteria = this.value;
         const container = document.getElementById("jobListings");
@@ -325,8 +332,10 @@
         jobs.sort((a, b) => {
             if (criteria === "company") {
                 return a.dataset.company.localeCompare(b.dataset.company);
-            } else if (criteria === "salary") {
+            } else if (criteria === "salaryHigh") {
                 return parseFloat(b.dataset.maxsalary) - parseFloat(a.dataset.maxsalary);
+            } else if (criteria === "salaryLow") {
+                return parseFloat(a.dataset.minsalary) - parseFloat(b.dataset.minsalary);
             }
             return 0;
         });
@@ -336,8 +345,7 @@
 
     document.getElementById("filterForm").addEventListener("submit", (e) => e.preventDefault());
 
-    // 2. New Application Functionality
-  // 2. Updated Application Functionality (ONLY changes the Apply logic)
+    // UPDATED APPLY LOGIC
     async function handleApply(jobId) {
         const userId = document.getElementById("sessionUserId").value;
         const btn = document.getElementById(`applyBtn-${jobId}`);
@@ -347,18 +355,13 @@
             return;
         }
 
-        Swal.fire({
-            title: 'Applying...',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading() }
-        });
+        Swal.fire({ title: 'Applying...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
 
         try {
-            // We use URLSearchParams because your Controller uses @RequestParam
             const params = new URLSearchParams();
             params.append('jobId', jobId);
-            params.append('seekerId', userId); // Sending userId as seekerId
-            params.append('resumeId', 1);      // Defaulting to 1 to match your Service requirements
+            params.append('seekerId', userId);
+            params.append('resumeId', 1);
             params.append('coverLetter', "Applied via RevHire Portal");
 
             const res = await fetch('/applications/submit-application', {
@@ -368,106 +371,66 @@
             });
 
             if (res.ok) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Applied Successfully!',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                // Update UI to "Applied" state
-                btn.innerText = "Applied";
-                btn.classList.add("btn-applied");
-                btn.disabled = true;
-                btn.onclick = null;
+                Swal.fire({ icon: 'success', title: 'Applied Successfully!', timer: 1500, showConfirmButton: false });
+                updateToAppliedState(jobId);
             } else if (res.status === 409) {
                 Swal.fire("Note", "Already applied for this job.", "info");
-                btn.innerText = "Applied";
-                btn.classList.add("btn-applied");
-                btn.disabled = true;
+                updateToAppliedState(jobId);
             } else {
-                Swal.fire("Error", "Could not apply. Ensure profile and resume exist.", "error");
+                Swal.fire("Error", "Could not apply.", "error");
             }
         } catch (err) {
             Swal.fire("Network Error", "Unable to connect to the server.", "error");
         }
     }
 
-    // 3. Persistence: Check applied status on page load
+    function updateToAppliedState(jobId) {
+        const btn = document.getElementById(`applyBtn-${jobId}`);
+        if (btn) {
+            const appliedLabel = document.createElement("span");
+            appliedLabel.className = "applied-badge";
+            appliedLabel.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
+            btn.parentNode.replaceChild(appliedLabel, btn);
+        }
+    }
+
+    // PERSISTENCE CHECK ON LOAD
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = document.getElementById("sessionUserId").value;
         if(!userId) return;
 
         try {
-            // Using your existing getBySeeker endpoint: /applications/seeker/{id}
             const res = await fetch(`/applications/seeker/${userId}`);
             if (res.ok) {
                 const appliedList = await res.json();
                 appliedList.forEach(app => {
-
-    const jobId = app.jobId;   // make sure API returns jobId
-
-    const btn = document.getElementById(`applyBtn-${jobId}`);
-
-    if(btn){
-
-        btn.innerText = "Applied";
-        btn.classList.add("btn-applied");
-        btn.disabled = true;
-        btn.onclick = null;
-
-    }
-
-});
+                    // Match by JobId if available in app object, or Title as fallback
+                    const jobCards = document.querySelectorAll(".job-card");
+                    jobCards.forEach(card => {
+                        // Assuming your API returns 'jobId' or matching title
+                        if (card.dataset.jobid == app.jobId || card.dataset.title === app.jobTitle) {
+                           updateToAppliedState(card.dataset.jobid);
+                        }
+                    });
+                });
             }
         } catch (e) { console.log("Applied status check failed."); }
     });
 
     async function saveJob(jobId) {
-
-    const userId = document.getElementById("sessionUserId").value;
-    const btn = document.getElementById(`saveBtn-${jobId}`);
-
-    if(!userId){
-        Swal.fire("Login Required","Please login first","warning");
-        return;
+        const userId = document.getElementById("sessionUserId").value;
+        const btn = document.getElementById(`saveBtn-${jobId}`);
+        if(!userId){ Swal.fire("Login Required","Please login first","warning"); return; }
+        try{
+            const response = await fetch(`/api/jobseeker/favorites/${userId}/${jobId}`,{ method:"POST" });
+            if(response.ok || response.status === 409){
+                if(response.ok) Swal.fire({ icon:'success', title:'Job Saved!', timer:1200, showConfirmButton:false });
+                btn.classList.add("btn-saved");
+                btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                btn.disabled = true;
+            }
+        }catch(e){ console.log("Save error",e); }
     }
-
-    try{
-
-        const response = await fetch(`/api/jobseeker/favorites/${userId}/${jobId}`,{
-            method:"POST"
-        });
-
-        if(response.ok){
-
-            Swal.fire({
-                icon:'success',
-                title:'Job Saved!',
-                timer:1200,
-                showConfirmButton:false
-            });
-
-            btn.classList.add("btn-saved");
-            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
-            btn.disabled = true;
-
-        }
-        else if(response.status === 409){
-
-            Swal.fire("Info","Job already saved","info");
-
-            btn.classList.add("btn-saved");
-            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
-            btn.disabled = true;
-
-        }
-
-    }catch(e){
-        console.log("Save error",e);
-    }
-
-}
 </script>
 </body>
 </html>
