@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import org.springframework.core.io.UrlResource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -135,22 +136,79 @@ public class JobSeekerController {
     @PutMapping("/profile/{userId}")
     public ResponseEntity<?> updateProfile(
             @PathVariable Long userId,
-            @RequestBody JobSeekerProfile profile) {
+            @RequestBody Map<String,Object> data) {
 
-        logger.info("Updating profile for userId {}", userId);
-
-        JobSeekerProfile existing =
+        JobSeekerProfile profile =
                 profileRepo.findByUserUserId(userId)
                         .orElseThrow(() -> new RuntimeException("Profile not found"));
 
-        existing.setFullName(profile.getFullName());
-        existing.setPhone(profile.getPhone());
-        existing.setLocation(profile.getLocation());
-        existing.setTotalExperience(profile.getTotalExperience());
+        profile.setFullName((String) data.get("fullName"));
+        profile.setPhone((String) data.get("phone"));
+        profile.setLocation((String) data.get("location"));
 
-        profileRepo.save(existing);
+        if(data.get("employmentStatus") != null)
+            profile.setTotalExperience(parseExperience((String) data.get("employmentStatus")));
 
-        return ResponseEntity.ok(existing);
+        profileRepo.save(profile);
+
+        Resume resume = resumeRepo
+                .findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
+                .orElseGet(() -> {
+                    Resume r = new Resume();
+                    r.setSeeker(profile);
+                    return resumeRepo.save(r);
+                });
+
+        resume.setObjective((String) data.get("experience"));
+        resumeRepo.save(resume);
+
+        Long resumeId = resume.getResumeId();
+
+        resumeSkillRepo.deleteByResumeResumeId(resumeId);
+        String skillsStr = (String) data.get("skills");
+        if(skillsStr != null){
+            for(String s : skillsStr.split(",")){
+                ResumeSkill skill = new ResumeSkill();
+                skill.setResume(resume);
+                skill.setSkillName(s.trim());
+                resumeSkillRepo.save(skill);
+            }
+        }
+
+        certificationRepo.deleteByResumeResumeId(resumeId);
+        String certStr = (String) data.get("certifications");
+        if(certStr != null){
+            for(String c : certStr.split(",")){
+                ResumeCertification cert = new ResumeCertification();
+                cert.setResume(resume);
+                cert.setCertificationName(c.trim());
+                certificationRepo.save(cert);
+            }
+        }
+
+        educationRepo.deleteByResumeResumeId(resumeId);
+        String educationVal = (String) data.get("education");
+
+        if(educationVal != null && !educationVal.isEmpty()){
+
+            ResumeEducation edu = new ResumeEducation();
+            edu.setResume(resume);
+
+            if(educationVal.contains(" - ")){
+                String[] parts = educationVal.split(" - ");
+                edu.setDegree(parts[0]);
+                edu.setInstitution(parts[1]);
+            }else{
+                edu.setDegree(educationVal);
+                edu.setInstitution("");
+            }
+
+            educationRepo.save(edu);
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message","Profile updated successfully"
+        ));
     }
 
     // RESUME FILE UPLOAD
@@ -266,5 +324,18 @@ public class JobSeekerController {
                 "savedJobs", savedJobs,
                 "recentApplications", recent
         ));
+    }
+
+    private int parseExperience(String status){
+
+        switch(status){
+
+            case "Fresher": return 0;
+            case "0-2 Years Experience": return 1;
+            case "3-5 Years Experience": return 4;
+            case "6-10 Years Experience": return 8;
+            case "10+ Years Experience": return 12;
+            default: return 0;
+        }
     }
 }
