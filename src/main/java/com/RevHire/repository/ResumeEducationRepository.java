@@ -1,22 +1,29 @@
-    package com.RevHire.repository;
+package com.RevHire.repository;
 
-    import com.RevHire.entity.Resume;
-    import org.springframework.data.jpa.repository.JpaRepository;
-    import com.RevHire.entity.ResumeEducation;
-    import org.springframework.transaction.annotation.Transactional;
-    import org.springframework.data.jpa.repository.Modifying;
-    import java.util.List;
+import com.RevHire.entity.Resume;
+import com.RevHire.entity.ResumeEducation;
 
-    public interface ResumeEducationRepository extends JpaRepository<ResumeEducation, Long> {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.repository.Modifying;
 
-        List<ResumeEducation> findByResume_ResumeId(Long resumeId);
+import java.util.List;
 
-        List<ResumeEducation> findByResumeResumeId(Long resumeId);
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-        void deleteByResume(Resume resume);
+public interface ResumeEducationRepository extends JpaRepository<ResumeEducation, Long> {
 
-        @Transactional
-        @Modifying
-        void deleteByResumeResumeId(Long resumeId);
+    Logger logger = LogManager.getLogger(ResumeEducationRepository.class);
 
-    }
+    List<ResumeEducation> findByResume_ResumeId(Long resumeId);
+
+    List<ResumeEducation> findByResumeResumeId(Long resumeId);
+
+    void deleteByResume(Resume resume);
+
+    @Transactional
+    @Modifying
+    void deleteByResumeResumeId(Long resumeId);
+
+}

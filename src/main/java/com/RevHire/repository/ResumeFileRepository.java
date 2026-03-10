@@ -2,16 +2,23 @@ package com.RevHire.repository;
 
 import com.RevHire.entity.Resume;
 import com.RevHire.entity.ResumeFile;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
 
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public interface ResumeFileRepository extends JpaRepository<ResumeFile, Long> {
+
+    Logger logger = LogManager.getLogger(ResumeFileRepository.class);
 
     List<ResumeFile> findByResume_ResumeId(Long resumeId);
 

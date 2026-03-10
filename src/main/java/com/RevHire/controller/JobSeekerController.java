@@ -7,20 +7,14 @@ import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
 import com.RevHire.service.ResumeService;
-
 import com.RevHire.service.impl.ApplicationServiceImpl;
-import com.RevHire.service.impl.JobSeekerServiceImpl;
+
 import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -28,12 +22,16 @@ import org.springframework.http.HttpHeaders;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.*;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @RestController
 @RequestMapping("/api/jobseeker")
 public class JobSeekerController {
+
+    private static final Logger logger = LogManager.getLogger(JobSeekerController.class);
 
     private final JobSeekerService jobSeekerService;
     private final ResumeService resumeService;
@@ -47,7 +45,6 @@ public class JobSeekerController {
     private final ResumeProjectRepository projectRepo;
     private final ResumeSkillRepository resumeSkillRepo;
 
-    // Update the constructor to include ALL dependencies
     public JobSeekerController(
             JobSeekerService jobSeekerService,
             ResumeService resumeService,
@@ -60,6 +57,7 @@ public class JobSeekerController {
             ResumeCertificationRepository certificationRepo,
             ResumeProjectRepository projectRepo,
             ResumeSkillRepository resumeSkillRepo) {
+
         this.jobSeekerService = jobSeekerService;
         this.resumeService = resumeService;
         this.resumeRepo = resumeRepo;
@@ -67,23 +65,27 @@ public class JobSeekerController {
         this.profileRepo = profileRepo;
         this.educationRepo = educationRepo;
         this.experienceRepo = experienceRepo;
-        this.applicationService=applicationService;
+        this.applicationService = applicationService;
         this.certificationRepo = certificationRepo;
         this.projectRepo = projectRepo;
         this.resumeSkillRepo = resumeSkillRepo;
-
     }
 
-    // ========== PROFILE ==========
+    // PROFILE
     @PostMapping("/profile/{userId}")
     public ResponseEntity<JobSeekerProfile> createProfile(
             @PathVariable Long userId,
             @RequestBody JobSeekerProfile profile) {
+
+        logger.info("Creating profile for userId: {}", userId);
+
         return ResponseEntity.ok(jobSeekerService.createProfile(profile, userId));
     }
 
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getProfile(@PathVariable Long userId) {
+
+        logger.info("Fetching profile for userId: {}", userId);
 
         return jobSeekerService.getProfile(userId).map(profile -> {
 
@@ -103,42 +105,26 @@ public class JobSeekerController {
 
                 Resume r = resumeOpt.get();
 
-                response.put("objective", r.getObjective());
+                logger.debug("Resume found for seekerId {}", profile.getSeekerId());
 
-                /* ===== SKILLS ===== */
+                response.put("objective", r.getObjective());
 
                 List<ResumeSkill> skillList =
                         resumeService.getSkillsByResume(r.getResumeId());
 
                 response.put("skills", skillList);
 
-                /* ===== EDUCATION ===== */
+                response.put("education",
+                        educationRepo.findByResumeResumeId(r.getResumeId()));
 
-                List<ResumeEducation> education =
-                        educationRepo.findByResumeResumeId(r.getResumeId());
+                response.put("experience",
+                        experienceRepo.findByResumeResumeId(r.getResumeId()));
 
-                response.put("education", education);
+                response.put("certifications",
+                        certificationRepo.findByResumeResumeId(r.getResumeId()));
 
-                /* ===== EXPERIENCE ===== */
-
-                List<ResumeExperience> experience =
-                        experienceRepo.findByResumeResumeId(r.getResumeId());
-
-                response.put("experience", experience);
-
-                /* ===== CERTIFICATIONS ===== */
-
-                List<ResumeCertification> certs =
-                        certificationRepo.findByResumeResumeId(r.getResumeId());
-
-                response.put("certifications", certs);
-
-                /* ===== PROJECTS ===== */
-
-                List<ResumeProject> projects =
-                        projectRepo.findByResumeResumeId(r.getResumeId());
-
-                response.put("projects", projects);
+                response.put("projects",
+                        projectRepo.findByResumeResumeId(r.getResumeId()));
             }
 
             return ResponseEntity.ok(response);
@@ -150,6 +136,8 @@ public class JobSeekerController {
     public ResponseEntity<?> updateProfile(
             @PathVariable Long userId,
             @RequestBody JobSeekerProfile profile) {
+
+        logger.info("Updating profile for userId {}", userId);
 
         JobSeekerProfile existing =
                 profileRepo.findByUserUserId(userId)
@@ -165,21 +153,28 @@ public class JobSeekerController {
         return ResponseEntity.ok(existing);
     }
 
-    // ========== RESUME FILE UPLOAD ==========
+    // RESUME FILE UPLOAD
     @PostMapping("/resume/upload/{userId}")
     public ResponseEntity<?> uploadResume(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file) {
 
+        logger.info("Uploading resume for userId {}", userId);
+
         try {
 
             if (file.getSize() > 2 * 1024 * 1024) {
+
+                logger.warn("File size exceeds limit for userId {}", userId);
+
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "File size must be less than 2MB"));
             }
 
             ResumeFile savedFile =
                     jobSeekerService.uploadResumeFile(userId, file);
+
+            logger.info("Resume uploaded successfully: {}", savedFile.getFileName());
 
             return ResponseEntity.ok(Map.of(
                     "message", "Resume uploaded successfully",
@@ -188,16 +183,21 @@ public class JobSeekerController {
 
         } catch (Exception e) {
 
+            logger.error("Resume upload failed for userId {}", userId, e);
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
     }
 
-    // ========== FAVORITE JOBS ==========
+    // FAVORITE JOBS
     @PostMapping("/favorites/{seekerId}/{jobId}")
     public ResponseEntity<?> addFavorite(@PathVariable Long seekerId, @PathVariable Long jobId) {
+
+        logger.info("Adding favorite job {} for seeker {}", jobId, seekerId);
+
         try {
-            // Assuming your service handles the check "if already exists"
+
             jobSeekerService.addFavoriteJob(seekerId, jobId);
 
             return ResponseEntity.ok(Map.of(
@@ -205,8 +205,11 @@ public class JobSeekerController {
                     "message", "Job added to favorites successfully",
                     "jobId", jobId
             ));
+
         } catch (RuntimeException e) {
-            // If the service throws an error because it's already saved
+
+            logger.warn("Job already saved: jobId {}", jobId);
+
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "status", "error",
                     "message", "This job is already in your saved list."
@@ -216,293 +219,27 @@ public class JobSeekerController {
 
     @GetMapping("/favorites/{seekerId}")
     public ResponseEntity<List<FavoriteJobDTO>> getFavorites(@PathVariable Long seekerId) {
+
+        logger.info("Fetching favorite jobs for seekerId {}", seekerId);
+
         List<FavoriteJobDTO> favorites = jobSeekerService.getFavorites(seekerId);
+
         return ResponseEntity.ok(favorites);
     }
 
     @DeleteMapping("/favorites/{favId}")
     public void removeFavorite(@PathVariable Long favId) {
+
+        logger.warn("Removing favorite job with id {}", favId);
+
         jobSeekerService.removeFavoriteJob(favId);
     }
 
-    @GetMapping("/jobseeker/jobs/saved")
-    public String getSavedJobsPage(HttpSession session, Model model) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) return "redirect:/auth/login";
-
-        // 1. Get Seeker Profile
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-        // 2. Get Favorites (Assuming your service returns List<FavoriteJobDTO>)
-        List<FavoriteJobDTO> savedJobs = jobSeekerService.getFavorites(profile.getSeekerId());
-
-        model.addAttribute("savedJobs", savedJobs);
-        model.addAttribute("activePage", "saved");
-        return "jobseeker/saved-jobs"; // Your HTML file name
-    }
-
-
-    // ========== NOTIFICATIONS ==========
-    @PutMapping("/notifications/{notificationId}/read")
-    public void markNotificationAsRead(@PathVariable Long notificationId) {
-        jobSeekerService.markNotificationAsRead(notificationId);
-    }
-
-    @GetMapping("/api/jobseeker/favorites/count/{userId}")
-    @ResponseBody
-    public ResponseEntity<Map<String, Long>> getFavoriteCount(@PathVariable Long userId) {
-        // Get profile first to get seekerId
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-        long count = favoriteJobRepo.countBySeekerSeekerId(profile.getSeekerId());
-        return ResponseEntity.ok(Map.of("count", count));
-    }
-
-    @PostMapping("/resume/save/{userId}")
-    public ResponseEntity<?> saveResume(
-            @PathVariable Long userId,
-            @RequestBody Map<String,Object> data) {
-
-        try {
-
-            JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                    .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-            // Always get latest resume
-            Resume resume = resumeRepo
-                    .findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
-                    .orElseGet(() -> {
-                        Resume r = new Resume();
-                        r.setSeeker(profile);
-                        return resumeRepo.save(r);
-                    });
-
-            resume.setObjective((String) data.get("objective"));
-            resumeRepo.save(resume);
-
-            Long resumeId = resume.getResumeId();
-
-            // Delete old data
-            educationRepo.deleteByResumeResumeId(resumeId);
-            experienceRepo.deleteByResumeResumeId(resumeId);
-            projectRepo.deleteByResumeResumeId(resumeId);
-            certificationRepo.deleteByResumeResumeId(resumeId);
-            resumeSkillRepo.deleteByResumeResumeId(resumeId);
-
-            /* EDUCATION */
-
-            List<Map<String,Object>> educations =
-                    (List<Map<String,Object>>) data.get("educations");
-
-            if(educations != null){
-                for(Map<String,Object> e : educations){
-
-                    ResumeEducation edu = new ResumeEducation();
-                    edu.setResume(resume);
-                    edu.setInstitution((String)e.get("institution"));
-                    edu.setDegree((String)e.get("degree"));
-
-                    educationRepo.save(edu);
-                }
-            }
-
-            /* EXPERIENCE */
-
-            List<Map<String,Object>> experiences =
-                    (List<Map<String,Object>>) data.get("experiences");
-
-            if(experiences != null){
-                for(Map<String,Object> ex : experiences){
-
-                    ResumeExperience exp = new ResumeExperience();
-                    exp.setResume(resume);
-                    exp.setCompanyName((String)ex.get("companyName"));
-                    exp.setRole((String)ex.get("role"));
-
-                    experienceRepo.save(exp);
-                }
-            }
-
-            /* PROJECTS */
-
-            List<Map<String,Object>> projects =
-                    (List<Map<String,Object>>) data.get("projects");
-
-            if(projects != null){
-                for(Map<String,Object> p : projects){
-
-                    ResumeProject proj = new ResumeProject();
-                    proj.setResume(resume);
-                    proj.setProjectTitle((String)p.get("projectTitle"));
-                    proj.setTechnologies((String)p.get("technologies"));
-                    proj.setProjectLink((String)p.get("projectLink"));
-                    proj.setDescription((String)p.get("description"));
-
-                    projectRepo.save(proj);
-                }
-            }
-
-            /* CERTIFICATIONS */
-
-            List<Map<String,Object>> certs =
-                    (List<Map<String,Object>>) data.get("certifications");
-
-            if(certs != null){
-                for(Map<String,Object> c : certs){
-
-                    ResumeCertification cert = new ResumeCertification();
-                    cert.setResume(resume);
-                    cert.setCertificationName((String)c.get("certificationName"));
-                    cert.setCompany((String)c.get("company"));
-                    cert.setTechnologies((String)c.get("technologies"));
-
-                    certificationRepo.save(cert);
-                }
-            }
-
-            /* SKILLS */
-
-            List<String> skills = (List<String>) data.get("skills");
-
-            if(skills != null){
-                for(String s : skills){
-
-                    ResumeSkill skill = new ResumeSkill();
-                    skill.setResume(resume);
-                    skill.setSkillName(s.trim());
-
-                    resumeSkillRepo.save(skill);
-                }
-            }
-
-            return ResponseEntity.ok(Map.of(
-                    "message","Resume saved successfully"
-            ));
-
-        } catch(Exception e){
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-
-    @GetMapping("/jobseeker/resume/view")
-    public String viewResumePage(HttpSession session) {
-
-        if(session.getAttribute("userId")==null){
-            return "redirect:/auth/login";
-        }
-
-        return "jobseeker/view-resume"; // loads view-resume.html
-    }
-    // ========== RECOMMENDED JOBS ==========
-    @GetMapping("/recommended-jobs/{userId}")
-    public ResponseEntity<?> getRecommendedJobs(@PathVariable Long userId) {
-
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-        Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
-
-        if (resumeOpt.isEmpty()) {
-            return ResponseEntity.ok(List.of());
-        }
-
-        Resume resume = resumeOpt.get();
-
-        // Get user skills
-        List<ResumeSkill> skills = resumeService.getSkillsByResume(resume.getResumeId());
-
-        if (skills.isEmpty()) {
-            return ResponseEntity.ok(List.of());
-        }
-
-        List<String> skillNames = skills.stream()
-                .map(ResumeSkill::getSkillName)
-                .toList();
-
-        // Get recommended jobs using service
-        List<Job> recommendedJobs = jobSeekerService.getRecommendedJobs(skillNames);
-
-        return ResponseEntity.ok(recommendedJobs);
-    }
-
-    /* ================= ADD CERTIFICATION ================= */
-
-    @PostMapping("/resume/{resumeId}/certification")
-    public ResponseEntity<?> addCertification(
-            @PathVariable Long resumeId,
-            @RequestBody ResumeCertification cert) {
-
-        Resume resume =
-                resumeRepo.findById(resumeId)
-                        .orElseThrow(() -> new RuntimeException("Resume not found"));
-
-        cert.setResume(resume);
-
-        return ResponseEntity.ok(certificationRepo.save(cert));
-    }
-
-
-    /* ================= ADD PROJECT ================= */
-
-    @PostMapping("/resume/{resumeId}/project")
-    public ResponseEntity<?> addProject(
-            @PathVariable Long resumeId,
-            @RequestBody ResumeProject project) {
-
-        Resume resume =
-                resumeRepo.findById(resumeId)
-                        .orElseThrow(() -> new RuntimeException("Resume not found"));
-
-        project.setResume(resume);
-
-        return ResponseEntity.ok(projectRepo.save(project));
-    }
-
-
-    /* ================= DOWNLOAD RESUME ================= */
-/*
-    @GetMapping("/resume/download/{fileId}")
-    public ResponseEntity<Resource> downloadResume(
-            @PathVariable Long fileId) throws Exception {
-
-        ResumeFile file =
-                jobSeekerService.getResumeFile(fileId);
-
-        Path path = Paths.get(file.getFilePath());
-
-        Resource resource = new UrlResource(path.toUri());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + file.getFileName() + "\"")
-                .body(resource);
-    }*/
-    @GetMapping("/resume/download/{fileId}")
-    public ResponseEntity<Resource> downloadResume(
-            @PathVariable Long fileId) throws Exception {
-
-        ResumeFile file =
-                resumeService.getResumeFile(fileId);   // ✅ FIXED
-
-        Path path = Paths.get(file.getFilePath());
-
-        Resource resource = new UrlResource(path.toUri());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + file.getFileName() + "\"")
-                .body(resource);
-    }
-
-    /* ================= DASHBOARD ================= */
-
+    // DASHBOARD
     @GetMapping("/dashboard/{userId}")
     public ResponseEntity<?> getDashboard(@PathVariable Long userId) {
+
+        logger.info("Loading dashboard for userId {}", userId);
 
         JobSeekerProfile profile =
                 profileRepo.findByUserUserId(userId)
@@ -530,5 +267,4 @@ public class JobSeekerController {
                 "recentApplications", recent
         ));
     }
-
 }

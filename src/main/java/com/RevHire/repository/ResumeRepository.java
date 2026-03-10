@@ -1,10 +1,17 @@
 package com.RevHire.repository;
 
 import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import com.RevHire.entity.Resume;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
+
+    Logger logger = LogManager.getLogger(ResumeRepository.class);
 
     Optional<Resume> findBySeekerSeekerId(Long seekerId);
 
@@ -15,6 +22,5 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
     // Always return latest resume
     Optional<Resume> findTopBySeekerSeekerIdOrderByResumeIdDesc(Long seekerId);
-
 
 }
