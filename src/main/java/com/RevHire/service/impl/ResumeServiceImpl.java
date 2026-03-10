@@ -12,6 +12,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +26,8 @@ import java.util.List;
 
 @Service
 public class ResumeServiceImpl implements ResumeService {
+
+    private static final Logger logger = LogManager.getLogger(ResumeServiceImpl.class);
 
     @Autowired
     private final ResumeRepository resumeRepo;
@@ -58,35 +63,61 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public Resume createResume(Resume resume) {
-        return resumeRepo.save(resume);
+
+        logger.info("Creating resume for seeker");
+
+        Resume saved = resumeRepo.save(resume);
+
+        logger.info("Resume created with ID: {}", saved.getResumeId());
+
+        return saved;
     }
 
     @Override
     public Resume updateResume(Long resumeId, Resume updatedResume) {
 
+        logger.info("Updating resume with ID: {}", resumeId);
+
         Resume existing = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume not found with ID: {}", resumeId);
+                    return new RuntimeException("Resume not found");
+                });
 
         existing.setObjective(updatedResume.getObjective());
 
-        return resumeRepo.save(existing);
+        Resume saved = resumeRepo.save(existing);
+
+        logger.info("Resume updated successfully for ID: {}", resumeId);
+
+        return saved;
     }
 
     @Override
     public void deleteResume(Long resumeId) {
+
+        logger.warn("Deleting resume with ID: {}", resumeId);
+
         resumeRepo.deleteById(resumeId);
     }
 
     @Override
     public Resume getResumeByUserId(Long seekerId) {
 
+        logger.info("Fetching resume for seekerId: {}", seekerId);
+
         Resume resume = resumeRepo.findBySeeker_SeekerId(seekerId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume not found for seekerId: {}", seekerId);
+                    return new RuntimeException("Resume not found");
+                });
 
         List<ResumeFile> orderedFiles =
                 resumeFileRepo.findByResume_ResumeIdOrderByUploadedAtDesc(resume.getResumeId());
 
         resume.setFiles(orderedFiles);
+
+        logger.debug("Total resume files found: {}", orderedFiles.size());
 
         return resume;
     }
@@ -95,16 +126,25 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public ResumeEducation addEducation(ResumeEducation education) {
+
+        logger.info("Adding education to resume");
+
         return educationRepo.save(education);
     }
 
     @Override
     public List<ResumeEducation> getEducationByResume(Long resumeId) {
+
+        logger.info("Fetching education for resumeId: {}", resumeId);
+
         return educationRepo.findByResume_ResumeId(resumeId);
     }
 
     @Override
     public void deleteEducation(Long educationId) {
+
+        logger.warn("Deleting education with ID: {}", educationId);
+
         educationRepo.deleteById(educationId);
     }
 
@@ -112,16 +152,25 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public ResumeExperience addExperience(ResumeExperience experience) {
+
+        logger.info("Adding experience to resume");
+
         return experienceRepo.save(experience);
     }
 
     @Override
     public List<ResumeExperience> getExperienceByResume(Long resumeId) {
+
+        logger.info("Fetching experience for resumeId: {}", resumeId);
+
         return experienceRepo.findByResume_ResumeId(resumeId);
     }
 
     @Override
     public void deleteExperience(Long experienceId) {
+
+        logger.warn("Deleting experience with ID: {}", experienceId);
+
         experienceRepo.deleteById(experienceId);
     }
 
@@ -129,16 +178,25 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public ResumeSkill addSkill(ResumeSkill skill) {
+
+        logger.info("Adding skill to resume");
+
         return skillRepo.save(skill);
     }
 
     @Override
     public List<ResumeSkill> getSkillsByResume(Long resumeId) {
+
+        logger.info("Fetching skills for resumeId: {}", resumeId);
+
         return skillRepo.findByResume_ResumeId(resumeId);
     }
 
     @Override
     public void deleteSkill(Long skillId) {
+
+        logger.warn("Deleting skill with ID: {}", skillId);
+
         skillRepo.deleteById(skillId);
     }
 
@@ -146,8 +204,13 @@ public class ResumeServiceImpl implements ResumeService {
     @Transactional
     public void saveSkills(Long resumeId, List<ResumeSkill> skills) {
 
+        logger.info("Saving skills for resumeId: {}", resumeId);
+
         Resume resume = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume not found while saving skills. resumeId: {}", resumeId);
+                    return new RuntimeException("Resume not found");
+                });
 
         skillRepo.deleteByResume(resume);
 
@@ -156,6 +219,8 @@ public class ResumeServiceImpl implements ResumeService {
         }
 
         skillRepo.saveAll(skills);
+
+        logger.info("Skills saved successfully for resumeId: {}", resumeId);
     }
 
     // ================= FILE UPLOAD =================
@@ -164,13 +229,19 @@ public class ResumeServiceImpl implements ResumeService {
     @Transactional
     public void saveResumeFile(Long userId, MultipartFile file) throws IOException {
 
+        logger.info("Uploading resume file for userId: {}", userId);
+
         Resume resume = resumeRepo.findBySeeker_User_UserId(userId)
-                .orElseThrow(() -> new RuntimeException("Resume profile not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume profile not found for userId: {}", userId);
+                    return new RuntimeException("Resume profile not found");
+                });
 
         Path uploadPath = Paths.get("uploads");
 
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
+            logger.info("Uploads directory created");
         }
 
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
@@ -188,11 +259,15 @@ public class ResumeServiceImpl implements ResumeService {
         resumeFile.setFileType(file.getContentType().contains("pdf") ? "PDF" : "DOCX");
 
         resumeFileRepo.save(resumeFile);
+
+        logger.info("Resume file uploaded successfully: {}", file.getOriginalFilename());
     }
 
     @Override
     @Transactional
     public void deleteResumeFile(Long fileId) {
+
+        logger.warn("Deleting resume file with ID: {}", fileId);
 
         if (resumeFileRepo.existsById(fileId)) {
             resumeFileRepo.deleteById(fileId);
@@ -203,16 +278,25 @@ public class ResumeServiceImpl implements ResumeService {
     @Override
     public byte[] getResumeFileBytes(Long seekerId) {
 
+        logger.info("Fetching resume file bytes for seekerId: {}", seekerId);
+
         Resume resume = resumeRepo.findBySeeker_SeekerId(seekerId)
-                .orElseThrow(() -> new RuntimeException("No resume found"));
+                .orElseThrow(() -> {
+                    logger.error("No resume found for seekerId: {}", seekerId);
+                    return new RuntimeException("No resume found");
+                });
 
         ResumeFile latestFile = resume.getFiles().stream()
                 .max(Comparator.comparing(ResumeFile::getFileId))
-                .orElseThrow(() -> new RuntimeException("No resume file uploaded"));
+                .orElseThrow(() -> {
+                    logger.error("No resume file uploaded for seekerId: {}", seekerId);
+                    return new RuntimeException("No resume file uploaded");
+                });
 
         try {
             return Files.readAllBytes(Paths.get(latestFile.getFilePath()));
         } catch (IOException e) {
+            logger.error("Unable to read resume file", e);
             throw new RuntimeException("Unable to read resume file");
         }
     }
@@ -222,12 +306,20 @@ public class ResumeServiceImpl implements ResumeService {
     @Override
     public ResponseEntity<Resource> downloadResumeFile(Long userId) {
 
+        logger.info("Downloading resume file for userId: {}", userId);
+
         Resume resume = resumeRepo.findBySeekerSeekerId(userId)
-                .orElseThrow(() -> new RuntimeException("No resume found"));
+                .orElseThrow(() -> {
+                    logger.error("No resume found for userId: {}", userId);
+                    return new RuntimeException("No resume found");
+                });
 
         ResumeFile latestFile = resume.getFiles().stream()
                 .max(Comparator.comparing(ResumeFile::getFileId))
-                .orElseThrow(() -> new RuntimeException("No file metadata found"));
+                .orElseThrow(() -> {
+                    logger.error("No file metadata found for userId: {}", userId);
+                    return new RuntimeException("No file metadata found");
+                });
 
         try {
 
@@ -236,6 +328,8 @@ public class ResumeServiceImpl implements ResumeService {
             ByteArrayResource resource =
                     new ByteArrayResource(Files.readAllBytes(filePath));
 
+            logger.info("Resume file download prepared: {}", latestFile.getFileName());
+
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(latestFile.getFileType()))
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -243,6 +337,9 @@ public class ResumeServiceImpl implements ResumeService {
                     .body(resource);
 
         } catch (IOException e) {
+
+            logger.error("Could not download resume file", e);
+
             throw new RuntimeException("Could not download file");
         }
     }
@@ -252,8 +349,13 @@ public class ResumeServiceImpl implements ResumeService {
     @Override
     public ResumeCertification addCertification(Long resumeId, ResumeCertification cert) {
 
+        logger.info("Adding certification to resumeId: {}", resumeId);
+
         Resume resume = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume not found for certification. resumeId: {}", resumeId);
+                    return new RuntimeException("Resume not found");
+                });
 
         cert.setResume(resume);
 
@@ -262,11 +364,17 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public List<ResumeCertification> getCertifications(Long resumeId) {
+
+        logger.info("Fetching certifications for resumeId: {}", resumeId);
+
         return certRepo.findByResumeResumeId(resumeId);
     }
 
     @Override
     public void deleteCertification(Long certificationId) {
+
+        logger.warn("Deleting certification with ID: {}", certificationId);
+
         certRepo.deleteById(certificationId);
     }
 
@@ -275,8 +383,13 @@ public class ResumeServiceImpl implements ResumeService {
     @Override
     public ResumeProject addProject(Long resumeId, ResumeProject project) {
 
+        logger.info("Adding project to resumeId: {}", resumeId);
+
         Resume resume = resumeRepo.findById(resumeId)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume not found for project. resumeId: {}", resumeId);
+                    return new RuntimeException("Resume not found");
+                });
 
         project.setResume(resume);
 
@@ -285,17 +398,29 @@ public class ResumeServiceImpl implements ResumeService {
 
     @Override
     public List<ResumeProject> getProjects(Long resumeId) {
+
+        logger.info("Fetching projects for resumeId: {}", resumeId);
+
         return projectRepo.findByResumeResumeId(resumeId);
     }
 
     @Override
     public void deleteProject(Long projectId) {
+
+        logger.warn("Deleting project with ID: {}", projectId);
+
         projectRepo.deleteById(projectId);
     }
 
     @Override
     public ResumeFile getResumeFile(Long fileId) {
+
+        logger.info("Fetching resume file metadata for fileId: {}", fileId);
+
         return resumeFileRepo.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found"));
+                .orElseThrow(() -> {
+                    logger.error("Resume file not found with ID: {}", fileId);
+                    return new RuntimeException("File not found");
+                });
     }
 }
