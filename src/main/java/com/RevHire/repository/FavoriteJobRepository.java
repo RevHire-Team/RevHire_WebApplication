@@ -1,6 +1,7 @@
 package com.RevHire.repository;
 
 import java.util.List;
+import java.util.Optional; // Added for safe finding
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -20,5 +21,9 @@ public interface FavoriteJobRepository extends JpaRepository<FavoriteJob, Long> 
     boolean existsBySeekerSeekerIdAndJobJobId(Long seekerId, Long jobId);
 
     long countBySeekerSeekerId(Long seekerId);
+
+    // ADDED: This allows the Controller to find the specific favorite record
+    // to delete it when the "Unsave" button is clicked.
+    Optional<FavoriteJob> findBySeekerSeekerIdAndJobJobId(Long seekerId, Long jobId);
 
 }

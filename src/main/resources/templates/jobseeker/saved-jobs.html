@@ -150,7 +150,10 @@
 </nav>
 
 <main class="main-content">
-    <h3 class="fw-bold mb-4">Saved Jobs</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">Saved Jobs</h3>
+        <span class="badge bg-primary rounded-pill px-3 py-2" th:text="${#lists.size(savedJobs)} + ' Jobs'"></span>
+    </div>
 
     <input type="hidden" id="sessionUserId" th:value="${session.userId}">
 
@@ -169,6 +172,13 @@
                             class="btn btn-primary rounded-pill px-4">
                         Apply Now
                     </button>
+
+                    <button class="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
+                            th:onclick="'removeSaved(' + ${job.jobId} + ')'"
+                            style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"
+                            title="Unsave Job">
+                        <i class="bi bi-heart-fill"></i>
+                    </button>
                 </div>
             </div>
 
@@ -184,13 +194,16 @@
         <div th:if="${#lists.isEmpty(savedJobs)}" class="text-center py-5 text-muted bg-white border rounded-4">
             <i class="bi bi-heart" style="font-size:3rem"></i>
             <p class="mt-2 fw-bold">No saved jobs found.</p>
-            <a href="/jobseeker/jobs/search" class="btn btn-primary btn-sm mt-2">Find Jobs</a>
+            <p class="small text-muted mb-4">Start exploring opportunities and save the ones you like!</p>
+            <a href="/jobseeker/jobs/search" class="btn btn-primary px-4 rounded-pill">Search Jobs</a>
         </div>
     </div>
 </main>
 
 <script>
-    // Function to replace button with Applied badge
+    /**
+     * Replaces the Apply button with a checked "Applied" badge
+     */
     function updateToAppliedState(jobId) {
         const btn = document.getElementById(`applyBtn-${jobId}`);
         if (btn) {
@@ -201,7 +214,9 @@
         }
     }
 
-    // CHECK FOR APPLIED STATUS ON LOAD
+    /**
+     * Checks existing applications on load to show "Applied" badges
+     */
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = document.getElementById("sessionUserId").value;
         if(!userId) return;
@@ -214,7 +229,6 @@
 
                 appliedList.forEach(app => {
                     jobCards.forEach(card => {
-                        // Compare by ID or Title to ensure sync
                         if (card.dataset.jobid == app.jobId || card.dataset.title === app.jobTitle) {
                             updateToAppliedState(card.dataset.jobid);
                         }
@@ -224,18 +238,24 @@
         } catch (e) { console.log("Applied sync failed."); }
     });
 
+    /**
+     * Handles Job Application Submission
+     */
     async function handleApply(jobId) {
         const userId = document.getElementById("sessionUserId").value;
-        if (!userId) return;
+        if (!userId) {
+            Swal.fire("Error", "Session expired. Please login again.", "error");
+            return;
+        }
 
-        Swal.fire({ title: 'Applying...', didOpen: () => { Swal.showLoading() } });
+        Swal.fire({ title: 'Submitting Application...', didOpen: () => { Swal.showLoading() } });
 
         try {
             const params = new URLSearchParams();
             params.append('jobId', jobId);
             params.append('seekerId', userId);
-            params.append('resumeId', 1);
-            params.append('coverLetter', "Applied from Saved Jobs");
+            params.append('resumeId', 1); // Default resume
+            params.append('coverLetter', "Applied from Saved Jobs list.");
 
             const res = await fetch('/applications/submit-application', {
                 method: "POST",
@@ -244,10 +264,60 @@
             });
 
             if (res.ok) {
-                Swal.fire({ icon: 'success', title: 'Applied!', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Application Sent!', timer: 1500, showConfirmButton: false });
                 updateToAppliedState(jobId);
+            } else {
+                Swal.fire("Error", "Failed to submit application.", "error");
             }
-        } catch (err) { Swal.fire("Error", "Could not apply", "error"); }
+        } catch (err) {
+            Swal.fire("Error", "Network error.", "error");
+        }
+    }
+
+    /**
+     * REMOVE SAVED JOB FUNCTION
+     * Syncs with @DeleteMapping("/api/jobseeker/favorites/{seekerId}/{jobId}")
+     */
+    async function removeSaved(jobId) {
+        const seekerId = document.getElementById("sessionUserId").value;
+        if (!seekerId) return;
+
+        const result = await Swal.fire({
+            title: 'Remove from Saved?',
+            text: "You can save this job again from the search page.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // Fetch matches the new URL mapping in JobSeekerController
+                const res = await fetch(`/api/jobseeker/favorites/${seekerId}/${jobId}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Removed!',
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
+
+                    // Refresh the page to update the UI and job count
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    const data = await res.json();
+                    Swal.fire("Error", data.error || "Could not remove job.", "error");
+                }
+            } catch (err) {
+                Swal.fire("Error", "Server error. Please try again later.", "error");
+            }
+        }
     }
 </script>
 </body>

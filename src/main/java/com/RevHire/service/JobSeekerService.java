@@ -27,7 +27,8 @@ public interface JobSeekerService {
 
     List<FavoriteJobDTO> getFavorites(Long seekerId);
 
-    void removeFavoriteJob(Long favId);
+    // UPDATED: Now uses seekerId and jobId to match your Frontend/Controller logic
+    void removeFavoriteJob(Long seekerId, Long jobId);
 
     // ========== NOTIFICATIONS ==========
     void markNotificationAsRead(Long notificationId);
