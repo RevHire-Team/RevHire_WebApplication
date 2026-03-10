@@ -3,6 +3,7 @@ package com.RevHire.controller;
 import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.FavoriteJobDTO;
 import com.RevHire.dto.ProfileUpdateDTO;
+import com.RevHire.dto.ResumeSaveDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
@@ -86,51 +87,58 @@ public class JobSeekerController {
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getProfile(@PathVariable Long userId) {
 
-        logger.info("Fetching profile for userId: {}", userId);
+        Optional<JobSeekerProfile> profileOpt = jobSeekerService.getProfile(userId);
 
-        return jobSeekerService.getProfile(userId).map(profile -> {
+        if(profileOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
-            Optional<Resume> resumeOpt =
-                    resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
+        JobSeekerProfile profile = profileOpt.get();
 
-            Map<String, Object> response = new HashMap<>();
+        Map<String,Object> response = new HashMap<>();
 
-            response.put("profileId", profile.getSeekerId());
-            response.put("fullName", profile.getFullName());
-            response.put("phone", profile.getPhone());
-            response.put("location", profile.getLocation());
-            response.put("profileCompletion", profile.getProfileCompletion());
-            response.put("totalExperience", profile.getTotalExperience());
+        response.put("fullName", profile.getFullName());
+        response.put("phone", profile.getPhone());
+        response.put("location", profile.getLocation());
 
-            if (resumeOpt.isPresent()) {
+        Resume resume = resumeRepo
+                .findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
+                .orElse(null);
 
-                Resume r = resumeOpt.get();
+        if(resume != null){
 
-                logger.debug("Resume found for seekerId {}", profile.getSeekerId());
+            response.put("experience", resume.getObjective());
 
-                response.put("objective", r.getObjective());
+            List<ResumeSkill> skills =
+                    resumeSkillRepo.findByResumeResumeId(resume.getResumeId());
 
-                List<ResumeSkill> skillList =
-                        resumeService.getSkillsByResume(r.getResumeId());
+            response.put("skills",
+                    skills.stream()
+                            .map(ResumeSkill::getSkillName)
+                            .reduce((a,b)->a+","+b)
+                            .orElse("")
+            );
 
-                response.put("skills", skillList);
+            List<ResumeCertification> certs =
+                    certificationRepo.findByResumeResumeId(resume.getResumeId());
 
-                response.put("education",
-                        educationRepo.findByResumeResumeId(r.getResumeId()));
+            response.put("certifications",
+                    certs.stream()
+                            .map(ResumeCertification::getCertificationName)
+                            .reduce((a,b)->a+","+b)
+                            .orElse("")
+            );
 
-                response.put("experience",
-                        experienceRepo.findByResumeResumeId(r.getResumeId()));
+            List<ResumeEducation> edus =
+                    educationRepo.findByResumeResumeId(resume.getResumeId());
 
-                response.put("certifications",
-                        certificationRepo.findByResumeResumeId(r.getResumeId()));
-
-                response.put("projects",
-                        projectRepo.findByResumeResumeId(r.getResumeId()));
+            if(!edus.isEmpty()){
+                ResumeEducation e = edus.get(0);
+                response.put("education", e.getDegree()+" - "+e.getInstitution());
             }
+        }
 
-            return ResponseEntity.ok(response);
-
-        }).orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/profile/{userId}")
@@ -338,4 +346,111 @@ public class JobSeekerController {
             default: return 0;
         }
     }
+
+    @PostMapping("/resume/save/{userId}")
+    public ResponseEntity<?> saveResume(
+            @PathVariable Long userId,
+            @RequestBody ResumeSaveDTO dto) {
+
+        try {
+
+            JobSeekerProfile profile =
+                    profileRepo.findByUserUserId(userId)
+                            .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+            Resume resume = resumeRepo
+                    .findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
+                    .orElseGet(() -> {
+                        Resume r = new Resume();
+                        r.setSeeker(profile);
+                        return resumeRepo.save(r);
+                    });
+
+            resume.setObjective(dto.getObjective());
+            resumeRepo.save(resume);
+
+            Long resumeId = resume.getResumeId();
+
+            // Save Skills
+            resumeSkillRepo.deleteByResumeResumeId(resumeId);
+
+            for(String skill : dto.getSkills()){
+
+                ResumeSkill s = new ResumeSkill();
+                s.setResume(resume);
+                s.setSkillName(skill);
+
+                resumeSkillRepo.save(s);
+            }
+
+            // Save Education
+            educationRepo.deleteByResumeResumeId(resumeId);
+
+            dto.getEducations().forEach(e -> {
+
+                ResumeEducation edu = new ResumeEducation();
+                edu.setResume(resume);
+                edu.setInstitution(e.getInstitution());
+                edu.setDegree(e.getDegree());
+
+                educationRepo.save(edu);
+
+            });
+
+            // Save Experience
+            experienceRepo.deleteByResumeResumeId(resumeId);
+
+            dto.getExperiences().forEach(e -> {
+
+                ResumeExperience exp = new ResumeExperience();
+                exp.setResume(resume);
+                exp.setCompanyName(e.getCompanyName());
+                exp.setRole(e.getRole());
+
+                experienceRepo.save(exp);
+
+            });
+
+            // Save Projects
+            projectRepo.deleteByResumeResumeId(resumeId);
+
+            dto.getProjects().forEach(p -> {
+
+                ResumeProject proj = new ResumeProject();
+                proj.setResume(resume);
+                proj.setProjectTitle(p.getProjectTitle());
+                proj.setTechnologies(p.getTechnologies());
+                proj.setProjectLink(p.getProjectLink());
+                proj.setDescription(p.getDescription());
+
+                projectRepo.save(proj);
+
+            });
+
+            // Save Certifications
+            certificationRepo.deleteByResumeResumeId(resumeId);
+
+            dto.getCertifications().forEach(c -> {
+
+                ResumeCertification cert = new ResumeCertification();
+                cert.setResume(resume);
+                cert.setCertificationName(c.getCertificationName());
+                cert.setCompany(c.getCompany());
+
+                certificationRepo.save(cert);
+
+            });
+
+            return ResponseEntity.ok(
+                    Map.of("message","Resume saved successfully")
+            );
+
+        } catch(Exception e){
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error",e.getMessage()));
+
+        }
+    }
+
 }

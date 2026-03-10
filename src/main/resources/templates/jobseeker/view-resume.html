@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -12,7 +11,7 @@
 
         body{
             background:#f8fafc;
-            font-family: 'Plus Jakarta Sans',sans-serif;
+            font-family:'Plus Jakarta Sans',sans-serif;
         }
 
         .resume-paper{
@@ -52,18 +51,46 @@
             margin-bottom:10px;
         }
 
+        @media print {
+
+        body{
+        background:white;
+        }
+
+        .btn{
+        display:none;
+        }
+
+        .resume-paper{
+        box-shadow:none;
+        border-radius:0;
+        padding:0;
+        max-width:100%;
+        }
+
+        }
+
     </style>
 
 </head>
 
 <body>
 
-
 <div class="container mt-5">
 
-    <div class="resume-paper" th:if="${resume!=null}">
+    <div class="d-flex justify-content-end mb-3">
 
-        <!-- HEADER -->
+        <button onclick="printResume()" class="btn btn-dark me-2">
+            🖨 Print Resume
+        </button>
+
+        <button onclick="downloadResume()" class="btn btn-success">
+            ⬇ Download PDF
+        </button>
+
+    </div>
+
+    <div class="resume-paper" th:if="${resume!=null}">
 
         <div class="text-center mb-4">
 
@@ -76,9 +103,6 @@
 
         </div>
 
-
-        <!-- OBJECTIVE -->
-
         <div>
 
             <div class="section-title">Professional Summary</div>
@@ -86,10 +110,6 @@
             <p th:text="${resume.objective}"></p>
 
         </div>
-
-
-
-        <!-- EDUCATION -->
 
         <div th:if="${educations!=null}">
 
@@ -105,10 +125,6 @@
 
         </div>
 
-
-
-        <!-- EXPERIENCE -->
-
         <div th:if="${experiences!=null}">
 
             <div class="section-title">Experience</div>
@@ -122,10 +138,6 @@
             </div>
 
         </div>
-
-
-
-        <!-- PROJECTS -->
 
         <div th:if="${projects!=null}">
 
@@ -147,10 +159,6 @@
 
         </div>
 
-
-
-        <!-- CERTIFICATIONS -->
-
         <div th:if="${certifications!=null}">
 
             <div class="section-title">Certifications</div>
@@ -168,10 +176,6 @@
 
         </div>
 
-
-
-        <!-- SKILLS -->
-
         <div th:if="${skills!=null}">
 
             <div class="section-title">Technical Skills</div>
@@ -184,10 +188,6 @@
             </div>
 
         </div>
-
-
-
-        <!-- UPLOADED RESUME -->
 
         <div th:if="${resumeFiles!=null}">
 
@@ -212,12 +212,7 @@
 
         </div>
 
-
     </div>
-
-
-
-    <!-- IF NO RESUME -->
 
     <div class="text-center mt-5" th:if="${resume==null}">
 
@@ -231,8 +226,73 @@
 
     </div>
 
-
 </div>
+
+<!-- POPUP MODAL -->
+
+<div class="modal fade" id="resumePopup" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Resume Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+                <p id="popupMessage">Processing...</p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+
+    function showPopup(message){
+    document.getElementById("popupMessage").innerText = message;
+    const modal = new bootstrap.Modal(document.getElementById('resumePopup'));
+    modal.show();
+    }
+
+    function printResume(){
+
+
+    setTimeout(function(){
+    window.print();
+    },800);
+
+    }
+
+    function downloadResume(){
+
+    showPopup("Preparing your PDF resume...");
+
+    const element = document.querySelector(".resume-paper");
+
+    const opt = {
+    margin:0.3,
+    filename:'RevHire_Resume.pdf',
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2},
+    jsPDF:{unit:'in',format:'a4',orientation:'portrait'}
+    };
+
+    setTimeout(function(){
+    html2pdf().set(opt).from(element).save();
+    },800);
+
+    }
+
+</script>
 
 </body>
 </html>

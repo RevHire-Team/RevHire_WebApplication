@@ -115,18 +115,25 @@ public class JobSeekerControllerTest {
     // =========================
     @Test
     void testUpdateProfile() throws Exception {
-
         JobSeekerProfile profile = new JobSeekerProfile();
-        profile.setFullName("Updated");
+        profile.setSeekerId(1L); // Ensure ID is set
 
-        when(profileRepo.findByUserUserId(1L))
-                .thenReturn(Optional.of(new JobSeekerProfile()));
+        // 1. Mock finding the profile
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
 
-        when(profileRepo.save(any())).thenReturn(profile);
+        // 2. IMPORTANT: Mock finding the resume so it doesn't return null
+        Resume mockResume = new Resume();
+        mockResume.setResumeId(1L);
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(1L))
+                .thenReturn(Optional.of(mockResume));
 
+        // 3. Mock saving the resume
+        when(resumeRepo.save(any())).thenReturn(mockResume);
+
+        // Now perform the test
         mockMvc.perform(put("/api/jobseeker/profile/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(profile)))
+                        .content("{\"fullName\":\"Updated\",\"experience\":\"Some objective\"}"))
                 .andExpect(status().isOk());
     }
 
