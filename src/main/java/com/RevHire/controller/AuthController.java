@@ -10,9 +10,14 @@ import com.RevHire.entity.User;
 import com.RevHire.service.AuthService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Controller
 @RequestMapping("/auth")
 public class AuthController {
+
+    private static final Logger logger = LogManager.getLogger(AuthController.class);
 
     @Autowired
     private AuthService authService;
@@ -20,6 +25,9 @@ public class AuthController {
     // Show Register Page
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
+
+        logger.info("Opening registration page");
+
         model.addAttribute("user", new User());
         return "auth/register";
     }
@@ -27,23 +35,41 @@ public class AuthController {
     // Show Login Page
     @GetMapping("/login")
     public String showLoginPage() {
+
+        logger.info("Opening login page");
+
         return "auth/login";
     }
 
     @GetMapping("/forgot-password")
     public String showResetPasswordPage() {
+
+        logger.info("Opening forgot password page");
+
         return "auth/forgotpassword";
     }
 
     // Handle Register
     @PostMapping("/register")
     public String registerUser(@ModelAttribute User user, Model model) {
+
+        logger.info("Register request received for email: {}", user.getEmail());
+
         try {
+
             authService.registerUser(user);
+
+            logger.info("User registered successfully: {}", user.getEmail());
+
             return "redirect:/auth/login";
+
         } catch (RuntimeException e) {
+
+            logger.error("User registration failed for email: {}", user.getEmail(), e);
+
             model.addAttribute("error", e.getMessage());
             model.addAttribute("user", user);
+
             return "register";
         }
     }
@@ -55,6 +81,8 @@ public class AuthController {
                         HttpSession session,
                         Model model) {
 
+        logger.info("Login attempt for email: {}", email);
+
         try {
 
             User user = authService.login(email, password);
@@ -65,7 +93,7 @@ public class AuthController {
             session.setAttribute("userId", user.getUserId());
             session.setAttribute("role", user.getRole().name());
 
-            System.out.println("ROLE FROM DB: [" + role + "]"); //
+            logger.info("Login successful for userId: {} with role: {}", user.getUserId(), role);
 
             if (role != null && role.trim().equalsIgnoreCase("EMPLOYER")) {
 
@@ -84,6 +112,8 @@ public class AuthController {
 
         } catch (Exception e) {
 
+            logger.warn("Login failed for email: {}", email);
+
             model.addAttribute("error", "Invalid email or password");
             model.addAttribute("email", email);
 
@@ -97,26 +127,45 @@ public class AuthController {
                                 @RequestParam String newPassword,
                                 Model model) {
 
+        logger.info("Password reset attempt for email: {}", email);
+
         try {
+
             authService.resetPassword(email, answer, newPassword);
+
+            logger.info("Password reset successful for email: {}", email);
+
             model.addAttribute("success", "Password updated successfully");
+
             return "auth/login";
+
         } catch (Exception e) {
+
+            logger.error("Password reset failed for email: {}", email, e);
+
             model.addAttribute("error", e.getMessage());
+
             return "auth/forgotpassword";
         }
     }
 
-    // 1. Add this to show the page
+    // Show internal reset page
     @GetMapping("/reset-password")
     public String showInternalResetPage(HttpSession session) {
+
+        logger.info("Opening internal password reset page");
+
         if (session.getAttribute("userId") == null) {
+
+            logger.warn("Unauthorized access to reset password page");
+
             return "redirect:/auth/login";
         }
-        return "auth/reset-password"; // Points to templates/auth/reset-password.html
+
+        return "auth/reset-password";
     }
 
-    // 2. Update the POST method redirect
+    // Update password
     @PostMapping("/update-password")
     public String updatePassword(@RequestParam String currentPassword,
                                  @RequestParam String newPassword,
@@ -124,42 +173,67 @@ public class AuthController {
                                  RedirectAttributes redirectAttributes) {
 
         Long userId = (Long) session.getAttribute("userId");
+
         if (userId == null) {
+
+            logger.warn("Password update attempted without login");
+
             return "redirect:/auth/login";
         }
 
         try {
+
             authService.updatePassword(userId, currentPassword, newPassword);
+
+            logger.info("Password updated successfully for userId: {}", userId);
+
             redirectAttributes.addFlashAttribute("success", "Password updated successfully!");
+
         } catch (RuntimeException e) {
+
+            logger.error("Password update failed for userId: {}", userId, e);
+
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
 
-        // FIXED: Redirects back to the GET mapping above
         return "redirect:/auth/reset-password";
     }
 
     @GetMapping("/delete")
     public String deleteAccount(HttpSession session, RedirectAttributes redirectAttributes) {
+
         Long userId = (Long) session.getAttribute("userId");
 
         if (userId != null) {
+
+            logger.warn("Account deletion requested for userId: {}", userId);
+
             try {
-                // ACTIVATE THIS LINE: Call the service to remove from DB
+
                 authService.deleteUser(userId);
 
-                // Clear the session so the user is logged out
                 session.invalidate();
 
-                redirectAttributes.addFlashAttribute("success", "Your account has been permanently deleted.");
+                logger.info("Account deleted successfully for userId: {}", userId);
+
+                redirectAttributes.addFlashAttribute("success",
+                        "Your account has been permanently deleted.");
+
                 return "redirect:/";
 
             } catch (Exception e) {
-                redirectAttributes.addFlashAttribute("error", "Error: " + e.getMessage());
+
+                logger.error("Error deleting account for userId: {}", userId, e);
+
+                redirectAttributes.addFlashAttribute("error",
+                        "Error: " + e.getMessage());
+
                 return "redirect:/auth/reset-password";
             }
         }
+
+        logger.warn("Delete account attempted without login");
+
         return "redirect:/auth/login";
     }
-
 }
