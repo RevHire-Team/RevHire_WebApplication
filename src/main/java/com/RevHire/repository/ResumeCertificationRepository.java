@@ -1,13 +1,19 @@
 package com.RevHire.repository;
 
 import com.RevHire.entity.ResumeCertification;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public interface ResumeCertificationRepository extends JpaRepository<ResumeCertification, Long> {
+
+    Logger logger = LogManager.getLogger(ResumeCertificationRepository.class);
 
     List<ResumeCertification> findByResumeResumeId(Long resumeId);
 

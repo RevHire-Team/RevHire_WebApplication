@@ -5,10 +5,17 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
 import com.RevHire.entity.Job;
+
 import org.springframework.data.repository.query.Param;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public interface JobRepository extends JpaRepository<Job, Long> {
+
+    Logger logger = LogManager.getLogger(JobRepository.class);
 
     List<Job> findByStatus(String status);
 
@@ -69,7 +76,6 @@ AND j.status = 'OPEN'
 
     // Recommended Jobs based on skill
     @Query("""
-
 SELECT j FROM Job j
 WHERE (
 LOWER(j.title) LIKE LOWER(CONCAT('%', :skill, '%'))
