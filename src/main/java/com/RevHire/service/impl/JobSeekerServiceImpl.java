@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -19,6 +22,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class JobSeekerServiceImpl implements JobSeekerService {
+
+    private static final Logger logger = LogManager.getLogger(JobSeekerServiceImpl.class);
 
     private final JobSeekerProfileRepository profileRepo;
     private final ResumeRepository resumeRepo;
@@ -52,16 +57,28 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public JobSeekerProfile createProfile(JobSeekerProfile profile, Long userId) {
 
+        logger.info("Creating profile for userId: {}", userId);
+
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> {
+                    logger.error("User not found with ID: {}", userId);
+                    return new RuntimeException("User not found with ID: " + userId);
+                });
 
         profile.setUser(user);
-        return profileRepo.save(profile);
+
+        JobSeekerProfile savedProfile = profileRepo.save(profile);
+
+        logger.info("Profile created successfully for userId: {}", userId);
+
+        return savedProfile;
     }
 
     @Override
     public Optional<JobSeekerProfile> getProfile(Long userId) {
-        // Return null instead of Optional to avoid JSON issues
+
+        logger.info("Fetching profile for userId: {}", userId);
+
         return Optional.ofNullable(profileRepo.findByUserUserId(userId)
                 .orElse(null));
     }
@@ -69,8 +86,13 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public JobSeekerProfile updateProfile(Long profileId, JobSeekerProfile profile) {
 
+        logger.info("Updating profile with ID: {}", profileId);
+
         JobSeekerProfile existing = profileRepo.findById(profileId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> {
+                    logger.error("Profile not found with ID: {}", profileId);
+                    return new RuntimeException("Profile not found");
+                });
 
         existing.setFullName(profile.getFullName());
         existing.setPhone(profile.getPhone());
@@ -79,7 +101,11 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         existing.setTotalExperience(profile.getTotalExperience());
         existing.setProfileCompletion(profile.getProfileCompletion());
 
-        return profileRepo.save(existing);
+        JobSeekerProfile updated = profileRepo.save(existing);
+
+        logger.info("Profile updated successfully with ID: {}", profileId);
+
+        return updated;
     }
 
     // ========================= RESUME =========================
@@ -87,11 +113,17 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public Resume getOrCreateResume(Long userId) {
 
+        logger.info("Fetching or creating resume for userId: {}", userId);
+
         JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found. Create profile first."));
+                .orElseThrow(() -> {
+                    logger.error("Profile not found for userId: {}", userId);
+                    return new RuntimeException("Profile not found. Create profile first.");
+                });
 
         return resumeRepo.findBySeekerSeekerId(profile.getSeekerId())
                 .orElseGet(() -> {
+                    logger.info("Creating new resume for seekerId: {}", profile.getSeekerId());
                     Resume newResume = new Resume();
                     newResume.setSeeker(profile);
                     return resumeRepo.save(newResume);
@@ -101,8 +133,13 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public ResumeFile uploadResumeFile(Long userId, MultipartFile file) {
 
+        logger.info("Uploading resume for userId: {}", userId);
+
         JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> {
+                    logger.error("Profile not found while uploading resume for userId: {}", userId);
+                    return new RuntimeException("Profile not found");
+                });
 
         Resume resume = getOrCreateResume(userId);
 
@@ -116,6 +153,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
             File destination = new File(uploadDir + File.separator + fileName);
+
             file.transferTo(destination);
 
             ResumeFile resumeFile = new ResumeFile();
@@ -131,9 +169,16 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
             resumeFile.setFileType(extension);
 
-            return resumeFileRepo.save(resumeFile);
+            ResumeFile savedFile = resumeFileRepo.save(resumeFile);
+
+            logger.info("Resume uploaded successfully for userId: {}", userId);
+
+            return savedFile;
 
         } catch (IOException e) {
+
+            logger.error("Error saving resume file for userId: {}", userId, e);
+
             throw new RuntimeException("FileSystem Error: Could not save file", e);
         }
     }
@@ -143,13 +188,24 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public FavoriteJob addFavoriteJob(Long seekerId, Long jobId) {
 
+        logger.info("Adding favorite job. seekerId: {}, jobId: {}", seekerId, jobId);
+
         JobSeekerProfile seeker = profileRepo.findById(seekerId)
-                .orElseThrow(() -> new RuntimeException("Seeker not found"));
+                .orElseThrow(() -> {
+                    logger.error("Seeker not found with ID: {}", seekerId);
+                    return new RuntimeException("Seeker not found");
+                });
 
         Job job = jobRepo.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> {
+                    logger.error("Job not found with ID: {}", jobId);
+                    return new RuntimeException("Job not found");
+                });
 
         if (favoriteJobRepo.existsBySeekerSeekerIdAndJobJobId(seekerId, jobId)) {
+
+            logger.warn("Job already added to favorites. seekerId: {}, jobId: {}", seekerId, jobId);
+
             throw new RuntimeException("Already added to favorites");
         }
 
@@ -157,14 +213,19 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         fav.setSeeker(seeker);
         fav.setJob(job);
 
-        return favoriteJobRepo.save(fav);
+        FavoriteJob saved = favoriteJobRepo.save(fav);
+
+        logger.info("Favorite job added successfully. favId: {}", saved.getFavId());
+
+        return saved;
     }
 
     @Override
     public List<FavoriteJobDTO> getFavorites(Long seekerId) {
 
-        List<FavoriteJob> favorites =
-                favoriteJobRepo.findBySeekerSeekerId(seekerId);
+        logger.info("Fetching favorite jobs for seekerId: {}", seekerId);
+
+        List<FavoriteJob> favorites = favoriteJobRepo.findBySeekerSeekerId(seekerId);
 
         return favorites.stream().map(fav -> {
 
@@ -191,6 +252,9 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public void removeFavoriteJob(Long favId) {
+
+        logger.info("Removing favorite job with ID: {}", favId);
+
         favoriteJobRepo.deleteById(favId);
     }
 
@@ -199,8 +263,13 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public void markNotificationAsRead(Long notificationId) {
 
+        logger.info("Marking notification as read. notificationId: {}", notificationId);
+
         Notification notification = notificationRepo.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                .orElseThrow(() -> {
+                    logger.error("Notification not found with ID: {}", notificationId);
+                    return new RuntimeException("Notification not found");
+                });
 
         notification.setIsRead(true);
         notificationRepo.save(notification);
@@ -216,6 +285,8 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                                    Double minSal,
                                    Double maxSal,
                                    String type) {
+
+        logger.info("Searching jobs with filters");
 
         BigDecimal bMin = (minSal != null)
                 ? BigDecimal.valueOf(minSal)
@@ -235,6 +306,8 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                 type != null ? "%" + type + "%" : "%",
                 "OPEN"
         );
+
+        logger.info("Jobs found: {}", jobs.size());
 
         return jobs.stream().map(this::convertToDTO).toList();
     }
@@ -258,12 +331,16 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                 companyName
         );
     }
+
     // ========================= RECOMMENDED JOBS =========================
 
     @Override
     public List<Job> getRecommendedJobs(List<String> skills) {
 
+        logger.info("Fetching recommended jobs based on skills");
+
         if (skills == null || skills.isEmpty()) {
+            logger.warn("No skills provided for job recommendation");
             return List.of();
         }
 
@@ -279,5 +356,4 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                 .limit(10)
                 .toList();
     }
-
 }
