@@ -1,0 +1,346 @@
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>My Profile | RevHire</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+
+        :root{
+            --primary:#2563eb;
+            --sidebar:#0f172a;
+            --bg:#f8fafc;
+            --shadow:0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        body{
+            background:var(--bg);
+            font-family:'Plus Jakarta Sans',sans-serif;
+            display:flex;
+        }
+
+        .sidebar{
+            width:250px;
+            height:100vh;
+            background:var(--sidebar);
+            color:white;
+            position:fixed;
+            padding:1.5rem 1rem;
+            display:flex;
+            flex-direction:column;
+        }
+
+        .logo{
+            font-size:1.4rem;
+            font-weight:800;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:25px;
+            text-decoration:none;
+            color:white;
+        }
+
+        .nav-link{
+            color:#94a3b8;
+            padding:10px 14px;
+            border-radius:10px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:6px;
+            text-decoration:none;
+        }
+
+        .nav-link:hover,
+        .nav-link.active{
+            background:var(--primary);
+            color:white;
+        }
+
+        .main{
+            margin-left:250px;
+            width:100%;
+            padding:40px;
+        }
+
+        .profile-header{
+            background:white;
+            border-radius:20px;
+            padding:30px;
+            box-shadow:var(--shadow);
+            display:flex;
+            gap:25px;
+            align-items:center;
+            margin-bottom:30px;
+        }
+
+        .avatar{
+            width:110px;
+            height:110px;
+            background:var(--primary);
+            color:white;
+            font-size:38px;
+            font-weight:800;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:20px;
+        }
+
+        .card-box{
+            background:white;
+            border-radius:20px;
+            padding:25px;
+            box-shadow:var(--shadow);
+        }
+
+        .section-title{
+            font-size:0.8rem;
+            font-weight:800;
+            color:#64748b;
+            text-transform:uppercase;
+            margin-bottom:15px;
+        }
+
+        .data-label{
+            font-size:0.75rem;
+            font-weight:700;
+            color:#94a3b8;
+        }
+
+        .data-value{
+            font-weight:600;
+            margin-bottom:14px;
+        }
+
+        .skill-badge{
+            background:#eff6ff;
+            color:#2563eb;
+            padding:6px 12px;
+            border-radius:12px;
+            margin-right:6px;
+            margin-bottom:6px;
+            display:inline-block;
+        }
+
+        .cert-badge{
+            background:#ecfeff;
+            color:#0891b2;
+            padding:6px 12px;
+            border-radius:12px;
+            margin-right:6px;
+            margin-bottom:6px;
+            display:inline-block;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<nav class="sidebar">
+
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        RevHire
+    </a>
+
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+
+    <a th:href="@{/jobseeker/profile/manage}" class="nav-link active">
+        <i class="bi bi-person"></i> Manage Profile
+    </a>
+
+</nav>
+
+<div class="main">
+
+    <div class="profile-header">
+
+        <div class="avatar" th:text="${session.userInitial ?: 'U'}">U</div>
+
+        <div>
+
+            <h2 id="display-name">User</h2>
+
+            <p id="display-title" class="text-muted">Job Seeker</p>
+
+            <a th:href="@{/jobseeker/edit-profile}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Profile
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-7">
+
+            <div class="card-box">
+
+                <div class="section-title">Personal Details</div>
+
+                <div class="data-label">Email</div>
+                <div class="data-value" th:text="${session.userEmail}"></div>
+
+                <div class="data-label">Phone</div>
+                <div class="data-value" id="view-phone">Not Provided</div>
+
+                <div class="data-label">Location</div>
+                <div class="data-value" id="view-location">Not Set</div>
+
+                <hr>
+
+                <div class="section-title">Education</div>
+
+                <div id="view-education">Not Added</div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-5 d-flex flex-column gap-4">
+
+            <div class="card-box">
+
+                <div class="section-title">Top Skills</div>
+
+                <div id="skills-container">
+                    <span class="text-muted small">No skills added yet.</span>
+                </div>
+
+            </div>
+
+            <div class="card-box">
+
+                <div class="section-title">Certifications</div>
+
+                <div id="certifications-container">
+                    <span class="text-muted small">No certifications added yet.</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <input type="hidden" id="userId" th:value="${session.userId}">
+
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        const userId = document.getElementById("userId").value;
+
+        if(!userId) return;
+
+        try{
+
+            const res = await fetch(`/api/jobseeker/profile/${userId}`);
+
+            if(!res.ok){
+                console.error("Failed to load profile");
+                return;
+            }
+
+            const profile = await res.json();
+
+            document.getElementById("display-name").innerText =
+                profile.fullName || "User";
+
+            document.getElementById("display-title").innerText =
+                profile.jobTitle || "Job Seeker";
+
+            document.getElementById("view-phone").innerText =
+                profile.phone || "Not Provided";
+
+            document.getElementById("view-location").innerText =
+                profile.location || "Not Set";
+
+            document.getElementById("view-education").innerText =
+                profile.education || "Not Added";
+
+
+            /* SKILLS */
+
+            const skillsContainer = document.getElementById("skills-container");
+            skillsContainer.innerHTML = "";
+
+            if(profile.skills){
+
+                profile.skills.split(",").forEach(skill=>{
+
+                    const badge = document.createElement("span");
+                    badge.className = "skill-badge";
+                    badge.innerText = skill.trim();
+
+                    skillsContainer.appendChild(badge);
+
+                });
+
+            }else{
+
+                skillsContainer.innerHTML =
+                    '<span class="text-muted small">No skills added yet.</span>';
+
+            }
+
+
+            /* CERTIFICATIONS */
+
+            const certContainer =
+                document.getElementById("certifications-container");
+
+            certContainer.innerHTML = "";
+
+            if(profile.certifications){
+
+                profile.certifications.split(",").forEach(cert=>{
+
+                    const badge = document.createElement("span");
+                    badge.className = "cert-badge";
+                    badge.innerText = cert.trim();
+
+                    certContainer.appendChild(badge);
+
+                });
+
+            }else{
+
+                certContainer.innerHTML =
+                    '<span class="text-muted small">No certifications added yet.</span>';
+
+            }
+
+        }catch(error){
+
+            console.error("Error loading profile:",error);
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
+```

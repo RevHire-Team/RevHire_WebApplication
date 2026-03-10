@@ -1,0 +1,18 @@
+package com.RevHire.repository;
+
+import com.RevHire.entity.ResumeCertification;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.repository.Modifying;
+
+import java.util.List;
+
+public interface ResumeCertificationRepository extends JpaRepository<ResumeCertification, Long> {
+
+    List<ResumeCertification> findByResumeResumeId(Long resumeId);
+
+    @Transactional
+    @Modifying
+    void deleteByResumeResumeId(Long resumeId);
+
+}

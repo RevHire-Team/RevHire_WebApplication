@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Applications | RevHire</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-subtle: #f8fafc;
+            --text-main: #0f172a;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background: var(--bg-subtle);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+
+        .header-box, .filter-box, .table-box {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .table thead th {
+            background-color: #f1f5f9;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: #64748b;
+            border: none;
+        }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<div class="container mt-4">
+    <input type="hidden" id="employerId" th:value="${session.loggedInUser.userId}">
+
+    <div class="header-box d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="fw-800 mb-1">
+                Manage Applications
+                <span class="badge bg-danger ms-2" id="notificationCount">0</span>
+            </h3>
+            <p class="text-muted mb-0">Review candidate profiles and update their hiring status.</p>
+        </div>
+        <div class="mb-4">
+            <a th:href="@{'/employer/dashboard/' + ${session.loggedInUser.userId}}" class="text-decoration-none fw-bold text-primary">
+                <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="filter-box">
+        <h6 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>Smart Filter</h6>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Search Candidate or Job</label>
+                <input type="text" id="filterKeyword" class="form-control" placeholder="Name, Email, or Title...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Application Status</label>
+                <select id="filterStatus" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="APPLIED">Applied</option>
+                    <option value="SHORTLISTED">Shortlisted</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100 fw-bold" onclick="filterApplicants()">
+                    <i class="bi bi-search me-2"></i> Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <table class="table align-middle">
+            <thead>
+            <tr>
+                <th>Candidate Details</th>
+                <th>Applied For</th>
+                <th>Date Applied</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="appTable">
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Fetching applications...</p>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Candidate Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    fetchAndDisplayApplications();
+});
+
+let allApplications = [];
+
+async function fetchAndDisplayApplications() {
+
+    const tableBody = document.getElementById('appTable');
+
+    const employerId = document.getElementById("employerId").value;
+
+    try {
+
+      const response = await fetch(`/applications/employer/${employerId}`);    // Matches Controller
+      const applications = await response.json();
+
+      allApplications = applications;
+
+        if (applications.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No applications found.</td></tr>';
+            return;
+        }
+
+        // Inside your fetchAndDisplayApplications function:
+tableBody.innerHTML = applications.map(app => `
+    <tr>
+        <td>
+            <div class="fw-bold">${app.applicantName || 'N/A'}</div>
+            <small class="text-muted">${app.seekerEmail || ''}</small>
+        </td>
+        <td>${app.jobTitle || 'N/A'}</td>
+        <td>${app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : 'N/A'}</td>
+        <td>
+            <span class="badge badge-status bg-${getStatusColor(app.status)}">
+                ${app.status || 'UNKNOWN'}
+            </span>
+        </td>
+        <td class="text-end">
+            <button class="btn btn-outline-primary btn-action" onclick="viewDetails(${app.applicationId})">
+                <i class="bi bi-eye"></i>
+            </button>
+        </td>
+    </tr>
+`).join('');
+    } catch (error) {
+        console.error("Error fetching applications:", error);
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load data.</td></tr>';
+    }
+}
+
+function getStatusColor(status) {
+
+    const colors = {
+        'APPLIED': 'info',
+        'SHORTLISTED': 'primary',
+        'REJECTED': 'danger',
+        'WITHDRAWN': 'secondary'
+    };
+
+    return colors[status] || 'secondary';
+}
+
+function viewDetails(appId) {
+
+    const app = allApplications.find(a => a.applicationId === appId);
+
+    const modalContent = document.getElementById("modalContent");
+
+    modalContent.innerHTML = `
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <strong>Candidate Name</strong>
+                <div>${app.applicantName}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Email</strong>
+                <div>${app.applicantEmail}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Job Title</strong>
+                <div>${app.jobTitle}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Status</strong>
+                <div id="statusText">${app.status}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Applied Date</strong>
+                <div>${new Date(app.appliedDate).toLocaleString()}</div>
+            </div>
+
+            <div class="col-md-12 mt-3">
+                <strong>Resume</strong>
+                <div class="mt-2">
+
+                    <a href="/api/resume/view/${app.resumeId}"
+                       target="_blank"
+                       class="btn btn-outline-primary me-2">
+                       <i class="bi bi-eye"></i> View Resume
+                    </a>
+
+                    <a href="/api/resume/download/${app.resumeId}"
+                       class="btn btn-success">
+                       <i class="bi bi-download"></i> Download Resume
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="col-md-12 mt-4">
+                <strong>Update Application Status</strong>
+                <div class="mt-2">
+
+                   ${app.status === 'WITHDRAWN'
+                   ? `<div class="alert alert-warning mt-2">
+                   Candidate has withdrawn this application.
+                   </div>`
+                   : `
+                   <button class="btn btn-success me-2"
+                   onclick="updateStatus(${app.applicationId}, 'SHORTLISTED')">
+                   ✔ Shortlist
+                   </button>
+
+                   <button class="btn btn-danger"
+                   onclick="updateStatus(${app.applicationId}, 'REJECTED')">
+                   ❌ Reject
+                   </button>
+                   `
+                   }
+
+                </div>
+            </div>
+
+        </div>
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    modal.show();
+}
+
+    function filterApplicants() {
+
+    const keyword = document.getElementById("filterKeyword").value.toLowerCase();
+    const status = document.getElementById("filterStatus").value;
+
+    let filtered = allApplications.filter(app => {
+
+        const matchesKeyword =
+            (app.applicantName && app.applicantName.toLowerCase().includes(keyword)) ||
+            (app.seekerEmail && app.seekerEmail.toLowerCase().includes(keyword)) ||
+            (app.jobTitle && app.jobTitle.toLowerCase().includes(keyword));
+
+        const matchesStatus =
+            status === "" || app.status === status;
+
+        return matchesKeyword && matchesStatus;
+
+    });
+
+    renderApplications(filtered);
+
+}
+
+async function updateStatus(appId, status) {
+
+    try {
+
+        const response = await fetch(`/applications/update-status/${appId}?status=${status}`, {
+            method: "POST"
+        });
+
+        if (response.ok) {
+
+            showToast(
+                status === "SHORTLISTED"
+                ? "✔ Candidate Shortlisted Successfully"
+                : "❌ Candidate Rejected"
+            );
+
+            fetchAndDisplayApplications();
+
+        } else {
+
+            showToast("⚠ Failed to update status", "danger");
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("⚠ Error updating status", "danger");
+
+    }
+
+}
+    function renderApplications(applications) {
+
+    const tableBody = document.getElementById('appTable');
+
+    if (applications.length === 0) {
+        tableBody.innerHTML =
+            '<tr><td colspan="5" class="text-center py-4">No matching applications</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = applications.map(app => `
+        <tr>
+            <td>
+                <div class="fw-bold">${app.applicantName || 'N/A'}</div>
+                <small class="text-muted">${app.seekerEmail || ''}</small>
+            </td>
+
+            <td>${app.jobTitle || 'N/A'}</td>
+
+            <td>${app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : 'N/A'}</td>
+
+            <td>
+                <span class="badge badge-status bg-${getStatusColor(app.status)}">
+                    ${app.status || 'UNKNOWN'}
+                </span>
+            </td>
+
+            <td class="text-end">
+                <button class="btn btn-outline-primary btn-action"
+                    onclick="viewDetails(${app.applicationId})">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+
+}
+
+    function showToast(message, type="success") {
+
+    const toastElement = document.getElementById("statusToast");
+    const toastMessage = document.getElementById("toastMessage");
+
+    toastMessage.innerText = message;
+
+    toastElement.classList.remove("text-bg-success","text-bg-danger");
+
+    if(type === "danger"){
+        toastElement.classList.add("text-bg-danger");
+    } else {
+        toastElement.classList.add("text-bg-success");
+    }
+
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/employer.js}"></script>
+
+<!-- Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="statusToast" class="toast align-items-center text-bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                Status Updated
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+# ===============================
+
+# Spring Boot / Maven .gitignore
+
+# ===============================
+
+# Maven build folder
+
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven wrapper
+
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+
+*.log
+
+# Compiled class files
+
+*.class
+
+# ===============================
+
+# Sensitive configuration files
+
+# ===============================
+
+# Application properties (contains DB credentials)
+
+src/main/resources/application.properties
+# ===============================
+
+# Uploads / generated files
+
+# ===============================
+
+uploads/
+
+# ===============================
+
+# OS files
+
+# ===============================
+
+.DS_Store
+Thumbs.db
+
+# ===============================
+
+# IntelliJ IDEA
+
+# ===============================
+
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===============================
+
+# Eclipse / STS
+
+# ===============================
+
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# ===============================
+
+# NetBeans
+
+# ===============================
+
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===============================
+
+# VS Code
+
+# ===============================
+
+.vscode/
+
+# ===============================
+
+# Temporary files
+
+# ===============================
+
+*.swp
+*.tmp
+*.bak
+*.orig
+
+# ===============================
+
+# Misc
+
+# ===============================
+
+HELP.md

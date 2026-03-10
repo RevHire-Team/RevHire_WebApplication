@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search Jobs | RevHire</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root{
+            --primary:#2563eb;
+            --sidebar-bg:#0f172a;
+            --bg-subtle:#f8fafc;
+            --text-main:#0f172a;
+            --text-muted:#64748b;
+            --border:#e2e8f0;
+            --card-shadow:0 10px 15px -3px rgba(0,0,0,0.05);
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;}
+        body{background:var(--bg-subtle);color:var(--text-main);display:flex;min-height:100vh;}
+
+        .sidebar{
+            width:250px;height:100vh;background:var(--sidebar-bg);color:white;
+            position:fixed;padding:1.5rem 1rem;display:flex;flex-direction:column;
+        }
+
+        .logo{
+            font-size:1.5rem;font-weight:800;padding:0 1rem 1.5rem;
+            display:flex;align-items:center;gap:10px;color:white;text-decoration:none;
+        }
+
+        .nav-menu{list-style:none;padding:0;flex-grow:1;overflow-y:auto;}
+
+        .nav-link{
+            color:#94a3b8;text-decoration:none;padding:.7rem 1rem;border-radius:10px;
+            display:flex;align-items:center;gap:12px;font-weight:500;transition:.3s;margin-bottom:2px;
+        }
+
+        .nav-link:hover,.nav-link.active{
+            background:var(--primary)!important;
+            color:white!important;
+        }
+
+        .main-content{
+            margin-left:250px;flex:1;padding:2.5rem;width:calc(100% - 250px);
+        }
+
+        .filter-box{
+            background:white;padding:2rem;border-radius:16px;
+            border:1px solid var(--border);box-shadow:var(--card-shadow);margin-bottom:2rem;
+        }
+
+        .job-card{
+            background:white;padding:1.8rem;border-radius:20px;
+            border:1px solid var(--border);box-shadow:var(--card-shadow);
+            margin-bottom:1.25rem;transition:.3s;
+        }
+
+        .job-card:hover{
+            transform:translateY(-5px);
+            border-color:var(--primary);
+        }
+
+        .company-name{
+            color:var(--primary);
+            font-weight:700;
+            font-size:.85rem;
+            text-transform:uppercase;
+        }
+
+        .job-title{
+            font-weight:800;
+            font-size:1.3rem;
+            margin:.4rem 0;
+        }
+
+        .job-meta{
+            font-size:.9rem;
+            color:var(--text-muted);
+            display:flex;
+            gap:20px;
+        }
+
+        .job-meta i{
+            color:var(--primary);
+            margin-right:5px;
+        }
+
+        /* Styling for the applied state */
+        .btn-applied {
+            background-color: #64748b !important;
+            border-color: #64748b !important;
+            color: white !important;
+            cursor: not-allowed;
+        }
+
+        .btn-saved{
+    background:#ef4444 !important;
+    border-color:#ef4444 !important;
+    color:white !important;
+}
+
+    </style>
+</head>
+
+<body>
+
+<nav class="sidebar">
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
+
+    <div class="nav-menu">
+        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
+            <i class="bi bi-pencil"></i><span>Manage Profile</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">
+            <i class="bi bi-file-earmark-text"></i><span>Resume Builder</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/view}" class="nav-link">
+            <i class="bi bi-eye"></i><span>View Resume</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
+            <i class="bi bi-upload"></i><span>Upload Resume</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/search}" class="nav-link active">
+            <i class="bi bi-search"></i><span>Search Jobs</span>
+        </a>
+        <a th:href="@{/jobseeker/applications}" class="nav-link">
+            <i class="bi bi-briefcase"></i><span>Applications</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+            <i class="bi bi-heart"></i><span>Saved Jobs</span>
+        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i><span>Notifications</span>
+        </a>
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i><span>Reset Password</span>
+        </a>
+    </div>
+
+    <div class="mt-auto">
+        <a th:href="@{/}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i><span>Logout</span>
+        </a>
+    </div>
+</nav>
+
+<main class="main-content">
+    <h3 class="fw-bold mb-3">Explore Opportunities</h3>
+
+    <div class="filter-box">
+        <form id="filterForm" th:action="@{/jobseeker/jobs/search}" method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" id="titleFilter" name="title" class="form-control" placeholder="Job title">
+            </div>
+            <div class="col-md-3">
+                <input type="text" id="locationFilter" name="location" class="form-control" placeholder="Location">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Find Jobs</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" onclick="clearFilters()" class="btn btn-outline-secondary w-100">Clear All</button>
+            </div>
+        </form>
+
+        <hr>
+
+        <div class="row g-3 mt-2">
+            <div class="col-md-3">
+                <input type="text" id="companyFilter" class="form-control" placeholder="Company Name">
+            </div>
+            <div class="col-md-2">
+                <input type="number" id="minSalary" class="form-control" placeholder="Min Salary">
+            </div>
+            <div class="col-md-2">
+                <input type="number" id="maxSalary" class="form-control" placeholder="Max Salary">
+            </div>
+            <div class="col-md-2">
+                <select id="jobTypeFilter" class="form-select">
+                    <option value="">Job Type</option>
+                    <option value="Full Time">Full Time</option>
+                    <option value="Part Time">Part Time</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Contract">Contract</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="sortJobs" class="form-select">
+                    <option value="">Sort Jobs</option>
+                    <option value="company">Company</option>
+                    <option value="salary">Salary (High to Low)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="sessionUserId" th:value="${session.userId}">
+
+    <div id="jobListings">
+        <div th:each="job : ${jobs}" class="job-card"
+             th:attr="data-jobid=${job.jobId},
+                      data-company=${job.companyName},
+                      data-title=${job.title},
+                      data-location=${job.location},
+                      data-type=${job.jobType},
+                      data-minsalary=${job.salaryMin},
+                      data-maxsalary=${job.salaryMax}">
+
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="company-name" th:text="${job.companyName}"></span>
+                    <h5 class="job-title" th:text="${job.title}"></h5>
+                </div>
+                <div class="d-flex gap-2">
+
+                    <button th:id="'saveBtn-' + ${job.jobId}"
+                            th:onclick="'saveJob(' + ${job.jobId} + ')'"
+                            class="btn btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-heart"></i>
+                    </button>
+
+                    <button th:id="'applyBtn-' + ${job.jobId}"
+                            th:onclick="'handleApply(' + ${job.jobId} + ')'"
+                            class="btn btn-primary rounded-pill px-4">
+                        Apply Now
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="job-meta">
+                <span><i class="bi bi-geo-alt"></i><span th:text="${job.location}"></span></span>
+                <span><i class="bi bi-currency-dollar"></i>
+                <span th:text="${job.salaryMin + ' - ' + job.salaryMax}"></span></span>
+                <span><i class="bi bi-clock"></i>
+                <span th:text="${job.jobType}"></span></span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // 1. Existing Filtering Functionality
+    const filterIds = ["titleFilter", "locationFilter", "companyFilter", "minSalary", "maxSalary", "jobTypeFilter"];
+
+    filterIds.forEach(id => {
+        document.getElementById(id).addEventListener("input", applyFilters);
+    });
+
+    function applyFilters() {
+        const searchTitle = document.getElementById("titleFilter").value.toLowerCase().trim();
+        const searchLocation = document.getElementById("locationFilter").value.toLowerCase().trim();
+        const searchCompany = document.getElementById("companyFilter").value.toLowerCase().trim();
+        const searchMinSal = parseFloat(document.getElementById("minSalary").value) || 0;
+        const searchMaxSal = parseFloat(document.getElementById("maxSalary").value) || Infinity;
+        const searchType = document.getElementById("jobTypeFilter").value.toLowerCase();
+
+        const jobCards = document.querySelectorAll(".job-card");
+        let visibleCount = 0;
+
+        jobCards.forEach(card => {
+            const jTitle = (card.dataset.title || "").toLowerCase();
+            const jLoc = (card.dataset.location || "").toLowerCase();
+            const jComp = (card.dataset.company || "").toLowerCase();
+            const jType = (card.dataset.type || "").toLowerCase().replace("_", " ");
+            const jMinSal = parseFloat(card.dataset.minsalary || 0);
+            const jMaxSal = parseFloat(card.dataset.maxsalary || 0);
+
+            const titleMatch = !searchTitle || jTitle.includes(searchTitle);
+            const locMatch = !searchLocation || jLoc.includes(searchLocation);
+            const compMatch = !searchCompany || jComp.includes(searchCompany);
+            const typeMatch = !searchType || jType.includes(searchType);
+            const salaryMatch = (jMaxSal >= searchMinSal) && (jMinSal <= searchMaxSal);
+
+            if (titleMatch && locMatch && compMatch && typeMatch && salaryMatch) {
+                card.style.display = "block";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        toggleNoResults(visibleCount);
+    }
+
+    function clearFilters() {
+        filterIds.forEach(id => {
+            document.getElementById(id).value = "";
+        });
+        applyFilters();
+    }
+
+    function toggleNoResults(count) {
+        let msg = document.getElementById("noJobsMessage");
+        if (count === 0) {
+            if (!msg) {
+                msg = document.createElement("div");
+                msg.id = "noJobsMessage";
+                msg.className = "text-center py-5 text-muted bg-white border rounded-4";
+                msg.innerHTML = `<i class="bi bi-search" style="font-size:3rem"></i><p class="mt-2 fw-bold">No jobs found matching these filters.</p>`;
+                document.getElementById("jobListings").appendChild(msg);
+            }
+        } else if (msg) {
+            msg.remove();
+        }
+    }
+
+    document.getElementById("sortJobs").addEventListener("change", function() {
+        const criteria = this.value;
+        const container = document.getElementById("jobListings");
+        const jobs = Array.from(container.querySelectorAll(".job-card"));
+
+        jobs.sort((a, b) => {
+            if (criteria === "company") {
+                return a.dataset.company.localeCompare(b.dataset.company);
+            } else if (criteria === "salary") {
+                return parseFloat(b.dataset.maxsalary) - parseFloat(a.dataset.maxsalary);
+            }
+            return 0;
+        });
+
+        jobs.forEach(job => container.appendChild(job));
+    });
+
+    document.getElementById("filterForm").addEventListener("submit", (e) => e.preventDefault());
+
+    // 2. New Application Functionality
+  // 2. Updated Application Functionality (ONLY changes the Apply logic)
+    async function handleApply(jobId) {
+        const userId = document.getElementById("sessionUserId").value;
+        const btn = document.getElementById(`applyBtn-${jobId}`);
+
+        if (!userId) {
+            Swal.fire("Login Required", "Please log in to apply.", "warning");
+            return;
+        }
+
+        Swal.fire({
+            title: 'Applying...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading() }
+        });
+
+        try {
+            // We use URLSearchParams because your Controller uses @RequestParam
+            const params = new URLSearchParams();
+            params.append('jobId', jobId);
+            params.append('seekerId', userId); // Sending userId as seekerId
+            params.append('resumeId', 1);      // Defaulting to 1 to match your Service requirements
+            params.append('coverLetter', "Applied via RevHire Portal");
+
+            const res = await fetch('/applications/submit-application', {
+                method: "POST",
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            });
+
+            if (res.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Applied Successfully!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // Update UI to "Applied" state
+                btn.innerText = "Applied";
+                btn.classList.add("btn-applied");
+                btn.disabled = true;
+                btn.onclick = null;
+            } else if (res.status === 409) {
+                Swal.fire("Note", "Already applied for this job.", "info");
+                btn.innerText = "Applied";
+                btn.classList.add("btn-applied");
+                btn.disabled = true;
+            } else {
+                Swal.fire("Error", "Could not apply. Ensure profile and resume exist.", "error");
+            }
+        } catch (err) {
+            Swal.fire("Network Error", "Unable to connect to the server.", "error");
+        }
+    }
+
+    // 3. Persistence: Check applied status on page load
+    document.addEventListener("DOMContentLoaded", async () => {
+        const userId = document.getElementById("sessionUserId").value;
+        if(!userId) return;
+
+        try {
+            // Using your existing getBySeeker endpoint: /applications/seeker/{id}
+            const res = await fetch(`/applications/seeker/${userId}`);
+            if (res.ok) {
+                const appliedList = await res.json();
+                appliedList.forEach(app => {
+                    // Find the button inside the job listings that matches the job title
+                    const jobCards = document.querySelectorAll(".job-card");
+                    jobCards.forEach(card => {
+                        if (card.dataset.title === app.jobTitle) {
+                            const btn = card.querySelector("button");
+                            if (btn) {
+                                btn.innerText = "Applied";
+                                btn.classList.add("btn-applied");
+                                btn.disabled = true;
+                                btn.onclick = null;
+                            }
+                        }
+                    });
+                });
+            }
+        } catch (e) { console.log("Applied status check failed."); }
+    });
+
+    async function saveJob(jobId) {
+
+    const userId = document.getElementById("sessionUserId").value;
+    const btn = document.getElementById(`saveBtn-${jobId}`);
+
+    if(!userId){
+        Swal.fire("Login Required","Please login first","warning");
+        return;
+    }
+
+    try{
+
+        const response = await fetch(`/api/jobseeker/favorites/${userId}/${jobId}`,{
+            method:"POST"
+        });
+
+        if(response.ok){
+
+            Swal.fire({
+                icon:'success',
+                title:'Job Saved!',
+                timer:1200,
+                showConfirmButton:false
+            });
+
+            btn.classList.add("btn-saved");
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+            btn.disabled = true;
+
+        }
+        else if(response.status === 409){
+
+            Swal.fire("Info","Job already saved","info");
+
+            btn.classList.add("btn-saved");
+            btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+            btn.disabled = true;
+
+        }
+
+    }catch(e){
+        console.log("Save error",e);
+    }
+
+}
+</script>
+</body>
+</html>
