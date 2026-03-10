@@ -36,4 +36,5 @@ public interface ResumeFileRepository extends JpaRepository<ResumeFile, Long> {
 
     List<ResumeFile> findByResume_ResumeIdOrderByUploadedAtDesc(Long resumeId);
 
+    List<ResumeFile> findByResumeResumeId(Long resumeId);
 }

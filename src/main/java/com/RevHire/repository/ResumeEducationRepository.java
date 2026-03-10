@@ -1,15 +1,22 @@
-package com.RevHire.repository;
+    package com.RevHire.repository;
 
-import com.RevHire.entity.Resume;
-import org.springframework.data.jpa.repository.JpaRepository;
+    import com.RevHire.entity.Resume;
+    import org.springframework.data.jpa.repository.JpaRepository;
+    import com.RevHire.entity.ResumeEducation;
+    import org.springframework.transaction.annotation.Transactional;
+    import org.springframework.data.jpa.repository.Modifying;
+    import java.util.List;
 
-import com.RevHire.entity.ResumeEducation;
+    public interface ResumeEducationRepository extends JpaRepository<ResumeEducation, Long> {
 
-import java.util.List;
+        List<ResumeEducation> findByResume_ResumeId(Long resumeId);
 
-public interface ResumeEducationRepository extends JpaRepository<ResumeEducation, Long> {
+        List<ResumeEducation> findByResumeResumeId(Long resumeId);
 
-    List<ResumeEducation> findByResume_ResumeId(Long resumeId);
+        void deleteByResume(Resume resume);
 
-    void deleteByResume(Resume resume);
-}
+        @Transactional
+        @Modifying
+        void deleteByResumeResumeId(Long resumeId);
+
+    }

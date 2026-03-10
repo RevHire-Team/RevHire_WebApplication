@@ -1,7 +1,8 @@
 package com.RevHire.service;
 
 import com.RevHire.entity.*;
-import org.springframework.core.io.Resource;import jakarta.transaction.Transactional;
+import org.springframework.core.io.Resource;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,4 +52,25 @@ public interface ResumeService {
     void deleteResumeFile(Long fileId);
 
     byte[] getResumeFileBytes(Long userId);
+
+
+    // ================= ADDED FROM FILE 2 =================
+
+    // Certifications
+    ResumeCertification addCertification(Long resumeId, ResumeCertification cert);
+
+    List<ResumeCertification> getCertifications(Long resumeId);
+
+    void deleteCertification(Long certificationId);
+
+    // Projects
+    ResumeProject addProject(Long resumeId, ResumeProject project);
+
+    List<ResumeProject> getProjects(Long resumeId);
+
+    void deleteProject(Long projectId);
+
+    // File retrieval
+    ResumeFile getResumeFile(Long fileId);
+
 }

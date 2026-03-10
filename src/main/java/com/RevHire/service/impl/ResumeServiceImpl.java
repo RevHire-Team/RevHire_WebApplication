@@ -31,6 +31,15 @@ public class ResumeServiceImpl implements ResumeService {
     private final ResumeSkillRepository skillRepo;
     private final ResumeFileRepository resumeFileRepo;
 
+    @Autowired
+    private ResumeCertificationRepository certRepo;
+
+    @Autowired
+    private ResumeProjectRepository projectRepo;
+
+    @Autowired
+    private JobSeekerProfileRepository profileRepo;
+
     public ResumeServiceImpl(
             ResumeRepository resumeRepo,
             ResumeEducationRepository educationRepo,
@@ -236,5 +245,57 @@ public class ResumeServiceImpl implements ResumeService {
         } catch (IOException e) {
             throw new RuntimeException("Could not download file");
         }
+    }
+
+    // ================= CERTIFICATIONS =================
+
+    @Override
+    public ResumeCertification addCertification(Long resumeId, ResumeCertification cert) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        cert.setResume(resume);
+
+        return certRepo.save(cert);
+    }
+
+    @Override
+    public List<ResumeCertification> getCertifications(Long resumeId) {
+        return certRepo.findByResumeResumeId(resumeId);
+    }
+
+    @Override
+    public void deleteCertification(Long certificationId) {
+        certRepo.deleteById(certificationId);
+    }
+
+    // ================= PROJECTS =================
+
+    @Override
+    public ResumeProject addProject(Long resumeId, ResumeProject project) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        project.setResume(resume);
+
+        return projectRepo.save(project);
+    }
+
+    @Override
+    public List<ResumeProject> getProjects(Long resumeId) {
+        return projectRepo.findByResumeResumeId(resumeId);
+    }
+
+    @Override
+    public void deleteProject(Long projectId) {
+        projectRepo.deleteById(projectId);
+    }
+
+    @Override
+    public ResumeFile getResumeFile(Long fileId) {
+        return resumeFileRepo.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
     }
 }

@@ -15,7 +15,8 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "RESUME_EDUCATION")
-@Getter @Setter
+@Getter
+@Setter
 public class ResumeEducation {
 
     @Id
@@ -33,5 +34,4 @@ public class ResumeEducation {
 
     @Column(name = "year_of_completion")
     private Integer yearOfCompletion;
-
 }

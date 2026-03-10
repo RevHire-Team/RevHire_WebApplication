@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.http.ResponseEntity;
 
 @Controller // This is the key! It allows returning HTML templates.
 @RequestMapping("/jobseeker") // Matches the redirect in AuthController
@@ -127,25 +127,49 @@ public class JobSeekerUIController {
 
     @GetMapping("/resume/view")
     public String viewResume(HttpSession session, Model model) {
+
         Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) return "redirect:/auth/login";
 
-        // 1. Get the profile using the JobSeekerService
-        jobSeekerService.getProfile(userId).ifPresent(profile -> {
-            model.addAttribute("profile", profile);
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
 
-            // 2. Find the Resume associated with the seeker
-            Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
+        Optional<JobSeekerProfile> profileOpt = jobSeekerService.getProfile(userId);
 
-            resumeOpt.ifPresent(resume -> {
-                // 3. Populate lists using the ResumeService logic from your ResumeController
-                Long rId = resume.getResumeId();
-                model.addAttribute("resume", resume);
-                model.addAttribute("educations", resumeService.getEducationByResume(rId));
-                model.addAttribute("experiences", resumeService.getExperienceByResume(rId));
-                model.addAttribute("skills", resumeService.getSkillsByResume(rId));
-            });
-        });
+        if (profileOpt.isEmpty()) {
+            model.addAttribute("resume", null);
+            return "jobseeker/view-resume";
+        }
+
+        JobSeekerProfile profile = profileOpt.get();
+        model.addAttribute("profile", profile);
+
+        Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
+
+        if (resumeOpt.isEmpty()) {
+            model.addAttribute("resume", null);
+            return "jobseeker/view-resume";
+        }
+
+        Resume resume = resumeOpt.get();
+        model.addAttribute("resume", resume);
+
+        Long resumeId = resume.getResumeId();
+
+        model.addAttribute("educations",
+                resumeService.getEducationByResume(resumeId));
+
+        model.addAttribute("experiences",
+                resumeService.getExperienceByResume(resumeId));
+
+        model.addAttribute("projects",
+                resumeService.getProjects(resumeId));
+
+        model.addAttribute("certifications",
+                resumeService.getCertifications(resumeId));
+
+        model.addAttribute("skills",
+                resumeService.getSkillsByResume(resumeId));
 
         return "jobseeker/view-resume";
     }
@@ -179,15 +203,11 @@ public class JobSeekerUIController {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) return "redirect:/auth/login";
 
-        final List<ApplicationResponseDTO>[] apps = new List[]{List.of()}; // default empty list
-
-        // Fetch profile and applications if available
         jobSeekerService.getProfile(userId).ifPresent(profile -> {
-            apps[0] = applicationService.getApplicationsBySeeker(profile.getSeekerId());
+            List<ApplicationResponseDTO> apps = applicationService.getApplicationsBySeeker(profile.getSeekerId());
+            model.addAttribute("applications", apps);
+            model.addAttribute("activePage", "applications");
         });
-
-        model.addAttribute("applications", apps[0]); // Now it's a List, Thymeleaf can iterate
-        model.addAttribute("activePage", "applications");
 
         return "jobseeker/applications";
     }
@@ -233,7 +253,7 @@ public class JobSeekerUIController {
 
         // 4. Update Skills (Relational Table)
         // Delete existing skills first to avoid duplicates
-        resumeSkillRepo.deleteByResume(resume);
+        resumeSkillRepo.deleteByResumeResumeId(resume.getResumeId());
 
         if (dto.getSkills() != null && !dto.getSkills().trim().isEmpty()) {
             String[] skillNames = dto.getSkills().split(",");
@@ -260,7 +280,9 @@ public class JobSeekerUIController {
         if(p.getLocation() != null) count += 20;
         if(r.getObjective() != null) count += 20;
         // Check if skills exist
-        if(!resumeSkillRepo.findByResume(r).isEmpty()) count += 20;
+        if (!resumeSkillRepo.findByResumeResumeId(r.getResumeId()).isEmpty()) {
+    count += 20;
+}
         return count;
     }
 
