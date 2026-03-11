@@ -22,7 +22,6 @@
         .form-control,.form-select{ border-radius:12px; padding:12px; }
         .btn-save{ background:var(--primary); color:white; border:none; padding:14px; border-radius:12px; font-weight:700; }
         .btn-save:hover{ background:var(--primary-dark); }
-        .skill-item, .cert-item{ margin-bottom:8px; }
     </style>
 </head>
 <body>
@@ -44,10 +43,6 @@
                 <div class="col-md-6">
                     <label class="form-label">Full Name</label>
                     <input type="text" id="fullName" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Professional Title</label>
-                    <input type="text" id="jobTitle" class="form-control">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email</label>
@@ -75,29 +70,6 @@
                         <option value="10+ Years Experience">10+ Years Experience</option>
                     </select>
                 </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Skills</label>
-                    <div id="skillsContainer"></div>
-                    <div class="input-group mt-2">
-                        <input type="text" id="skillInput" class="form-control" placeholder="Enter skill">
-                        <button type="button" class="btn btn-primary" onclick="addSkill()">Add</button>
-                    </div>
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Certifications</label>
-                    <div id="certContainer"></div>
-                    <div class="input-group mt-2">
-                        <input type="text" id="certInput" class="form-control" placeholder="Enter certification">
-                        <button type="button" class="btn btn-primary" onclick="addCertification()">Add</button>
-                    </div>
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Professional Summary</label>
-                    <textarea id="experience" class="form-control" rows="4" placeholder="Enter professional summary"></textarea>
-                </div>
             </div>
 
             <button type="submit" class="btn btn-save w-100 mt-4">
@@ -108,45 +80,6 @@
 </div>
 
 <script>
-    let skillsList = [];
-    let certList = [];
-
-    // Render skills
-    function renderSkills() {
-        const container = document.getElementById("skillsContainer");
-        container.innerHTML = "";
-        if(skillsList.length === 0) container.innerHTML = '<span class="text-muted small">No skills added yet.</span>';
-        skillsList.forEach(skill => {
-            const div = document.createElement("div");
-            div.className = "skill-item";
-            div.innerHTML = `<input type="text" class="form-control mb-1" value="${skill}" readonly>`;
-            container.appendChild(div);
-        });
-    }
-
-    // Render certifications
-    function renderCertifications() {
-        const container = document.getElementById("certContainer");
-        container.innerHTML = "";
-        if(certList.length === 0) container.innerHTML = '<span class="text-muted small">No certifications added yet.</span>';
-        certList.forEach(cert => {
-            const div = document.createElement("div");
-            div.className = "cert-item";
-            div.innerHTML = `<input type="text" class="form-control mb-1" value="${cert}" readonly>`;
-            container.appendChild(div);
-        });
-    }
-
-    function addSkill(){
-        const val = document.getElementById("skillInput").value.trim();
-        if(val){ skillsList.push(val); renderSkills(); document.getElementById("skillInput").value=""; }
-    }
-
-    function addCertification(){
-        const val = document.getElementById("certInput").value.trim();
-        if(val){ certList.push(val); renderCertifications(); document.getElementById("certInput").value=""; }
-    }
-
     // Load profile
     async function loadProfile(){
         const userId = document.getElementById("userId").value;
@@ -157,18 +90,10 @@
             const profile = await res.json();
 
             document.getElementById("fullName").value = profile.fullName || "";
-            document.getElementById("jobTitle").value = profile.jobTitle || "";
             document.getElementById("phone").value = profile.phone || "";
             document.getElementById("location").value = profile.location || "";
             document.getElementById("education").value = profile.education || "";
             document.getElementById("employmentStatus").value = profile.employmentStatus || "Fresher";
-            document.getElementById("experience").value = profile.experience || "";
-
-            if(profile.skills) skillsList = profile.skills.split(",").map(s=>s.trim());
-            if(profile.certifications) certList = profile.certifications.split(",").map(c=>c.trim());
-
-            renderSkills();
-            renderCertifications();
 
         } catch(err){ console.error(err); }
     }
@@ -179,14 +104,10 @@
         const userId = document.getElementById("userId").value;
         const data = {
             fullName: document.getElementById("fullName").value,
-            jobTitle: document.getElementById("jobTitle").value,
             phone: document.getElementById("phone").value,
             location: document.getElementById("location").value,
             education: document.getElementById("education").value,
-            employmentStatus: document.getElementById("employmentStatus").value,
-            experience: document.getElementById("experience").value,
-            skills: skillsList.join(","),
-            certifications: certList.join(",")
+            employmentStatus: document.getElementById("employmentStatus").value
         };
         try{
             const res = await fetch(`/api/jobseeker/profile/${userId}`, {
@@ -195,7 +116,8 @@
                 body: JSON.stringify(data)
             });
             if(res.ok){
-                Swal.fire({icon:"success",title:"Saved!",text:"Profile updated successfully."}).then(()=>location.href='/jobseeker/profile/manage');
+                Swal.fire({icon:"success",title:"Saved!",text:"Profile updated successfully."})
+                    .then(()=>location.href='/jobseeker/profile/manage');
             } else {
                 Swal.fire({icon:"error",title:"Error",text:"Unable to save profile."});
             }
