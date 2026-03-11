@@ -413,6 +413,107 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
+    public Resume getResumeById(Long resumeId) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        List<ResumeFile> orderedFiles =
+                resumeFileRepo.findByResume_ResumeIdOrderByUploadedAtDesc(resumeId);
+
+        resume.setFiles(orderedFiles);
+
+        return resume;
+    }
+
+
+    @Override
+    public String generateResumeHtml(Long resumeId) {
+
+        Resume resume = resumeRepo.findById(resumeId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        JobSeekerProfile profile = resume.getSeeker();
+
+        List<ResumeEducation> educations = educationRepo.findByResume_ResumeId(resumeId);
+        List<ResumeExperience> experiences = experienceRepo.findByResume_ResumeId(resumeId);
+        List<ResumeSkill> skills = skillRepo.findByResume_ResumeId(resumeId);
+        List<ResumeProject> projects = projectRepo.findByResumeResumeId(resumeId);
+        List<ResumeCertification> certs = certRepo.findByResumeResumeId(resumeId);
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("<html>");
+        html.append("<body style='font-family:Arial; padding:40px;'>");
+
+        // Header
+        html.append("<h1 style='text-align:center;'>")
+                .append(profile.getFullName())
+                .append("</h1>");
+
+        html.append("<p style='text-align:center;'>")
+                .append(profile.getLocation())
+                .append(" | ")
+                .append(profile.getPhone())
+                .append("</p>");
+
+        // Summary
+        html.append("<h3>Professional Summary</h3>");
+        html.append("<p>").append(resume.getObjective()).append("</p>");
+
+        // Education
+        html.append("<h3>Education</h3>");
+        for (ResumeEducation edu : educations) {
+            html.append("<p><b>")
+                    .append(edu.getDegree())
+                    .append("</b> - ")
+                    .append(edu.getInstitution())
+                    .append("</p>");
+        }
+
+        // Experience
+        html.append("<h3>Experience</h3>");
+        for (ResumeExperience exp : experiences) {
+            html.append("<p><b>")
+                    .append(exp.getRole())
+                    .append("</b> - ")
+                    .append(exp.getCompanyName())
+                    .append("</p>");
+        }
+
+        // Projects
+        html.append("<h3>Projects</h3>");
+        for (ResumeProject proj : projects) {
+            html.append("<p><b>")
+                    .append(proj.getProjectTitle())
+                    .append("</b><br/>")
+                    .append(proj.getDescription())
+                    .append("</p>");
+        }
+
+        // Certifications
+        html.append("<h3>Certifications</h3>");
+        for (ResumeCertification cert : certs) {
+            html.append("<p><b>")
+                    .append(cert.getCertificationName())
+                    .append("</b> - ")
+                    .append(cert.getCompany())
+                    .append("</p>");
+        }
+
+        // Skills
+        html.append("<h3>Technical Skills</h3>");
+        for (ResumeSkill skill : skills) {
+            html.append("<p>").append(skill.getSkillName()).append("</p>");
+        }
+
+        html.append("</body>");
+        html.append("</html>");
+
+        return html.toString();
+    }
+
+    @Override
     public ResumeFile getResumeFile(Long fileId) {
 
         logger.info("Fetching resume file metadata for fileId: {}", fileId);

@@ -143,7 +143,7 @@
         </div>
     </header>
 
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-5 justify-content-center">
         <div class="col-md-3">
             <div class="stat-card">
                 <div class="stat-icon bg-primary bg-opacity-10 text-primary mb-3">
@@ -199,11 +199,10 @@
                             <p class="mb-0 fw-600">Fast-track Hiring</p>
 
                             <small class="text-muted">
-                                You currently have
-                                <strong th:text="${dashboard.activeJobs}">0</strong>
-                                active job openings and
-                                <strong th:text="${dashboard.pendingReviews}">0</strong>
-                                pending applications.
+                                Hiring overview:
+                                <strong th:text="${dashboard.totalJobs}">0</strong> jobs posted,
+                                <strong th:text="${dashboard.activeJobs}">0</strong> active,
+                                <strong th:text="${dashboard.totalApplications}">0</strong> applications received.
                             </small>
 
                         </div>
@@ -240,36 +239,44 @@
 </main>
 <script>
 
-    const ctx = document.getElementById('applicationsChart');
+    const totalJobs = [[${dashboard.totalJobs}]];
+const activeJobs = [[${dashboard.activeJobs}]];
+const totalApplications = [[${dashboard.totalApplications}]];
 
-    const applicationsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-            datasets: [{
-                label: 'Applications',
-                data: [3,5,4,8,6,9,7],
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37,99,235,0.15)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4
-            }]
+const ctx = document.getElementById('applicationsChart');
+
+const applicationsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Total Jobs', 'Active Jobs', 'Total Applications'],
+        datasets: [{
+            label: 'Recruitment Overview',
+            data: [totalJobs, activeJobs, totalApplications],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.15)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 6,
+            pointBackgroundColor: '#2563eb'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
                 }
             }
         }
-    });
+    }
+});
 
 </script>
 </body>

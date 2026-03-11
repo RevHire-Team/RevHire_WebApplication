@@ -4,15 +4,19 @@ import com.RevHire.entity.*;
 import com.RevHire.repository.ResumeFileRepository;
 import com.RevHire.service.ResumeService;
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -230,6 +234,55 @@ public class ResumeController {
 
             throw new RuntimeException("Could not read file: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/page/{resumeId}")
+    public String viewResumePage(@PathVariable Long resumeId, Model model) {
+
+        Resume resume = resumeService.getResumeById(resumeId);
+
+        model.addAttribute("resume", resume);
+        model.addAttribute("profile", resume.getSeeker());
+
+        model.addAttribute("educations",
+                resumeService.getEducationByResume(resumeId));
+
+        model.addAttribute("experiences",
+                resumeService.getExperienceByResume(resumeId));
+
+        model.addAttribute("skills",
+                resumeService.getSkillsByResume(resumeId));
+
+        model.addAttribute("resumeFiles", resume.getFiles());
+
+        return "view-resume";
+    }
+
+    @GetMapping("/resume-pdf/{resumeId}")
+    public ResponseEntity<byte[]> generateResumePdf(@PathVariable Long resumeId) {
+
+        String html = resumeService.generateResumeHtml(resumeId);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try {
+
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.withHtmlContent(html, null);
+            builder.toStream(outputStream);
+            builder.run();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating PDF", e);
+        }
+
+        byte[] pdfBytes = outputStream.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("inline", "resume.pdf");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 
     @GetMapping("/view/{fileId}")

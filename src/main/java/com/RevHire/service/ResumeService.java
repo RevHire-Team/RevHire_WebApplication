@@ -73,4 +73,8 @@ public interface ResumeService {
     // File retrieval
     ResumeFile getResumeFile(Long fileId);
 
+    Resume getResumeById(Long resumeId);
+
+    String generateResumeHtml(Long resumeId);
+
 }
