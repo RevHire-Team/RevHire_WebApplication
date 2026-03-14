@@ -146,16 +146,25 @@ public class JobSeekerController {
             @PathVariable Long userId,
             @RequestBody Map<String,Object> data) {
 
-        JobSeekerProfile profile =
-                profileRepo.findByUserUserId(userId)
-                        .orElseThrow(() -> new RuntimeException("Profile not found"));
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                .orElseGet(() -> {
+                    JobSeekerProfile newProfile = new JobSeekerProfile();
+
+                    User user = new User();
+                    user.setUserId(userId);
+
+                    newProfile.setUser(user);
+                    return newProfile;
+                });
 
         profile.setFullName((String) data.get("fullName"));
         profile.setPhone((String) data.get("phone"));
         profile.setLocation((String) data.get("location"));
 
-        if(data.get("employmentStatus") != null)
+        if(data.get("employmentStatus") != null){
+            profile.setCurrentEmploymentStatus((String) data.get("employmentStatus"));
             profile.setTotalExperience(parseExperience((String) data.get("employmentStatus")));
+        }
 
         profileRepo.save(profile);
 
@@ -218,7 +227,6 @@ public class JobSeekerController {
                 "message","Profile updated successfully"
         ));
     }
-
     // RESUME FILE UPLOAD
     @PostMapping("/resume/upload/{userId}")
     public ResponseEntity<?> uploadResume(
