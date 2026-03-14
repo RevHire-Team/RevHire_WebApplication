@@ -247,7 +247,6 @@ width:100%;
                     <div class="dynamic-row">
                         <input class="form-control mb-2 proj-title" placeholder="Project Title">
                         <input class="form-control mb-2 proj-tech" placeholder="Technologies">
-                        <input class="form-control mb-2 proj-link" placeholder="Project Link">
                         <textarea class="form-control proj-desc" rows="3" placeholder="Project Description"></textarea>
                     </div>
 
@@ -325,7 +324,6 @@ width:100%;
 <div class="btn-remove" onclick="removeRow('${id}')">✕</div>
 <input class="form-control mb-2 proj-title" placeholder="Project Title">
 <input class="form-control mb-2 proj-tech" placeholder="Technologies">
-<input class="form-control mb-2 proj-link" placeholder="Project Link">
 <textarea class="form-control proj-desc" rows="3" placeholder="Project Description"></textarea>
 </div>`
         }
@@ -380,7 +378,6 @@ width:100%;
             projects:Array.from(document.querySelectorAll("#proj-container .dynamic-row")).map(r=>({
                 projectTitle:r.querySelector(".proj-title").value,
                 technologies:r.querySelector(".proj-tech").value,
-                projectLink:r.querySelector(".proj-link").value,
                 description:r.querySelector(".proj-desc").value
             })),
 

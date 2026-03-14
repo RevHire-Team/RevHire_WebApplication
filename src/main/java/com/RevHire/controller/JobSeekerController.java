@@ -179,6 +179,10 @@ public class JobSeekerController {
         resume.setObjective((String) data.get("experience"));
         resumeRepo.save(resume);
 
+        int completion = calculateProfileCompletion(profile, resume);
+        profile.setProfileCompletion(completion);
+        profileRepo.save(profile);
+
         Long resumeId = resume.getResumeId();
 
         resumeSkillRepo.deleteByResumeResumeId(resumeId);
@@ -332,10 +336,23 @@ public class JobSeekerController {
         List<ApplicationResponseDTO> recent =
                 applications.stream().limit(5).toList();
 
+        int score = profile.getProfileCompletion() != null
+                ? profile.getProfileCompletion()
+                : 0;
+
+        Optional<Resume> resumeOpt =
+                resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(seekerId);
+
+        if (resumeOpt.isPresent()) {
+
+            score = calculateProfileCompletion(profile, resumeOpt.get());
+
+            profile.setProfileCompletion(score);
+            profileRepo.save(profile);
+        }
+
         return ResponseEntity.ok(Map.of(
-                "profileScore",
-                profile.getProfileCompletion() != null ?
-                        profile.getProfileCompletion() : 0,
+                "profileScore", score,
                 "totalApplications", totalApps,
                 "savedJobs", savedJobs,
                 "recentApplications", recent
@@ -353,6 +370,39 @@ public class JobSeekerController {
             case "10+ Years Experience": return 12;
             default: return 0;
         }
+    }
+    private int calculateProfileCompletion(JobSeekerProfile profile, Resume resume) {
+
+        int score = 0;
+
+        if(profile.getFullName()!=null && !profile.getFullName().isEmpty())
+            score += 10;
+
+        if(profile.getPhone()!=null && !profile.getPhone().isEmpty())
+            score += 10;
+
+        if(profile.getLocation()!=null && !profile.getLocation().isEmpty())
+            score += 10;
+
+        if(resume.getObjective()!=null && !resume.getObjective().isEmpty())
+            score += 10;
+
+        if(!educationRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 15;
+
+        if(!experienceRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 15;
+
+        if(!projectRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        if(!resumeSkillRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        if(!certificationRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        return score;
     }
 
     @PostMapping("/resume/save/{userId}")
@@ -448,6 +498,10 @@ public class JobSeekerController {
                 certificationRepo.save(cert);
 
             });
+
+            int completion = calculateProfileCompletion(profile, resume);
+            profile.setProfileCompletion(completion);
+            profileRepo.save(profile);
 
             return ResponseEntity.ok(
                     Map.of("message","Resume saved successfully")
