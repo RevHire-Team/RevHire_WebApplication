@@ -248,11 +248,10 @@ function viewDetails(appId) {
                 <strong>Resume</strong>
                 <div class="mt-2">
 
-                    <a href="/api/resume/view/${app.resumeId}"
-                       target="_blank"
-                       class="btn btn-outline-primary me-2">
-                       <i class="bi bi-eye"></i> View Resume
-                    </a>
+                   <button class="btn btn-outline-primary me-2"
+        onclick="window.open('/api/resume/resume-pdf/${app.resumeId}', '_blank')">
+    <i class="bi bi-eye"></i> View Resume
+</button>
 
                 </div>
             </div>

@@ -146,16 +146,25 @@ public class JobSeekerController {
             @PathVariable Long userId,
             @RequestBody Map<String,Object> data) {
 
-        JobSeekerProfile profile =
-                profileRepo.findByUserUserId(userId)
-                        .orElseThrow(() -> new RuntimeException("Profile not found"));
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
+                .orElseGet(() -> {
+                    JobSeekerProfile newProfile = new JobSeekerProfile();
+
+                    User user = new User();
+                    user.setUserId(userId);
+
+                    newProfile.setUser(user);
+                    return newProfile;
+                });
 
         profile.setFullName((String) data.get("fullName"));
         profile.setPhone((String) data.get("phone"));
         profile.setLocation((String) data.get("location"));
 
-        if(data.get("employmentStatus") != null)
+        if(data.get("employmentStatus") != null){
+            profile.setCurrentEmploymentStatus((String) data.get("employmentStatus"));
             profile.setTotalExperience(parseExperience((String) data.get("employmentStatus")));
+        }
 
         profileRepo.save(profile);
 
@@ -169,6 +178,10 @@ public class JobSeekerController {
 
         resume.setObjective((String) data.get("experience"));
         resumeRepo.save(resume);
+
+        int completion = calculateProfileCompletion(profile, resume);
+        profile.setProfileCompletion(completion);
+        profileRepo.save(profile);
 
         Long resumeId = resume.getResumeId();
 
@@ -218,7 +231,6 @@ public class JobSeekerController {
                 "message","Profile updated successfully"
         ));
     }
-
     // RESUME FILE UPLOAD
     @PostMapping("/resume/upload/{userId}")
     public ResponseEntity<?> uploadResume(
@@ -324,10 +336,23 @@ public class JobSeekerController {
         List<ApplicationResponseDTO> recent =
                 applications.stream().limit(5).toList();
 
+        int score = profile.getProfileCompletion() != null
+                ? profile.getProfileCompletion()
+                : 0;
+
+        Optional<Resume> resumeOpt =
+                resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(seekerId);
+
+        if (resumeOpt.isPresent()) {
+
+            score = calculateProfileCompletion(profile, resumeOpt.get());
+
+            profile.setProfileCompletion(score);
+            profileRepo.save(profile);
+        }
+
         return ResponseEntity.ok(Map.of(
-                "profileScore",
-                profile.getProfileCompletion() != null ?
-                        profile.getProfileCompletion() : 0,
+                "profileScore", score,
                 "totalApplications", totalApps,
                 "savedJobs", savedJobs,
                 "recentApplications", recent
@@ -345,6 +370,39 @@ public class JobSeekerController {
             case "10+ Years Experience": return 12;
             default: return 0;
         }
+    }
+    private int calculateProfileCompletion(JobSeekerProfile profile, Resume resume) {
+
+        int score = 0;
+
+        if(profile.getFullName()!=null && !profile.getFullName().isEmpty())
+            score += 10;
+
+        if(profile.getPhone()!=null && !profile.getPhone().isEmpty())
+            score += 10;
+
+        if(profile.getLocation()!=null && !profile.getLocation().isEmpty())
+            score += 10;
+
+        if(resume.getObjective()!=null && !resume.getObjective().isEmpty())
+            score += 10;
+
+        if(!educationRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 15;
+
+        if(!experienceRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 15;
+
+        if(!projectRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        if(!resumeSkillRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        if(!certificationRepo.findByResumeResumeId(resume.getResumeId()).isEmpty())
+            score += 10;
+
+        return score;
     }
 
     @PostMapping("/resume/save/{userId}")
@@ -440,6 +498,10 @@ public class JobSeekerController {
                 certificationRepo.save(cert);
 
             });
+
+            int completion = calculateProfileCompletion(profile, resume);
+            profile.setProfileCompletion(completion);
+            profileRepo.save(profile);
 
             return ResponseEntity.ok(
                     Map.of("message","Resume saved successfully")
