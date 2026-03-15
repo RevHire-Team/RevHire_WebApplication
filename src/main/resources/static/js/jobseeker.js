@@ -357,6 +357,7 @@ function loadRecentApplications(){
 APPLY JOB FUNCTION
 ===================================================== */
 
+
 function applyJob(jobId){
 
 let jobs =

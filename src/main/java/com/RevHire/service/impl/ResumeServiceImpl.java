@@ -433,7 +433,9 @@ public class ResumeServiceImpl implements ResumeService {
         Resume resume = resumeRepo.findById(resumeId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-        JobSeekerProfile profile = resume.getSeeker();
+        JobSeekerProfile profile = profileRepo
+                .findById(resume.getSeeker().getSeekerId())
+                .orElseThrow(() -> new RuntimeException("JobSeeker profile not found"));
 
         List<ResumeEducation> educations = educationRepo.findByResume_ResumeId(resumeId);
         List<ResumeExperience> experiences = experienceRepo.findByResume_ResumeId(resumeId);
@@ -448,13 +450,13 @@ public class ResumeServiceImpl implements ResumeService {
 
         // Header
         html.append("<h1 style='text-align:center;'>")
-                .append(profile.getFullName())
+                .append(profile.getFullName() != null ? profile.getFullName() : "Candidate")
                 .append("</h1>");
 
         html.append("<p style='text-align:center;'>")
-                .append(profile.getLocation())
+                .append(profile.getLocation() != null ? profile.getLocation() : "")
                 .append(" | ")
-                .append(profile.getPhone())
+                .append(profile.getPhone() != null ? profile.getPhone() : "")
                 .append("</p>");
 
         // Summary

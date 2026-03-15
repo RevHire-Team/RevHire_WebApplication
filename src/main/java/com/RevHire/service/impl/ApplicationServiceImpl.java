@@ -71,11 +71,19 @@ public class ApplicationServiceImpl implements ApplicationService {
                     return new RuntimeException("Seeker not found with id: " + seekerId);
                 });
 
-        Resume resume = resumeRepository.findById(resumeId)
+        Resume resume = resumeRepository.findBySeeker_SeekerId(seekerId)
                 .orElseThrow(() -> {
-                    logger.error("Resume not found with id: {}", resumeId);
-                    return new RuntimeException("Resume not found with id: " + resumeId);
+                    logger.error("Resume not found for seeker {}", seekerId);
+                    return new RuntimeException("Resume not found for seeker");
                 });
+
+        /* Validate resume belongs to seeker */
+        if (!resume.getSeeker().getSeekerId().equals(seekerId)) {
+
+            logger.error("Resume {} does not belong to seeker {}", resumeId, seekerId);
+
+            throw new RuntimeException("Invalid resume selected for this seeker");
+        }
 
         Application application = new Application();
         application.setJob(job);
@@ -234,7 +242,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                         app.getSeeker().getUser().getEmail(),
                         app.getStatus(),
                         app.getAppliedDate(),
-                        app.getResume().getResumeId()
+                        app.getResume() != null ? app.getResume().getResumeId() : null
                 ))
                 .toList();
     }
