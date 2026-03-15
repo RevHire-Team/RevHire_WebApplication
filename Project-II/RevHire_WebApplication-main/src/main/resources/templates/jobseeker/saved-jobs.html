@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Saved Jobs | RevHire</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --sidebar-bg: #0f172a;
+            --bg-subtle: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg-subtle); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px; height: 100vh; background: var(--sidebar-bg); color: white;
+            position: fixed; padding: 1.5rem 1rem; display: flex; flex-direction: column; z-index: 1000;
+        }
+        .logo {
+            font-size: 1.5rem; font-weight: 800; padding: 0 1rem 1.5rem;
+            display: flex; align-items: center; gap: 10px; color: white; text-decoration: none;
+        }
+        .nav-menu { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
+        .nav-link {
+            color: #94a3b8; text-decoration: none; padding: 0.7rem 1rem; border-radius: 10px;
+            display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.3s; margin-bottom: 2px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: var(--primary) !important;
+            color: white !important;
+        }
+
+        /* Main Content */
+        .main-content { margin-left: 250px; flex: 1; padding: 2.5rem; width: calc(100% - 250px); }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted);
+            text-decoration: none; font-weight: 600; margin-bottom: 1.5rem;
+        }
+        .btn-back:hover { color: var(--primary); }
+
+        /* Job Cards */
+        .job-card {
+            background: white; padding: 1.8rem; border-radius: 20px;
+            border: 1px solid var(--border); box-shadow: var(--card-shadow);
+            margin-bottom: 1.25rem; transition: all 0.3s ease;
+        }
+        .job-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1);
+        }
+
+        .company-name { color: var(--primary); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .job-title { font-weight: 800; font-size: 1.3rem; margin: 0.4rem 0; color: var(--sidebar-bg); }
+        .job-meta { font-size: 0.9rem; color: var(--text-muted); display: flex; gap: 20px; }
+        .job-meta i { color: var(--primary); margin-right: 5px; }
+
+        /* Applied Badge Style */
+        .applied-badge {
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; }
+            .sidebar span, .logo span { display: none; }
+            .main-content { margin-left: 80px; width: calc(100% - 80px); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
+        <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+        <span>RevHire</span>
+    </a>
+    <div class="nav-menu">
+        <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="nav-link">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+        </a>
+        <a th:href="@{/jobseeker/profile/manage}" class="nav-link">
+            <i class="bi bi-pencil"></i> <span>Manage Profile</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/builder}" class="nav-link">
+            <i class="bi bi-file-earmark-text"></i> <span>Resume Builder</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/view}" class="nav-link">
+            <i class="bi bi-eye"></i>
+            <span>View Resume</span>
+        </a>
+        <a th:href="@{/jobseeker/resume/upload}" class="nav-link">
+            <i class="bi bi-upload"></i> <span>Upload Resume</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/search}" class="nav-link">
+            <i class="bi bi-search"></i> <span>Search Jobs</span>
+        </a>
+        <a th:href="@{/jobseeker/applications}" class="nav-link ">
+            <i class="bi bi-briefcase"></i> <span>Applications</span>
+        </a>
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link active">
+            <i class="bi bi-heart"></i> <span>Saved Jobs</span>
+        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link">
+            <i class="bi bi-bell"></i> <span>Notifications</span>
+        </a>
+        <a th:href="@{/auth/reset-password}" class="nav-link">
+            <i class="bi bi-key"></i> <span>Reset Password</span>
+        </a>
+    </div>
+    <div class="mt-auto">
+        <a th:href="@{/}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-left"></i> <span>Logout</span>
+        </a>
+    </div>
+</nav>
+
+<main class="main-content">
+    <h3 class="fw-800 mb-4">Your Saved Jobs</h3>
+
+    <div id="savedJobsList">
+        <div th:each="fav : ${savedJobs}" class="job-card"
+             th:id="'fav-card-' + ${fav.favId}"
+             th:attr="data-jobid=${fav.jobId}"> <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <span class="company-name" th:text="${fav.companyName}">Company</span>
+                <h5 class="job-title" th:text="${fav.title}">Job Title</h5>
+                <div class="job-meta">
+                    <span><i class="bi bi-geo-alt me-1"></i> <span th:text="${fav.location}">Location</span></span>
+                    <span><i class="bi bi-clock me-1"></i> <span th:text="${fav.jobType}">Type</span></span>
+                    <span><i class="bi bi-currency-dollar me-1"></i>
+                            <span th:text="${fav.salaryMin + ' - ' + fav.salaryMax}">$0 - $0</span>
+                        </span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 align-self-center">
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                        th:onclick="'removeSavedJob(' + ${fav.favId} + ')'">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+
+                <button th:id="'applyBtn-' + ${fav.jobId}"
+                        class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm"
+                        th:onclick="'initiateApply(' + ${fav.jobId} + ')'">
+                    Apply Now
+                </button>
+            </div>
+        </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(savedJobs)}" class="text-center py-5">
+            <div class="bg-white p-5 rounded-4 shadow-sm d-inline-block border">
+                <i class="bi bi-heart text-muted opacity-25" style="font-size: 4rem;"></i>
+                <h5 class="mt-4 fw-700">No saved jobs yet</h5>
+                <p class="text-muted">Explore jobs and click the heart icon to save them here.</p>
+                <a th:href="@{/jobseeker/jobs/search}" class="btn btn-primary mt-3 px-4 rounded-pill">Browse Jobs</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-5">
+                <div class="mb-3">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:70px;height:70px;font-size:30px;">✓</div>
+                </div>
+                <h4 class="fw-bold text-success">Application Submitted!</h4>
+                <p class="text-muted mb-4">Your application has been successfully sent to the employer.</p>
+                <button class="btn btn-success px-4 rounded-pill" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    // Helper to change button to "Applied" badge
+    function updateToAppliedState(jobId) {
+        const btn = document.getElementById(`applyBtn-${jobId}`);
+        if (btn) {
+            const appliedLabel = document.createElement("span");
+            appliedLabel.className = "applied-badge";
+            appliedLabel.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
+            btn.parentNode.replaceChild(appliedLabel, btn);
+        }
+    }
+
+    // ON PAGE LOAD: Check existing applications and sync status
+    document.addEventListener("DOMContentLoaded", async () => {
+        const userId = [[${session.userId}]];
+        if(!userId) return;
+
+        try {
+            const res = await fetch(`/applications/seeker/${userId}`);
+            if (res.ok) {
+                const appliedList = await res.json();
+                const savedJobCards = document.querySelectorAll(".job-card");
+
+                appliedList.forEach(app => {
+                    savedJobCards.forEach(card => {
+                        const cardTitle = card.querySelector(".job-title").innerText.trim().toLowerCase();
+                        const appliedTitle = app.jobTitle.trim().toLowerCase();
+
+                        // Sync status by matching titles (as DTO lacks ID)
+                        if (cardTitle === appliedTitle) {
+                            const jobId = card.getAttribute("data-jobid");
+                            updateToAppliedState(jobId);
+                        }
+                    });
+                });
+            }
+        } catch (e) {
+            console.error("Applied status check failed.");
+        }
+    });
+
+    async function initiateApply(jobId) {
+        const userId = [[${session.userId}]];
+        try {
+            const res = await fetch(`/api/resume/details/${userId}`);
+            const data = await res.json();
+            if (data && data.resumeId) {
+                submitApplication(jobId, userId, data.resumeId);
+            } else {
+                alert("Please upload a resume first!");
+                window.location.href = "/jobseeker/resume/upload";
+            }
+        } catch (e) { alert("Error checking resume status."); }
+    }
+
+    async function submitApplication(jobId, seekerId, resumeId) {
+        const params = new URLSearchParams();
+        params.append('jobId', jobId);
+        params.append('seekerId', seekerId);
+        params.append('resumeId', resumeId);
+        params.append('coverLetter', "Applied via saved jobs portal.");
+
+        try {
+            const response = await fetch('/applications/submit-application', {
+                method: 'POST',
+                body: params
+            });
+
+            if (response.status === 200) {
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+                updateToAppliedState(jobId);
+            } else if (response.status === 409) {
+                updateToAppliedState(jobId);
+            }
+        } catch (error) {
+            console.error("Apply Error:", error);
+        }
+    }
+
+    async function removeSavedJob(favId) {
+        try {
+            const response = await fetch(`/api/jobseeker/favorites/${favId}`, { method: "DELETE" });
+            if (response.ok) {
+                const card = document.getElementById("fav-card-" + favId);
+                if (card) card.remove();
+            }
+        } catch (error) { console.error("Remove error:", error); }
+    }
+</script>
+</body>
+</html>
