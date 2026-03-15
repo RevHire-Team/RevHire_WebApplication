@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Search Jobs | RevHire</title>
+    <title>Saved Jobs | RevHire</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -51,11 +51,6 @@
         }
         .btn-back:hover { color: var(--primary); }
 
-        .filter-box {
-            background: white; padding: 2rem; border-radius: 16px;
-            border: 1px solid var(--border); box-shadow: var(--card-shadow); margin-bottom: 2rem;
-        }
-
         /* Job Cards */
         .job-card {
             background: white; padding: 1.8rem; border-radius: 20px;
@@ -73,6 +68,20 @@
         .job-meta { font-size: 0.9rem; color: var(--text-muted); display: flex; gap: 20px; }
         .job-meta i { color: var(--primary); margin-right: 5px; }
 
+        /* Applied Badge Style */
+        .applied-badge {
+            background-color: #f1f5f9;
+            color: #64748b;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         @media (max-width: 1024px) {
             .sidebar { width: 80px; }
             .sidebar span, .logo span { display: none; }
@@ -83,7 +92,7 @@
 <body>
 
 <nav class="sidebar">
-    <a th:href="@{/jobseeker/dashboard}" class="logo">
+    <a th:href="@{'/jobseeker/dashboard/' + ${session.userId}}" class="logo">
         <i class="bi bi-rocket-takeoff-fill text-primary"></i>
         <span>RevHire</span>
     </a>
@@ -110,7 +119,7 @@
         <a th:href="@{/jobseeker/applications}" class="nav-link ">
             <i class="bi bi-briefcase"></i> <span>Applications</span>
         </a>
-        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link">
+        <a th:href="@{/jobseeker/jobs/saved}" class="nav-link active">
             <i class="bi bi-heart"></i> <span>Saved Jobs</span>
         </a>
         <a th:href="@{/notifications/notification}" class="nav-link">
@@ -131,32 +140,34 @@
     <h3 class="fw-800 mb-4">Your Saved Jobs</h3>
 
     <div id="savedJobsList">
-        <div th:each="fav : ${savedJobs}" class="job-card" th:id="'fav-card-' + ${fav.favId}">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <span class="company-name" th:text="${fav.companyName}">Company</span>
-                    <h5 class="job-title" th:text="${fav.title}">Job Title</h5>
-                    <div class="job-meta">
-                        <span><i class="bi bi-geo-alt me-1"></i> <span th:text="${fav.location}">Location</span></span>
-                        <span><i class="bi bi-clock me-1"></i> <span th:text="${fav.jobType}">Type</span></span>
-                        <span><i class="bi bi-currency-dollar me-1"></i>
+        <div th:each="fav : ${savedJobs}" class="job-card"
+             th:id="'fav-card-' + ${fav.favId}"
+             th:attr="data-jobid=${fav.jobId}"> <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <span class="company-name" th:text="${fav.companyName}">Company</span>
+                <h5 class="job-title" th:text="${fav.title}">Job Title</h5>
+                <div class="job-meta">
+                    <span><i class="bi bi-geo-alt me-1"></i> <span th:text="${fav.location}">Location</span></span>
+                    <span><i class="bi bi-clock me-1"></i> <span th:text="${fav.jobType}">Type</span></span>
+                    <span><i class="bi bi-currency-dollar me-1"></i>
                             <span th:text="${fav.salaryMin + ' - ' + fav.salaryMax}">$0 - $0</span>
                         </span>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2 align-self-center">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
-                            th:onclick="'removeSavedJob(' + ${fav.favId} + ')'">
-                        <i class="bi bi-trash"></i> Remove
-                    </button>
-
-                    <button class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm"
-                            th:onclick="'initiateApply(' + ${fav.jobId} + ')'">
-                        Apply Now
-                    </button>
                 </div>
             </div>
+
+            <div class="d-flex gap-2 align-self-center">
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                        th:onclick="'removeSavedJob(' + ${fav.favId} + ')'">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+
+                <button th:id="'applyBtn-' + ${fav.jobId}"
+                        class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm"
+                        th:onclick="'initiateApply(' + ${fav.jobId} + ')'">
+                    Apply Now
+                </button>
+            </div>
+        </div>
         </div>
 
         <div th:if="${#lists.isEmpty(savedJobs)}" class="text-center py-5">
@@ -185,93 +196,61 @@
     </div>
 </div>
 
-<div class="modal fade" id="alreadyAppliedModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body text-center p-5">
-                <div class="mb-3">
-                    <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width:70px;height:70px;font-size:30px;">!</div>
-                </div>
-                <h4 class="fw-bold text-warning">Already Applied</h4>
-                <p class="text-muted mb-4">You have already applied for this job.</p>
-                <button class="btn btn-warning px-4 rounded-pill" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="jobSavedModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body text-center p-5">
-                <div class="mb-3">
-                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:70px;height:70px;font-size:30px;"><i class="bi bi-heart-fill"></i></div>
-                </div>
-                <h4 class="fw-bold text-primary">Job Saved!</h4>
-                <p class="text-muted mb-4">This job has been added to your "Saved Jobs" list.</p>
-                <button class="btn btn-primary px-4 rounded-pill" data-bs-dismiss="modal">Great</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="alreadySavedModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body text-center p-5">
-                <div class="mb-3">
-                    <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:70px;height:70px;font-size:30px;"><i class="bi bi-info-circle"></i></div>
-                </div>
-                <h4 class="fw-bold text-secondary">Already Saved</h4>
-                <p class="text-muted mb-4">This job is already in your favorites list.</p>
-                <button class="btn btn-secondary px-4 rounded-pill" data-bs-dismiss="modal">OK</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script th:inline="javascript">
-    // --- SAVE JOB LOGIC ---
-    async function saveJob(jobId) {
-        try {
-            const userId = [[${session.userId}]];
-            const profileRes = await fetch(`/api/jobseeker/profile/${userId}`);
-            const profileData = await profileRes.json();
-            const seekerId = profileData.seekerId;
-
-            const response = await fetch(`/api/jobseeker/favorites/${seekerId}/${jobId}`, {
-                method: 'POST'
-            });
-
-            if (response.ok) {
-                new bootstrap.Modal(document.getElementById('jobSavedModal')).show();
-            } else if (response.status === 409 || !response.ok) {
-                // If conflict or error (assuming backend returns conflict for duplicates)
-                new bootstrap.Modal(document.getElementById('alreadySavedModal')).show();
-            }
-        } catch (error) {
-            console.error('Error saving job:', error);
+    // Helper to change button to "Applied" badge
+    function updateToAppliedState(jobId) {
+        const btn = document.getElementById(`applyBtn-${jobId}`);
+        if (btn) {
+            const appliedLabel = document.createElement("span");
+            appliedLabel.className = "applied-badge";
+            appliedLabel.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
+            btn.parentNode.replaceChild(appliedLabel, btn);
         }
     }
 
-    // --- APPLY LOGIC ---
+    // ON PAGE LOAD: Check existing applications and sync status
+    document.addEventListener("DOMContentLoaded", async () => {
+        const userId = [[${session.userId}]];
+        if(!userId) return;
+
+        try {
+            const res = await fetch(`/applications/seeker/${userId}`);
+            if (res.ok) {
+                const appliedList = await res.json();
+                const savedJobCards = document.querySelectorAll(".job-card");
+
+                appliedList.forEach(app => {
+                    savedJobCards.forEach(card => {
+                        const cardTitle = card.querySelector(".job-title").innerText.trim().toLowerCase();
+                        const appliedTitle = app.jobTitle.trim().toLowerCase();
+
+                        // Sync status by matching titles (as DTO lacks ID)
+                        if (cardTitle === appliedTitle) {
+                            const jobId = card.getAttribute("data-jobid");
+                            updateToAppliedState(jobId);
+                        }
+                    });
+                });
+            }
+        } catch (e) {
+            console.error("Applied status check failed.");
+        }
+    });
+
     async function initiateApply(jobId) {
         const userId = [[${session.userId}]];
         try {
             const res = await fetch(`/api/resume/details/${userId}`);
             const data = await res.json();
-
             if (data && data.resumeId) {
                 submitApplication(jobId, userId, data.resumeId);
             } else {
                 alert("Please upload a resume first!");
                 window.location.href = "/jobseeker/resume/upload";
             }
-        } catch (e) {
-            alert("Error checking resume status.");
-        }
+        } catch (e) { alert("Error checking resume status."); }
     }
 
     async function submitApplication(jobId, seekerId, resumeId) {
@@ -279,7 +258,7 @@
         params.append('jobId', jobId);
         params.append('seekerId', seekerId);
         params.append('resumeId', resumeId);
-        params.append('coverLetter', "Applied via search portal.");
+        params.append('coverLetter', "Applied via saved jobs portal.");
 
         try {
             const response = await fetch('/applications/submit-application', {
@@ -289,10 +268,9 @@
 
             if (response.status === 200) {
                 new bootstrap.Modal(document.getElementById('successModal')).show();
+                updateToAppliedState(jobId);
             } else if (response.status === 409) {
-                new bootstrap.Modal(document.getElementById('alreadyAppliedModal')).show();
-            } else {
-                alert("Server returned error: " + response.status);
+                updateToAppliedState(jobId);
             }
         } catch (error) {
             console.error("Apply Error:", error);
@@ -300,22 +278,14 @@
     }
 
     async function removeSavedJob(favId) {
-    try {
-        const response = await fetch(`/api/jobseeker/favorites/${favId}`, {
-            method: "DELETE"
-        });
-
-        if (response.ok) {
-            const card = document.getElementById("fav-card-" + favId);
-            if (card) card.remove();
-        } else {
-            alert("Failed to remove saved job.");
-        }
-    } catch (error) {
-        console.error("Remove error:", error);
+        try {
+            const response = await fetch(`/api/jobseeker/favorites/${favId}`, { method: "DELETE" });
+            if (response.ok) {
+                const card = document.getElementById("fav-card-" + favId);
+                if (card) card.remove();
+            }
+        } catch (error) { console.error("Remove error:", error); }
     }
-}
 </script>
-
 </body>
 </html>

@@ -91,7 +91,6 @@
             margin-right:5px;
         }
 
-        /* Applied Label Styling */
         .applied-badge {
             background-color: #f1f5f9;
             color: #64748b;
@@ -207,7 +206,6 @@
                     <option value="company">Company</option>
                     <option value="salaryLow">Salary (Low to High)</option>
                     <option value="salaryHigh">Salary (High to Low)</option>
-
                 </select>
             </div>
         </div>
@@ -231,19 +229,16 @@
                     <h5 class="job-title" th:text="${job.title}"></h5>
                 </div>
                 <div class="d-flex gap-2 align-items-center" th:id="'actionContainer-' + ${job.jobId}">
-
                     <button th:id="'saveBtn-' + ${job.jobId}"
                             th:onclick="'saveJob(' + ${job.jobId} + ')'"
                             class="btn btn-outline-primary rounded-pill px-3">
                         <i class="bi bi-heart"></i>
                     </button>
-
                     <button th:id="'applyBtn-' + ${job.jobId}"
                             th:onclick="'handleApply(' + ${job.jobId} + ')'"
                             class="btn btn-primary rounded-pill px-4">
                         Apply Now
                     </button>
-
                 </div>
             </div>
 
@@ -259,10 +254,18 @@
 </main>
 
 <script>
-    const filterIds = ["titleFilter", "locationFilter", "companyFilter", "minSalary", "maxSalary", "jobTypeFilter"];
+    // Updated filterIds to include BOTH dropdowns
+    const filterIds = ["titleFilter", "locationFilter", "companyFilter", "minSalary", "maxSalary", "jobTypeFilter", "sortJobs"];
 
     filterIds.forEach(id => {
-        document.getElementById(id).addEventListener("input", applyFilters);
+        const element = document.getElementById(id);
+        if(element) {
+            element.addEventListener("input", applyFilters);
+            // Specifically for dropdowns
+            if(element.tagName === "SELECT") {
+                element.addEventListener("change", applyFilters);
+            }
+        }
     });
 
     function applyFilters() {
@@ -302,10 +305,20 @@
     }
 
     function clearFilters() {
+        // 1. Clear every input and dropdown
         filterIds.forEach(id => {
-            document.getElementById(id).value = "";
+            const el = document.getElementById(id);
+            if(el) el.value = "";
         });
+
+        // 2. Refresh visibility
         applyFilters();
+
+        // 3. Reset the sort order to original (by Job ID)
+        const container = document.getElementById("jobListings");
+        const jobs = Array.from(container.querySelectorAll(".job-card"));
+        jobs.sort((a, b) => parseInt(a.dataset.jobid) - parseInt(b.dataset.jobid));
+        jobs.forEach(job => container.appendChild(job));
     }
 
     function toggleNoResults(count) {
@@ -323,9 +336,10 @@
         }
     }
 
-    // UPDATED SORTING LOGIC
     document.getElementById("sortJobs").addEventListener("change", function() {
         const criteria = this.value;
+        if (!criteria) return; // Don't sort if "Sort Jobs" is selected
+
         const container = document.getElementById("jobListings");
         const jobs = Array.from(container.querySelectorAll(".job-card"));
 
@@ -345,11 +359,8 @@
 
     document.getElementById("filterForm").addEventListener("submit", (e) => e.preventDefault());
 
-    // UPDATED APPLY LOGIC
     async function handleApply(jobId) {
         const userId = document.getElementById("sessionUserId").value;
-        const btn = document.getElementById(`applyBtn-${jobId}`);
-
         if (!userId) {
             Swal.fire("Login Required", "Please log in to apply.", "warning");
             return;
@@ -394,7 +405,6 @@
         }
     }
 
-    // PERSISTENCE CHECK ON LOAD
     document.addEventListener("DOMContentLoaded", async () => {
         const userId = document.getElementById("sessionUserId").value;
         if(!userId) return;
@@ -404,10 +414,8 @@
             if (res.ok) {
                 const appliedList = await res.json();
                 appliedList.forEach(app => {
-                    // Match by JobId if available in app object, or Title as fallback
                     const jobCards = document.querySelectorAll(".job-card");
                     jobCards.forEach(card => {
-                        // Assuming your API returns 'jobId' or matching title
                         if (card.dataset.jobid == app.jobId || card.dataset.title === app.jobTitle) {
                            updateToAppliedState(card.dataset.jobid);
                         }
