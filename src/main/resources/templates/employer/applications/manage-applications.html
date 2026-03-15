@@ -176,7 +176,7 @@ tableBody.innerHTML = applications.map(app => `
     <tr>
         <td>
             <div class="fw-bold">${app.applicantName || 'N/A'}</div>
-            <small class="text-muted">${app.seekerEmail || ''}</small>
+            <small class="text-muted">${app.applicantEmail || ''}</small>
         </td>
         <td>${app.jobTitle || 'N/A'}</td>
         <td>${app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : 'N/A'}</td>
@@ -248,10 +248,15 @@ function viewDetails(appId) {
                 <strong>Resume</strong>
                 <div class="mt-2">
 
-                   <button class="btn btn-outline-primary me-2"
-        onclick="window.open('/api/resume/resume-pdf/${app.resumeId}', '_blank')">
-    <i class="bi bi-eye"></i> View Resume
-</button>
+                    ${app.resumeId ? `
+                    <button class="btn btn-outline-primary me-2"
+                    onclick="window.open('/api/resume/resume-pdf/${app.resumeId}', '_blank')">
+                        <i class="bi bi-eye"></i> View Resume
+                    </button>
+                    `
+                    :
+                    `<span class="text-danger fw-bold">Resume not available</span>`
+                    }
 
                 </div>
             </div>
@@ -296,7 +301,7 @@ function viewDetails(appId) {
 
         const matchesKeyword =
             (app.applicantName && app.applicantName.toLowerCase().includes(keyword)) ||
-            (app.seekerEmail && app.seekerEmail.toLowerCase().includes(keyword)) ||
+            (app.applicantEmail && app.applicantEmail.toLowerCase().includes(keyword)) ||
             (app.jobTitle && app.jobTitle.toLowerCase().includes(keyword));
 
         const matchesStatus =
@@ -326,7 +331,7 @@ async function updateStatus(appId, status) {
                 : "❌ Candidate Rejected"
             );
 
-            fetchAndDisplayApplications();
+            await fetchAndDisplayApplications();
 
         } else {
 
@@ -356,7 +361,7 @@ async function updateStatus(appId, status) {
         <tr>
             <td>
                 <div class="fw-bold">${app.applicantName || 'N/A'}</div>
-                <small class="text-muted">${app.seekerEmail || ''}</small>
+                <small class="text-muted">${app.applicantEmail || ''}</small>
             </td>
 
             <td>${app.jobTitle || 'N/A'}</td>

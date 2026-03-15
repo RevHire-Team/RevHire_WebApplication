@@ -261,6 +261,16 @@ public class ResumeController {
     @GetMapping("/resume-pdf/{resumeId}")
     public ResponseEntity<byte[]> generateResumePdf(@PathVariable Long resumeId) {
 
+        logger.info("Generating PDF for resumeId {}", resumeId);
+
+        // 🔹 Ensure resume exists
+        Resume resume = resumeService.getResumeById(resumeId);
+
+        if (resume == null) {
+            logger.error("Resume not found for resumeId {}", resumeId);
+            throw new RuntimeException("Resume not found");
+        }
+
         String html = resumeService.generateResumeHtml(resumeId);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -273,6 +283,8 @@ public class ResumeController {
             builder.run();
 
         } catch (IOException e) {
+
+            logger.error("Error generating PDF for resumeId {}", resumeId, e);
             throw new RuntimeException("Error generating PDF", e);
         }
 
@@ -280,6 +292,8 @@ public class ResumeController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
+
+        // 🔹 Show in browser instead of downloading
         headers.setContentDispositionFormData("inline", "resume.pdf");
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);

@@ -116,9 +116,26 @@ public class EmployerServiceImpl implements EmployerService {
 
         EmployerProfile profile = employerProfileRepository
                 .findByUserUserId(userId)
-                .orElseThrow(() -> {
-                    logger.error("Employer profile not found for dashboard, userId: {}", userId);
-                    return new RuntimeException("Employer profile not found");
+                .orElseGet(() -> {
+
+                    logger.warn("Employer profile not found. Creating default profile for userId: {}", userId);
+
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+                    EmployerProfile newProfile = new EmployerProfile();
+
+                    newProfile.setUser(user);
+
+                    /* default values to satisfy DB constraints */
+                    newProfile.setCompanyName("Company");
+                    newProfile.setIndustry("Not specified");
+                    newProfile.setCompanySize(0);
+                    newProfile.setLocation("Not specified");
+                    newProfile.setDescription("");
+                    newProfile.setWebsite("");
+
+                    return employerProfileRepository.save(newProfile);
                 });
 
         Long employerId = profile.getEmployerId();
