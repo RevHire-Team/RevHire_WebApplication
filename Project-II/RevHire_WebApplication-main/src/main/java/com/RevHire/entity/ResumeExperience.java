@@ -1,0 +1,40 @@
+package com.RevHire.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "RESUME_EXPERIENCE")
+@Getter @Setter
+public class ResumeExperience {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "experience_id")
+    private Long experienceId;
+
+    @ManyToOne
+    @JoinColumn(name = "resume_id", nullable = false)
+    @JsonIgnore
+    private Resume resume;
+
+    @Column(name = "company_name")
+    @JsonIgnore
+    private String companyName;
+
+    private String role;
+    private Integer years;
+
+    @Lob
+    private String description;
+}
