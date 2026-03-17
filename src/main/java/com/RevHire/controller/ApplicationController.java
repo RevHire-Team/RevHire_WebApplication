@@ -99,7 +99,7 @@ public class ApplicationController {
                 applicationService.getApplicationsByJob(jobId)
         );
     }
-
+//    Employeruserid feteching apllications for employeruserid
     @GetMapping("/employer/{employerUserId}")
     @ResponseBody
     public ResponseEntity<List<EmployerApplicationDTO>> getByEmployer(@PathVariable Long employerUserId) {
