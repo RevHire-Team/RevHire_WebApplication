@@ -120,7 +120,7 @@ public class AuthController {
             return "auth/login";
         }
     }
-
+// Handle forgot-password
     @PostMapping("/forgot-password")
     public String resetPassword(@RequestParam String email,
                                 @RequestParam String answer,

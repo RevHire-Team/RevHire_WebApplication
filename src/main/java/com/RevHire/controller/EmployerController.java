@@ -24,6 +24,7 @@ public class EmployerController {
 
     private final EmployerService employerService;
 
+    //mwthod to create ir update profile
     @PostMapping("/profile/{userId}")
     public ResponseEntity<?> createOrUpdateProfile(
             @PathVariable Long userId,
