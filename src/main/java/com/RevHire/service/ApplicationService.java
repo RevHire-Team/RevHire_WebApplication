@@ -9,7 +9,11 @@ import java.util.List;
 
 public interface ApplicationService {
 
-    Application applyJob(Long jobId, Long seekerId, Long resumeId, String coverLetter);
+    public Application applyJob(Long jobId,
+                                Long userId,
+                                Long resumeId,
+                                Long fileId,
+                                String coverLetter);
 
     public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId);
 

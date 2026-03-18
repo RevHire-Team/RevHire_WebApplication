@@ -53,21 +53,18 @@ public class ApplicationController {
     public ResponseEntity<?> apply(@RequestParam Long jobId,
                                    @RequestParam Long userId,
                                    @RequestParam Long resumeId,
+                                   @RequestParam(required = false) Long fileId, // ✅ NEW
                                    @RequestParam(required = false) String coverLetter) {
 
         logger.info("Submitting application for jobId: {} by userId: {}", jobId, userId);
 
         try {
 
-            applicationService.applyJob(jobId, userId, resumeId, coverLetter);
-
-            logger.info("Application submitted successfully for jobId: {}", jobId);
+            applicationService.applyJob(jobId, userId, resumeId, fileId, coverLetter); // ✅ UPDATED
 
             return ResponseEntity.ok("Application submitted successfully");
 
         } catch (RuntimeException e) {
-
-            logger.error("Error while submitting application: {}", e.getMessage());
 
             if (e.getMessage().contains("Already applied")) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());

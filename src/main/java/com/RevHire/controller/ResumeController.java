@@ -261,39 +261,59 @@ public class ResumeController {
     @GetMapping("/resume-pdf/{resumeId}")
     public ResponseEntity<byte[]> generateResumePdf(@PathVariable Long resumeId) {
 
-        logger.info("Generating PDF for resumeId {}", resumeId);
+        logger.info("Fetching resume PDF for resumeId {}", resumeId);
 
-        // 🔹 Ensure resume exists
         Resume resume = resumeService.getResumeById(resumeId);
-
         if (resume == null) {
             logger.error("Resume not found for resumeId {}", resumeId);
             throw new RuntimeException("Resume not found");
         }
 
-        String html = resumeService.generateResumeHtml(resumeId);
+        // 🔹 First, check if user uploaded any resume files
+        List<ResumeFile> files = resume.getFiles();
+        if (files != null && !files.isEmpty()) {
+            // Use the latest uploaded file
+            ResumeFile latestFile = files.stream()
+                    .sorted((f1, f2) -> f2.getUploadedAt().compareTo(f1.getUploadedAt()))
+                    .findFirst()
+                    .get();
 
+            try {
+                Path path = Paths.get(latestFile.getFilePath());
+                if (!Files.exists(path)) {
+                    logger.warn("Uploaded resume file missing, fallback to generated PDF");
+                } else {
+                    byte[] fileBytes = Files.readAllBytes(path);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_PDF);
+                    headers.setContentDispositionFormData("inline", latestFile.getFileName());
+                    return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+                }
+            } catch (IOException e) {
+                logger.error("Error reading uploaded resume file", e);
+                // fallback to generated PDF
+            }
+        }
+
+        // 🔹 Fallback: generate PDF from ResumeBuilder
+        logger.info("Generating PDF from ResumeBuilder for resumeId {}", resumeId);
+
+        String html = resumeService.generateResumeHtml(resumeId);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         try {
-
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.withHtmlContent(html, null);
             builder.toStream(outputStream);
             builder.run();
-
         } catch (IOException e) {
-
-            logger.error("Error generating PDF for resumeId {}", resumeId, e);
+            logger.error("Error generating PDF from ResumeBuilder", e);
             throw new RuntimeException("Error generating PDF", e);
         }
 
         byte[] pdfBytes = outputStream.toByteArray();
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-
-        // 🔹 Show in browser instead of downloading
         headers.setContentDispositionFormData("inline", "resume.pdf");
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);

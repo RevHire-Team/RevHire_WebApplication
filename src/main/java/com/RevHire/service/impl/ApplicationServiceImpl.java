@@ -43,11 +43,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Autowired
     private EmployerProfileRepository employerRepository;
 
+    @Autowired
+    private ResumeFileRepository resumeFileRepository;
+
     @Override
     public Application applyJob(Long jobId,
                                 Long userId,
                                 Long resumeId,
-                                String coverLetter) {
+                                Long fileId,   // ✅ NEW
+                                String coverLetter){
 
         logger.info("Attempting to apply for jobId: {} by seekerId: {}", jobId, userId);
 
@@ -72,11 +76,24 @@ public class ApplicationServiceImpl implements ApplicationService {
                 });
         Long seekerId=seeker.getSeekerId();
 
+        /* ================= RESUME SELECTION LOGIC ================= */
+
         Resume resume = resumeRepository.findBySeeker_SeekerId(seekerId)
-                .orElseThrow(() -> {
-                    logger.error("Resume not found for seeker {}", userId);
-                    return new RuntimeException("Resume not found for seeker");
-                });
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+        ResumeFile selectedFile = null;
+
+// ✅ If user selected uploaded resume
+        if (fileId != null) {
+
+            selectedFile = resumeFileRepository.findById(fileId)
+                    .orElseThrow(() -> new RuntimeException("Resume file not found"));
+
+            // 🔥 SECURITY CHECK
+            if (!selectedFile.getResume().getResumeId().equals(resume.getResumeId())) {
+                throw new RuntimeException("File does not belong to this user");
+            }
+        }
 
         /* Validate resume belongs to seeker */
         if (!resume.getSeeker().getSeekerId().equals(seekerId)) {
@@ -226,12 +243,15 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         logger.info("Fetching applications for employer userId: {}", userId);
 
+        // 🔹 Fetch employer profile safely
         EmployerProfile employer = employerRepository.findByUserUserId(userId)
                 .orElseThrow(() -> {
-                    logger.error("Employer profile not found for userId: {}", userId);
-                    return new RuntimeException("Employer Profile not found for User ID: " + userId);
+                    String msg = "Employer profile not found for userId: " + userId;
+                    logger.error(msg);
+                    return new RuntimeException(msg);
                 });
 
+        // 🔹 Fetch applications for this employer
         return applicationRepository
                 .findByJobEmployerEmployerId(employer.getEmployerId())
                 .stream()
