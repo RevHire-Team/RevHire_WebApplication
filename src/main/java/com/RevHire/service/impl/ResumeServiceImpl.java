@@ -45,18 +45,23 @@ public class ResumeServiceImpl implements ResumeService {
     @Autowired
     private JobSeekerProfileRepository profileRepo;
 
+    @Autowired
+    private JobSeekerProfileRepository seekerRepository;
+
     public ResumeServiceImpl(
             ResumeRepository resumeRepo,
             ResumeEducationRepository educationRepo,
             ResumeExperienceRepository experienceRepo,
             ResumeSkillRepository skillRepo,
-            ResumeFileRepository resumeFileRepo) {
+            ResumeFileRepository resumeFileRepo,
+            JobSeekerProfileRepository seekerRepository) {
 
         this.resumeRepo = resumeRepo;
         this.educationRepo = educationRepo;
         this.experienceRepo = experienceRepo;
         this.skillRepo = skillRepo;
         this.resumeFileRepo = resumeFileRepo;
+        this.seekerRepository=seekerRepository;
     }
 
     // ================= RESUME =================
@@ -102,9 +107,16 @@ public class ResumeServiceImpl implements ResumeService {
     }
 
     @Override
-    public Resume getResumeByUserId(Long seekerId) {
+    public Resume getResumeByUserId(Long userId) {
 
-        logger.info("Fetching resume for seekerId: {}", seekerId);
+        logger.info("Fetching resume for seekerId: {}", userId);
+
+        JobSeekerProfile seeker = seekerRepository.findByUserUserId(userId)
+                .orElseThrow(() -> {
+                    logger.error("Seeker not found with id: {}", userId);
+                    return new RuntimeException("Seeker not found with id: " + userId);
+                });
+        Long seekerId=seeker.getSeekerId();
 
         Resume resume = resumeRepo.findBySeeker_SeekerId(seekerId)
                 .orElseThrow(() -> {

@@ -360,40 +360,63 @@
     document.getElementById("filterForm").addEventListener("submit", (e) => e.preventDefault());
 
     async function handleApply(jobId) {
-        const userId = document.getElementById("sessionUserId").value;
-        if (!userId) {
-            Swal.fire("Login Required", "Please log in to apply.", "warning");
+    const userId = document.getElementById("sessionUserId").value;
+
+    if (!userId) {
+        Swal.fire("Login Required", "Please log in to apply.", "warning");
+        return;
+    }
+
+    try {
+        // Fetch resume details
+        const res = await fetch(`/api/resume/details/${userId}`);
+        if (!res.ok) {
+            Swal.fire("Error", "No resume found. Please create/upload one.", "error");
             return;
         }
 
-        Swal.fire({ title: 'Applying...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+        const resume = await res.json();
 
-        try {
-            const params = new URLSearchParams();
-            params.append('jobId', jobId);
-            params.append('seekerId', userId);
-            params.append('resumeId', 1);
-            params.append('coverLetter', "Applied via RevHire Portal");
+        // 🔹 Use uploaded resume by default if it exists
+        const latestFile = resume.files && resume.files.length > 0 ? resume.files[0] : null;
 
-            const res = await fetch('/applications/submit-application', {
-                method: "POST",
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params
-            });
+        // Determine which resumeId or fileId to send
+        let resumeIdToSend = resume.resumeId;
+        let fileId = latestFile ? latestFile.fileId : null;
 
-            if (res.ok) {
-                Swal.fire({ icon: 'success', title: 'Applied Successfully!', timer: 1500, showConfirmButton: false });
-                updateToAppliedState(jobId);
-            } else if (res.status === 409) {
-                Swal.fire("Note", "Already applied for this job.", "info");
-                updateToAppliedState(jobId);
-            } else {
-                Swal.fire("Error", "Could not apply.", "error");
-            }
-        } catch (err) {
-            Swal.fire("Network Error", "Unable to connect to the server.", "error");
+        Swal.fire({ title: 'Applying...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        const params = new URLSearchParams();
+        params.append('jobId', jobId);
+        params.append('userId', userId);
+        params.append('resumeId', resumeIdToSend);
+        params.append('coverLetter', localStorage.getItem("revhire_cover_letter") || "");
+
+        // If uploaded resume exists, send fileId instead
+        if (fileId) {
+            params.append('fileId', fileId);
         }
+
+        const applyRes = await fetch('/applications/submit-application', {
+            method: "POST",
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+        });
+
+        if (applyRes.ok) {
+            Swal.fire({ icon: 'success', title: 'Applied Successfully!', timer: 1500, showConfirmButton: false });
+            updateToAppliedState(jobId);
+        } else if (applyRes.status === 409) {
+            Swal.fire("Note", "Already applied for this job.", "info");
+            updateToAppliedState(jobId);
+        } else {
+            Swal.fire("Error", "Could not apply.", "error");
+        }
+
+    } catch (err) {
+        Swal.fire("Error", "Unable to load resumes.", "error");
     }
+}
 
     function updateToAppliedState(jobId) {
         const btn = document.getElementById(`applyBtn-${jobId}`);
