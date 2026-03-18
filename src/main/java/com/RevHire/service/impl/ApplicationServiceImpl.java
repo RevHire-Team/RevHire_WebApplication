@@ -45,17 +45,17 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public Application applyJob(Long jobId,
-                                Long seekerId,
+                                Long userId,
                                 Long resumeId,
                                 String coverLetter) {
 
-        logger.info("Attempting to apply for jobId: {} by seekerId: {}", jobId, seekerId);
+        logger.info("Attempting to apply for jobId: {} by seekerId: {}", jobId, userId);
 
         if(applicationRepository
-                .findByJobJobIdAndSeekerSeekerId(jobId, seekerId)
+                .findByJobJobIdAndSeekerSeekerId(jobId, userId)
                 .isPresent()) {
 
-            logger.warn("Seeker {} already applied for job {}", seekerId, jobId);
+            logger.warn("Seeker {} already applied for job {}", userId, jobId);
             throw new RuntimeException("Already applied for this job");
         }
 
@@ -65,15 +65,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                     return new RuntimeException("Job not found with id: " + jobId);
                 });
 
-        JobSeekerProfile seeker = seekerRepository.findById(seekerId)
+        JobSeekerProfile seeker = seekerRepository.findByUserUserId(userId)
                 .orElseThrow(() -> {
-                    logger.error("Seeker not found with id: {}", seekerId);
-                    return new RuntimeException("Seeker not found with id: " + seekerId);
+                    logger.error("Seeker not found with id: {}", userId);
+                    return new RuntimeException("Seeker not found with id: " + userId);
                 });
+        Long seekerId=seeker.getSeekerId();
 
         Resume resume = resumeRepository.findBySeeker_SeekerId(seekerId)
                 .orElseThrow(() -> {
-                    logger.error("Resume not found for seeker {}", seekerId);
+                    logger.error("Resume not found for seeker {}", userId);
                     return new RuntimeException("Resume not found for seeker");
                 });
 
@@ -112,7 +113,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId) {
 
-        logger.info("Fetching applications for seekerId: {}", seekerId);
+        logger.info("Fetching applications for userId: {}", seekerId);
 
         return applicationRepository.findBySeekerSeekerId(seekerId)
                 .stream()

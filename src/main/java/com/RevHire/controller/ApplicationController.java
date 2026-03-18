@@ -51,15 +51,15 @@ public class ApplicationController {
 
     @PostMapping("/submit-application")
     public ResponseEntity<?> apply(@RequestParam Long jobId,
-                                   @RequestParam Long seekerId,
+                                   @RequestParam Long userId,
                                    @RequestParam Long resumeId,
                                    @RequestParam(required = false) String coverLetter) {
 
-        logger.info("Submitting application for jobId: {} by seekerId: {}", jobId, seekerId);
+        logger.info("Submitting application for jobId: {} by userId: {}", jobId, userId);
 
         try {
 
-            applicationService.applyJob(jobId, seekerId, resumeId, coverLetter);
+            applicationService.applyJob(jobId, userId, resumeId, coverLetter);
 
             logger.info("Application submitted successfully for jobId: {}", jobId);
 
@@ -82,7 +82,7 @@ public class ApplicationController {
     public ResponseEntity<List<ApplicationResponseDTO>> getBySeeker(
             @PathVariable Long seekerId) {
 
-        logger.info("Fetching applications for seekerId: {}", seekerId);
+        logger.info("Fetching applications for userId: {}", seekerId);
 
         return ResponseEntity.ok(
                 applicationService.getApplicationsBySeeker(seekerId)

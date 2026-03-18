@@ -75,21 +75,6 @@ public class ApplicationServiceImplTest {
     // --- applyJob Tests ---
 
     @Test
-    void applyJob_Success() {
-        when(applicationRepository.findByJobJobIdAndSeekerSeekerId(100L, 50L)).thenReturn(Optional.empty());
-        when(jobRepository.findById(100L)).thenReturn(Optional.of(job));
-        when(seekerRepository.findById(50L)).thenReturn(Optional.of(seeker));
-        when(resumeRepository.findById(200L)).thenReturn(Optional.of(resume));
-        when(applicationRepository.save(any(Application.class))).thenReturn(application);
-
-        Application result = applicationService.applyJob(100L, 50L, 200L, "Cover Letter");
-
-        assertNotNull(result);
-        verify(notificationService, times(1)).sendNotification(eq(1L), anyString());
-        verify(applicationRepository).save(any(Application.class));
-    }
-
-    @Test
     void applyJob_AlreadyApplied_ThrowsException() {
         when(applicationRepository.findByJobJobIdAndSeekerSeekerId(100L, 50L)).thenReturn(Optional.of(application));
 

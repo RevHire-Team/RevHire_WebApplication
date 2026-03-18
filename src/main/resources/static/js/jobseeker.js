@@ -268,29 +268,46 @@ function loadDashboard() {
 
     const userId = document.getElementById("userId").value;
 
+    if (!userId) return;
+
     fetch(`/api/jobseeker/dashboard/${userId}`)
         .then(res => res.json())
         .then(data => {
 
+            // Set default values if data is null or undefined
             document.getElementById("profileScore").innerText =
-                data.profileScore + "%";
+                (data.profileScore ?? 0) + "%";
 
             document.getElementById("totalApps").innerText =
-                data.totalApplications;
+                data.totalApplications ?? 0;
 
             document.getElementById("savedJobs").innerText =
-                data.savedJobs;
+                data.savedJobs ?? 0;
 
             const table = document.getElementById("recentApplications");
             table.innerHTML = "";
 
+            // If no recent applications
+            if (!data.recentApplications || data.recentApplications.length === 0) {
+
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-muted">
+                            No recent applications
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Populate applications
             data.recentApplications.forEach(app => {
 
                 const row = `
                     <tr>
-                        <td>${app.jobTitle}</td>
-                        <td>${app.status}</td>
-                        <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                        <td>${app.jobTitle ?? "N/A"}</td>
+                        <td>${app.status ?? "Pending"}</td>
+                        <td>${app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : "-"}</td>
                     </tr>
                 `;
 
@@ -298,7 +315,23 @@ function loadDashboard() {
             });
 
         })
-        .catch(err => console.error("Dashboard load failed", err));
+        .catch(err => {
+            console.error("Dashboard load failed", err);
+
+            // Show defaults on error
+            document.getElementById("profileScore").innerText = "0%";
+            document.getElementById("totalApps").innerText = "0";
+            document.getElementById("savedJobs").innerText = "0";
+
+            const table = document.getElementById("recentApplications");
+            table.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-danger">
+                        Failed to load applications
+                    </td>
+                </tr>
+            `;
+        });
 }
 
 
