@@ -188,9 +188,9 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>com/RevHire/entity/**</exclude>
-                                <exclude>com/RevHire/dto/**</exclude>
                                 <exclude>com/RevHire/util/**</exclude>
+                                
+                                <exclude>com/RevHire/*.class</exclude>
                             </excludes>
                         </configuration>
                     </execution>

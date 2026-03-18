@@ -1,5 +1,6 @@
 package com.RevHire.service.impl;
 
+import com.RevHire.dto.FavoriteJobDTO;
 import com.RevHire.dto.JobDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -52,7 +54,6 @@ public class JobSeekerServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
         MockitoAnnotations.openMocks(this);
 
         user = new User();
@@ -74,11 +75,9 @@ public class JobSeekerServiceImplTest {
         job.setStatus("OPEN");
     }
 
-    // ================= PROFILE TEST =================
-
+    // ================= PROFILE =================
     @Test
-    void testCreateProfile() {
-
+    void testCreateProfileSuccess() {
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
         when(profileRepo.save(profile)).thenReturn(profile);
 
@@ -86,117 +85,103 @@ public class JobSeekerServiceImplTest {
 
         assertNotNull(result);
         assertEquals("John Doe", result.getFullName());
-
         verify(profileRepo).save(profile);
     }
 
     @Test
     void testCreateProfileUserNotFound() {
-
         when(userRepo.findById(1L)).thenReturn(Optional.empty());
-
         assertThrows(RuntimeException.class,
                 () -> jobSeekerService.createProfile(profile, 1L));
     }
 
-    // ================= UPDATE PROFILE =================
-
     @Test
-    void testUpdateProfile() {
-
+    void testUpdateProfileSuccess() {
         when(profileRepo.findById(1L)).thenReturn(Optional.of(profile));
-        when(profileRepo.save(any(JobSeekerProfile.class))).thenReturn(profile);
+        when(profileRepo.save(profile)).thenReturn(profile);
 
-        JobSeekerProfile updated =
-                jobSeekerService.updateProfile(1L, profile);
+        JobSeekerProfile updated = jobSeekerService.updateProfile(1L, profile);
 
         assertNotNull(updated);
         verify(profileRepo).save(profile);
     }
 
-    // ================= RESUME =================
+    @Test
+    void testUpdateProfileNotFound() {
+        when(profileRepo.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class,
+                () -> jobSeekerService.updateProfile(1L, profile));
+    }
 
+    // ================= RESUME =================
     @Test
     void testGetOrCreateResumeExisting() {
-
         Resume resume = new Resume();
         resume.setSeeker(profile);
 
-        when(profileRepo.findByUserUserId(1L))
-                .thenReturn(Optional.of(profile));
-
-        when(resumeRepo.findBySeekerSeekerId(1L))
-                .thenReturn(Optional.of(resume));
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
+        when(resumeRepo.findBySeekerSeekerId(1L)).thenReturn(Optional.of(resume));
 
         Resume result = jobSeekerService.getOrCreateResume(1L);
-
         assertNotNull(result);
     }
 
     @Test
     void testGetOrCreateResumeNew() {
-
-        when(profileRepo.findByUserUserId(1L))
-                .thenReturn(Optional.of(profile));
-
-        when(resumeRepo.findBySeekerSeekerId(1L))
-                .thenReturn(Optional.empty());
-
-        when(resumeRepo.save(any(Resume.class)))
-                .thenReturn(new Resume());
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
+        when(resumeRepo.findBySeekerSeekerId(1L)).thenReturn(Optional.empty());
+        when(resumeRepo.save(any(Resume.class))).thenReturn(new Resume());
 
         Resume result = jobSeekerService.getOrCreateResume(1L);
-
         assertNotNull(result);
         verify(resumeRepo).save(any(Resume.class));
     }
 
-    // ================= FAVORITE JOB =================
-
     @Test
-    void testAddFavoriteJob() {
-
-        when(profileRepo.findById(1L)).thenReturn(Optional.of(profile));
-        when(jobRepo.findById(1L)).thenReturn(Optional.of(job));
-        when(favoriteJobRepo.existsBySeekerSeekerIdAndJobJobId(1L,1L))
-                .thenReturn(false);
-
-        FavoriteJob fav = new FavoriteJob();
-        when(favoriteJobRepo.save(any(FavoriteJob.class)))
-                .thenReturn(fav);
-
-        FavoriteJob result =
-                jobSeekerService.addFavoriteJob(1L,1L);
-
-        assertNotNull(result);
-        verify(favoriteJobRepo).save(any(FavoriteJob.class));
+    void testGetOrCreateResumeProfileNotFound() {
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class,
+                () -> jobSeekerService.getOrCreateResume(1L));
     }
 
     @Test
     void testAddFavoriteJobAlreadyExists() {
-
-        when(profileRepo.findById(1L)).thenReturn(Optional.of(profile));
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
         when(jobRepo.findById(1L)).thenReturn(Optional.of(job));
-
-        when(favoriteJobRepo
-                .existsBySeekerSeekerIdAndJobJobId(1L,1L))
-                .thenReturn(true);
+        when(favoriteJobRepo.existsBySeekerSeekerIdAndJobJobId(1L, 1L)).thenReturn(true);
 
         assertThrows(RuntimeException.class,
-                () -> jobSeekerService.addFavoriteJob(1L,1L));
+                () -> jobSeekerService.addFavoriteJob(1L, 1L));
+    }
+
+    @Test
+    void testGetFavorites() {
+        FavoriteJob fav = new FavoriteJob();
+        fav.setFavId(1L);
+        fav.setJob(job);
+
+        when(favoriteJobRepo.findBySeekerSeekerId(1L)).thenReturn(List.of(fav));
+
+        List<FavoriteJobDTO> favorites = jobSeekerService.getFavorites(1L);
+
+        assertEquals(1, favorites.size());
+        assertEquals("Java Developer", favorites.get(0).getTitle());
+    }
+
+    @Test
+    void testRemoveFavoriteJob() {
+        jobSeekerService.removeFavoriteJob(1L);
+        verify(favoriteJobRepo).deleteById(1L);
     }
 
     // ================= NOTIFICATION =================
-
     @Test
-    void testMarkNotificationAsRead() {
-
+    void testMarkNotificationAsReadSuccess() {
         Notification notification = new Notification();
         notification.setNotificationId(1L);
         notification.setIsRead(false);
 
-        when(notificationRepo.findById(1L))
-                .thenReturn(Optional.of(notification));
+        when(notificationRepo.findById(1L)).thenReturn(Optional.of(notification));
 
         jobSeekerService.markNotificationAsRead(1L);
 
@@ -204,35 +189,48 @@ public class JobSeekerServiceImplTest {
         verify(notificationRepo).save(notification);
     }
 
-    // ================= JOB SEARCH =================
-
     @Test
-    void testSearchJobs() {
-
-        when(jobRepo.findAdvanced(
-                anyString(),
-                anyString(),
-                anyInt(),
-                anyString(),
-                any(BigDecimal.class),
-                any(BigDecimal.class),
-                anyString(),
-                eq("OPEN")
-        )).thenReturn(List.of(job));
-
-        List<JobDTO> result =
-                jobSeekerService.searchJobs(
-                        "Java",
-                        "Bangalore",
-                        2,
-                        "BTech",
-                        20000.0,
-                        60000.0,
-                        "FULL_TIME"
-                );
-
-        assertEquals(1, result.size());
-        assertEquals("Java Developer", result.get(0).getTitle());
+    void testMarkNotificationAsReadNotFound() {
+        when(notificationRepo.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class,
+                () -> jobSeekerService.markNotificationAsRead(1L));
     }
 
+    // ================= JOB SEARCH =================
+    @Test
+    void testSearchJobs() {
+        when(jobRepo.findAdvanced(anyString(), anyString(), anyInt(),
+                anyString(), any(BigDecimal.class), any(BigDecimal.class),
+                anyString(), eq("OPEN"))).thenReturn(List.of(job));
+
+        List<JobDTO> results = jobSeekerService.searchJobs(
+                "Java", "Bangalore", 2, "BTech", 20000.0, 60000.0, "FULL_TIME"
+        );
+
+        assertEquals(1, results.size());
+        assertEquals("Java Developer", results.get(0).getTitle());
+    }
+
+    // ================= RECOMMENDED JOBS =================
+    @Test
+    void testGetRecommendedJobsWithSkills() {
+        job.setTitle("Java Developer");
+
+        when(jobRepo.findAll()).thenReturn(List.of(job));
+
+        List<Job> recommended = jobSeekerService.getRecommendedJobs(List.of("java"));
+        assertEquals(1, recommended.size());
+    }
+
+    @Test
+    void testGetRecommendedJobsNoSkills() {
+        List<Job> recommended = jobSeekerService.getRecommendedJobs(List.of());
+        assertTrue(recommended.isEmpty());
+    }
+
+    @Test
+    void testGetRecommendedJobsNullSkills() {
+        List<Job> recommended = jobSeekerService.getRecommendedJobs(null);
+        assertTrue(recommended.isEmpty());
+    }
 }

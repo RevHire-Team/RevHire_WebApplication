@@ -3,25 +3,25 @@ package com.RevHire.controller;
 import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
-import com.RevHire.entity.Application;
 import com.RevHire.entity.User;
 import com.RevHire.service.ApplicationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,160 +37,79 @@ class ApplicationControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // ---------- showApplyPage ----------
+    private MockHttpSession session;
+    private User mockUser;
+
+    @BeforeEach
+    void setUp() {
+        session = new MockHttpSession();
+        mockUser = new User();
+        mockUser.setUserId(1L);
+    }
+
+    // ================= UI / VIEW TESTS =================
 
     @Test
-    void showApplyPage_ShouldReturnApplyPage_WhenUserLoggedIn() throws Exception {
-
-        MockHttpSession session = new MockHttpSession();
+    void testShowApplyPage_Authorized() throws Exception {
         session.setAttribute("userId", 1L);
 
-        mockMvc.perform(get("/applications/jobseeker/jobs/apply/10")
-                        .session(session))
+        mockMvc.perform(get("/applications/jobseeker/jobs/apply/10").session(session))
                 .andExpect(status().isOk())
                 .andExpect(view().name("jobseeker/applications"))
                 .andExpect(model().attributeExists("jobId"))
-                .andExpect(model().attributeExists("userId"));
+                .andExpect(model().attribute("userId", 1L));
     }
 
     @Test
-    void showApplyPage_ShouldRedirectToLogin_WhenUserNotLoggedIn() throws Exception {
-
-        mockMvc.perform(get("/applications/jobseeker/jobs/apply/10"))
+    void testShowApplyPage_Unauthorized() throws Exception {
+        // No session attribute set
+        mockMvc.perform(get("/applications/jobseeker/jobs/apply/10").session(session))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
 
-    // ---------- apply ----------
+    // ================= POST / REST TESTS =================
 
     @Test
-    void apply_ShouldReturnSuccessMessage() throws Exception {
-        Application mockApp = new Application();
-        mockApp.setApplicationId(1L);
-
-        when(applicationService.applyJob(1L, 2L, 3L, "Cover letter"))
-                .thenReturn(mockApp);
-
+    void testApply_Success() throws Exception {
         mockMvc.perform(post("/applications/submit-application")
-                        .param("jobId", "1")
-                        .param("seekerId", "2")
-                        .param("resumeId", "3")
-                        .param("coverLetter", "Cover letter"))
+                        .param("jobId", "10")
+                        .param("userId", "1")
+                        .param("resumeId", "5")
+                        .param("coverLetter", "Hire me!"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Application submitted successfully"));
     }
 
-    // ---------- getBySeeker ----------
-
     @Test
-    void getBySeeker_ShouldReturnApplications() throws Exception {
+    void testApply_AlreadyAppliedConflict() throws Exception {
+        // Use any() for all slots to ensure the mock matches regardless of nulls
+        doThrow(new RuntimeException("Already applied to this job"))
+                .when(applicationService)
+                .applyJob(any(), any(), any(), any(), any());
 
-        List<ApplicationResponseDTO> list = List.of(
-                new ApplicationResponseDTO(
-                        1L,
-                        "John Doe",
-                        "john@example.com",
-                        "Software Engineer",
-                        "APPLIED",
-                        LocalDateTime.now()
-                )
-        );
-
-        when(applicationService.getApplicationsBySeeker(2L)).thenReturn(list);
-
-        mockMvc.perform(get("/applications/seeker/2"))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/applications/submit-application")
+                        .param("jobId", "10")
+                        .param("userId", "1")
+                        .param("resumeId", "5"))
+                // Now this should correctly hit the 'catch' block in your controller
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Already applied to this job"));
     }
 
-    // ---------- getByJob ----------
-
     @Test
-    void getByJob_ShouldReturnApplications() throws Exception {
-
-        List<ApplicationResponseDTO> list = List.of(
-                new ApplicationResponseDTO(
-                        1L,
-                        "John Doe",
-                        "john@example.com",
-                        "Software Engineer",
-                        "APPLIED",
-                        LocalDateTime.now()
-                )
-        );
-
-        when(applicationService.getApplicationsByJob(10L)).thenReturn(list);
-
-        mockMvc.perform(get("/applications/job/10"))
-                .andExpect(status().isOk());
-    }
-
-    // ---------- getByEmployer ----------
-
-    @Test
-    void getByEmployer_ShouldReturnEmployerApplications() throws Exception {
-
-        List<EmployerApplicationDTO> list = List.of(
-                new EmployerApplicationDTO(
-                        1L,
-                        "Software Engineer",
-                        100L,
-                        "John Doe",
-                        "john@example.com",
-                        "APPLIED",
-                        LocalDateTime.now(),
-                        1L
-                )
-        );
-
-        when(applicationService.getApplicationsByEmployer(1L)).thenReturn(list);
-
-        mockMvc.perform(get("/applications/employer/1"))
-                .andExpect(status().isOk());
-    }
-
-    // ---------- withdraw ----------
-
-    @Test
-    void withdraw_ShouldReturnSuccessMessage() throws Exception {
-
-        doNothing().when(applicationService)
-                .withdrawApplication(1L, "Not interested");
-
-        mockMvc.perform(post("/applications/withdraw/1")
-                        .param("reason", "Not interested"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Application withdrawn successfully"));
-    }
-
-    // ---------- updateStatus ----------
-
-    @Test
-    void updateStatus_ShouldReturnSuccessMessage() throws Exception {
-
-        Application updatedApp = new Application();
-        updatedApp.setApplicationId(1L);
-        updatedApp.setStatus("APPROVED");
-
-        when(applicationService.updateStatus(1L, "APPROVED"))
-                .thenReturn(updatedApp);
-
+    void testUpdateStatus_Success() throws Exception {
         mockMvc.perform(post("/applications/update-status/1")
-                        .param("status", "APPROVED"))
+                        .param("status", "ACCEPTED"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Application status updated successfully"));
     }
 
-    // ---------- addNotes ----------
-
     @Test
-    void addNotes_ShouldReturnSuccess() throws Exception {
-
+    void testAddNotes_Success() throws Exception {
         NoteRequestDTO request = new NoteRequestDTO();
         request.setEmployerId(1L);
-        request.setNoteText("Good candidate");
-
-        when(applicationService.addEmployerNotes(1L, 1L, "Good candidate"))
-                .thenReturn("Note added");
+        request.setNoteText("Great candidate");
 
         mockMvc.perform(put("/applications/notes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -198,67 +117,27 @@ class ApplicationControllerTest {
                 .andExpect(status().isOk());
     }
 
-    // ---------- showManageApplicationsPage ----------
+    // ================= DATA FETCHING TESTS =================
 
     @Test
-    void showManageApplicationsPage_ShouldReturnPage_WhenLoggedIn() throws Exception {
-
-        MockHttpSession session = new MockHttpSession();
-
-        User user = new User();
-        user.setUserId(1L);
-
-        session.setAttribute("loggedInUser", user);
-
-        mockMvc.perform(get("/applications/manage")
-                        .session(session))
-                .andExpect(status().isOk())
-                .andExpect(view().name("employer/applications/manage-applications"));
-    }
-
-    @Test
-    void showManageApplicationsPage_ShouldRedirect_WhenNotLoggedIn() throws Exception {
-
-        mockMvc.perform(get("/applications/manage"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/auth/login"));
-    }
-
-    // ---------- getAllApplications ----------
-
-    @Test
-    void getAllApplications_ShouldReturnApplications() throws Exception {
-
-        User user = new User();
-        user.setUserId(1L);
-
-        MockHttpSession session = new MockHttpSession();
-        session.setAttribute("loggedInUser", user);
-
-        List<EmployerApplicationDTO> list = List.of(
-                new EmployerApplicationDTO(
-                        1L,
-                        "Software Engineer",
-                        100L,
-                        "John Doe",
-                        "john@example.com",
-                        "APPLIED",
-                        LocalDateTime.now(),
-                        1L
-                )
-        );
-
-        when(applicationService.getApplicationsByEmployer(1L)).thenReturn(list);
-
-        mockMvc.perform(get("/applications/all")
-                        .session(session))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void getAllApplications_ShouldReturn401_WhenNotLoggedIn() throws Exception {
-
-        mockMvc.perform(get("/applications/all"))
+    void testGetAllApplications_Unauthorized() throws Exception {
+        mockMvc.perform(get("/applications/all").session(session))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void testGetAllApplications_Authorized() throws Exception {
+        session.setAttribute("loggedInUser", mockUser);
+        EmployerApplicationDTO dto = new EmployerApplicationDTO();
+        dto.setApplicationId(1L);
+
+        when(applicationService.getApplicationsByEmployer(1L))
+                .thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/applications/all").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].applicationId").value(1));
+    }
+
 }

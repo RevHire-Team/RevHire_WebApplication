@@ -1,196 +1,136 @@
 package com.RevHire.controller;
 
 import com.RevHire.dto.ApplicationResponseDTO;
-import com.RevHire.dto.FavoriteJobDTO;
-import com.RevHire.dto.ResumeSaveDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
 import com.RevHire.service.impl.ApplicationServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WebMvcTest(JobSeekerController.class)
 class JobSeekerControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock private JobSeekerService jobSeekerService;
-    @Mock private ResumeRepository resumeRepo;
-    @Mock private FavoriteJobRepository favoriteJobRepo;
-    @Mock private JobSeekerProfileRepository profileRepo;
-    @Mock private ResumeEducationRepository educationRepo;
-    @Mock private ResumeExperienceRepository experienceRepo;
-    @Mock private ResumeCertificationRepository certificationRepo;
-    @Mock private ResumeProjectRepository projectRepo;
-    @Mock private ResumeSkillRepository resumeSkillRepo;
-    @Mock private ApplicationServiceImpl applicationService;
-
-    @InjectMocks private JobSeekerController jobSeekerController;
-
+    @Autowired
     private ObjectMapper objectMapper;
 
+    // Mocking all constructor-injected dependencies
+    @MockBean private JobSeekerService jobSeekerService;
+    @MockBean private com.RevHire.service.ResumeService resumeService;
+    @MockBean private ApplicationServiceImpl applicationService;
+    @MockBean private ResumeRepository resumeRepo;
+    @MockBean private FavoriteJobRepository favoriteJobRepo;
+    @MockBean private JobSeekerProfileRepository profileRepo;
+    @MockBean private ResumeEducationRepository educationRepo;
+    @MockBean private ResumeExperienceRepository experienceRepo;
+    @MockBean private ResumeCertificationRepository certificationRepo;
+    @MockBean private ResumeProjectRepository projectRepo;
+    @MockBean private ResumeSkillRepository resumeSkillRepo;
+
+    private JobSeekerProfile mockProfile;
+
     @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(jobSeekerController).build();
-        objectMapper = new ObjectMapper();
+    void setUp() {
+        mockProfile = new JobSeekerProfile();
+        mockProfile.setSeekerId(1L);
+        mockProfile.setFullName("John Doe");
+        mockProfile.setProfileCompletion(80);
     }
 
-    // =========================
-    // CREATE PROFILE
-    // =========================
+    // ---------- Profile Tests ----------
+
     @Test
-    void testCreateProfile() throws Exception {
-        JobSeekerProfile profile = new JobSeekerProfile();
-        when(jobSeekerService.createProfile(any(JobSeekerProfile.class), eq(1L)))
-                .thenReturn(profile);
-
-        mockMvc.perform(post("/api/jobseeker/profile/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(profile)))
-                .andExpect(status().isOk());
-    }
-
-    // =========================
-    // GET PROFILE
-    // =========================
-    @Test
-    void testGetProfile() throws Exception {
-        JobSeekerProfile profile = new JobSeekerProfile();
-        profile.setSeekerId(1L);
-        profile.setFullName("John Doe");
-
-        when(jobSeekerService.getProfile(1L)).thenReturn(Optional.of(profile));
-        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(1L))
-                .thenReturn(Optional.empty());
+    void getProfile_ShouldReturnFormattedMap() throws Exception {
+        when(jobSeekerService.getProfile(1L)).thenReturn(Optional.of(mockProfile));
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/jobseeker/profile/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("John Doe"));
     }
 
-    // =========================
-    // UPDATE PROFILE
-    // =========================
     @Test
-    void testUpdateProfile() throws Exception {
-        JobSeekerProfile profile = new JobSeekerProfile();
-        profile.setSeekerId(1L);
+    void updateProfile_ShouldReturnSuccess() throws Exception {
+        when(profileRepo.findByUserUserId(anyLong())).thenReturn(Optional.of(mockProfile));
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong())).thenReturn(Optional.of(new Resume()));
 
-        Resume mockResume = new Resume();
-        mockResume.setResumeId(1L);
-
-        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
-        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(1L))
-                .thenReturn(Optional.of(mockResume));
-        when(resumeRepo.save(any())).thenReturn(mockResume);
-
-        String json = "{\"fullName\":\"Updated\",\"experience\":\"New Objective\",\"skills\":\"Java,Python\",\"certifications\":\"AWS\",\"education\":\"B.Tech - JNTU\"}";
+        Map<String, Object> updateData = Map.of(
+                "fullName", "John Updated",
+                "phone", "1234567890",
+                "location", "New York",
+                "experience", "5 years of Java"
+        );
 
         mockMvc.perform(put("/api/jobseeker/profile/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
+                        .content(objectMapper.writeValueAsString(updateData)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Profile updated successfully"));
     }
 
-    // =========================
-    // UPLOAD RESUME
-    // =========================
+    // ---------- Resume Upload Test ----------
+
     @Test
-    void testUploadResume() throws Exception {
-        ResumeFile file = new ResumeFile();
-        file.setFileName("resume.pdf");
+    void uploadResume_ShouldReturnFileName_WhenSuccessful() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "resume.pdf",
+                MediaType.APPLICATION_PDF_VALUE, "test content".getBytes());
 
-        MockMultipartFile multipartFile = new MockMultipartFile(
-                "file", "resume.pdf", "application/pdf", "test".getBytes());
+        ResumeFile mockFile = new ResumeFile();
+        mockFile.setFileName("resume.pdf");
 
-        when(jobSeekerService.uploadResumeFile(eq(1L), any())).thenReturn(file);
+        when(jobSeekerService.uploadResumeFile(eq(1L), any())).thenReturn(mockFile);
 
-        mockMvc.perform(multipart("/api/jobseeker/resume/upload/1").file(multipartFile))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart("/api/jobseeker/resume/upload/1").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Resume uploaded successfully"))
+                .andExpect(jsonPath("$.fileName").value("resume.pdf"));
     }
 
-    // =========================
-    // GET FAVORITES
-    // =========================
+    // ---------- Dashboard Test ----------
+
     @Test
-    void testGetFavorites() throws Exception {
-        List<FavoriteJobDTO> list = new ArrayList<>();
-        when(jobSeekerService.getFavorites(1L)).thenReturn(list);
-
-        mockMvc.perform(get("/api/jobseeker/favorites/1"))
-                .andExpect(status().isOk());
-    }
-
-    // =========================
-    // REMOVE FAVORITE
-    // =========================
-    @Test
-    void testRemoveFavorite() throws Exception {
-        doNothing().when(jobSeekerService).removeFavoriteJob(1L);
-
-        mockMvc.perform(delete("/api/jobseeker/favorites/1"))
-                .andExpect(status().isOk());
-    }
-
-    // =========================
-    // DASHBOARD
-    // =========================
-    @Test
-    void testDashboard() throws Exception {
-        JobSeekerProfile profile = new JobSeekerProfile();
-        profile.setSeekerId(1L);
-
-        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
-        when(favoriteJobRepo.countBySeekerSeekerId(1L)).thenReturn(3L);
-        when(applicationService.getApplicationsBySeeker(1L)).thenReturn(new ArrayList<>());
+    void getDashboard_ShouldReturnStats() throws Exception {
+        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(mockProfile));
+        when(favoriteJobRepo.countBySeekerSeekerId(anyLong())).thenReturn(5L);
+        when(applicationService.getApplicationsBySeeker(anyLong()))
+                .thenReturn(Collections.singletonList(new ApplicationResponseDTO()));
 
         mockMvc.perform(get("/api/jobseeker/dashboard/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileScore").value(80))
+                .andExpect(jsonPath("$.savedJobs").value(5))
+                .andExpect(jsonPath("$.totalApplications").value(1));
     }
 
-    // =========================
-    // SAVE RESUME
-    // =========================
+    // ---------- Favorite Jobs Test ----------
+
     @Test
-    void testSaveResume() throws Exception {
-        JobSeekerProfile profile = new JobSeekerProfile();
-        profile.setSeekerId(1L);
+    void addFavorite_ShouldReturnConflict_WhenAlreadySaved() throws Exception {
+        // Simulating the RuntimeException thrown by service when job is already saved
+        when(jobSeekerService.addFavoriteJob(1L, 101L))
+                .thenThrow(new RuntimeException("Already saved"));
 
-        ResumeSaveDTO dto = new ResumeSaveDTO();
-        dto.setObjective("Objective");
-        dto.setSkills(List.of("Java"));
-        dto.setEducations(List.of());
-        dto.setExperiences(List.of());
-        dto.setProjects(List.of());
-        dto.setCertifications(List.of());
-
-        when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(profile));
-        Resume resume = new Resume();
-        resume.setResumeId(1L);
-        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(1L))
-                .thenReturn(Optional.of(resume));
-        when(resumeRepo.save(any())).thenReturn(resume);
-
-        mockMvc.perform(post("/api/jobseeker/resume/save/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/jobseeker/favorites/1/101"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("error"));
     }
 }

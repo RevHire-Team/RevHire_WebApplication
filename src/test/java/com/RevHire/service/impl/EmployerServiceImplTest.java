@@ -57,26 +57,27 @@ public class EmployerServiceImplTest {
         profile.setIndustry("IT");
         profile.setWebsite("www.abctech.com");
         profile.setDescription("Software company");
+        profile.setLocation("India");
+        profile.setCompanySize(100);
 
         dto = new EmployerProfileDTO();
         dto.setCompanyName("ABC Tech");
         dto.setIndustry("IT");
-        dto.setCompanySize(100-500);
+        dto.setCompanySize(100);
         dto.setDescription("Software company");
         dto.setWebsite("www.abctech.com");
         dto.setLocation("India");
         dto.setContactEmail("employer@test.com");
     }
 
+    // ====================== CREATE OR UPDATE PROFILE ======================
     @Test
     void testCreateOrUpdateProfileSuccess() {
-
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(employerProfileRepository.findByUserUserId(1L))
                 .thenReturn(Optional.of(profile));
 
-        EmployerProfileDTO result =
-                employerService.createOrUpdateProfile(1L, dto);
+        EmployerProfileDTO result = employerService.createOrUpdateProfile(1L, dto);
 
         assertNotNull(result);
         assertEquals("ABC Tech", result.getCompanyName());
@@ -87,7 +88,6 @@ public class EmployerServiceImplTest {
 
     @Test
     void testCreateOrUpdateProfileUserNotFound() {
-
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class,
@@ -95,8 +95,18 @@ public class EmployerServiceImplTest {
     }
 
     @Test
-    void testGetProfileSuccess() {
+    void testCreateOrUpdateProfileEmailConflict() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.of(profile));
+        doThrow(new RuntimeException()).when(userRepository).save(user);
 
+        assertThrows(ResponseStatusException.class,
+                () -> employerService.createOrUpdateProfile(1L, dto));
+    }
+
+    // ====================== GET PROFILE ======================
+    @Test
+    void testGetProfileSuccess() {
         when(employerProfileRepository.findByUserUserId(1L))
                 .thenReturn(Optional.of(profile));
 
@@ -110,7 +120,6 @@ public class EmployerServiceImplTest {
 
     @Test
     void testGetProfileNotFound() {
-
         when(employerProfileRepository.findByUserUserId(1L))
                 .thenReturn(Optional.empty());
 
@@ -118,32 +127,67 @@ public class EmployerServiceImplTest {
                 () -> employerService.getProfile(1L));
     }
 
+    // ====================== DASHBOARD ======================
     @Test
-    void testGetDashboard() {
-
-        when(jobRepository.countByEmployerEmployerId(1L))
-                .thenReturn(5L);
-
-        when(jobRepository.countByEmployerEmployerIdAndStatus(1L, "OPEN"))
-                .thenReturn(3L);
-
-        when(applicationRepository.countByJob_Employer_EmployerId(1L))
-                .thenReturn(20L);
-
-        when(applicationRepository
-                .countByJob_Employer_EmployerIdAndStatus(1L, "PENDING"))
-                .thenReturn(4L);
-
+    void testGetDashboardWithExistingProfile() {
         when(employerProfileRepository.findByUserUserId(1L))
                 .thenReturn(Optional.of(profile));
 
-        EmployerDashboardDTO dashboard =
-                employerService.getDashboard(1L);
+        when(jobRepository.countByEmployerEmployerId(1L)).thenReturn(5L);
+        when(jobRepository.countByEmployerEmployerIdAndStatus(1L, "OPEN")).thenReturn(3L);
+        when(applicationRepository.countByJob_Employer_EmployerId(1L)).thenReturn(20L);
+        when(applicationRepository.countByJob_Employer_EmployerIdAndStatus(1L, "PENDING")).thenReturn(4L);
+
+        EmployerDashboardDTO dashboard = employerService.getDashboard(1L);
 
         assertNotNull(dashboard);
         assertEquals(5L, dashboard.getTotalJobs());
         assertEquals(3L, dashboard.getActiveJobs());
         assertEquals(20L, dashboard.getTotalApplications());
         assertEquals(4L, dashboard.getPendingReviews());
+    }
+
+    @Test
+    void testGetDashboardProfileNotFoundCreatesDefault() {
+        when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        EmployerProfile defaultProfile = new EmployerProfile();
+        defaultProfile.setEmployerId(2L);
+        when(employerProfileRepository.save(any())).thenReturn(defaultProfile);
+
+        EmployerDashboardDTO dashboard = employerService.getDashboard(1L);
+
+        assertNotNull(dashboard);
+        verify(employerProfileRepository).save(any());
+    }
+
+    @Test
+    void testGetDashboardUserNotFoundThrows() {
+        when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> employerService.getDashboard(1L));
+    }
+
+    // ====================== PROFILE COMPLETION ======================
+    @Test
+    void testCalculateCompletionFullProfile() {
+        when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.of(profile));
+
+        double completion = employerService.getDashboard(1L).getProfileCompletionPercentage();
+
+        assertTrue(completion >= 0 && completion <= 100);
+    }
+
+    @Test
+    void testCalculateCompletionEmptyProfile() {
+        EmployerProfile emptyProfile = new EmployerProfile();
+        when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.of(emptyProfile));
+
+        double completion = employerService.getDashboard(1L).getProfileCompletionPercentage();
+
+        assertEquals(0.0, completion);
     }
 }

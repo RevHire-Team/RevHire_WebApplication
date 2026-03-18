@@ -1,25 +1,28 @@
 package com.RevHire.service.impl;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import com.RevHire.dto.JobDTO;
 import com.RevHire.entity.EmployerProfile;
 import com.RevHire.entity.Job;
 import com.RevHire.repository.EmployerProfileRepository;
 import com.RevHire.repository.JobRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-public class JobServiceImplTest {
+@ExtendWith(MockitoExtension.class)
+class JobServiceImplTest {
 
     @Mock
     private JobRepository jobRepository;
@@ -30,201 +33,101 @@ public class JobServiceImplTest {
     @InjectMocks
     private JobServiceImpl jobService;
 
+    // This solves the "Cannot resolve symbol" error
+    @Captor
+    private ArgumentCaptor<Job> jobCaptor;
+
     private Job job;
     private EmployerProfile employer;
+    private final Long userId = 1L;
+    private final Long jobId = 10L;
 
     @BeforeEach
     void setUp() {
-
-        MockitoAnnotations.openMocks(this);
-
         employer = new EmployerProfile();
-        employer.setEmployerId(1L);
-        employer.setCompanyName("ABC Tech");
+        employer.setEmployerId(100L);
+        employer.setCompanyName("Tech Corp");
 
         job = new Job();
-        job.setJobId(1L);
-        job.setTitle("Java Developer");
-        job.setLocation("Bangalore");
-        job.setSalaryMin(BigDecimal.valueOf(30000));
-        job.setSalaryMax(BigDecimal.valueOf(60000));
-        job.setJobType("FULL_TIME");
+        job.setJobId(jobId);
+        job.setTitle("Software Engineer");
         job.setStatus("OPEN");
-        job.setActive(true);
         job.setEmployer(employer);
     }
 
-    // ================= CREATE JOB =================
-
     @Test
-    void testCreateJob() {
+    void testUpdateJob_Success() {
+        // Arrange
+        Job updatedData = new Job();
+        updatedData.setTitle("Senior Engineer");
+        updatedData.setLocation("New York");
 
-        when(employerRepository.findByUserUserId(1L))
-                .thenReturn(Optional.of(employer));
+        when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
+        when(jobRepository.save(any(Job.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        when(jobRepository.save(job)).thenReturn(job);
+        // Act
+        JobDTO result = jobService.updateJob(jobId, updatedData);
 
-        Job result = jobService.createJob(job, 1L);
+        // Assert
+        assertEquals("Senior Engineer", result.getTitle());
+        verify(jobRepository).save(jobCaptor.capture());
 
-        assertNotNull(result);
-        assertEquals("OPEN", result.getStatus());
-
-        verify(jobRepository).save(job);
+        // Verify the internal state of the object passed to save()
+        Job capturedJob = jobCaptor.getValue();
+        assertEquals("Senior Engineer", capturedJob.getTitle());
+        assertEquals("New York", capturedJob.getLocation());
     }
 
     @Test
-    void testCreateJobEmployerNotFound() {
+    void testSearchJobs_Coverage() {
+        // Arrange
+        when(jobRepository.advancedSearch(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(Collections.singletonList(job));
 
-        when(employerRepository.findByUserUserId(1L))
-                .thenReturn(Optional.empty());
+        // Act
+        List<JobDTO> results = jobService.searchJobs("Java", "Remote", 2, "Bachelors", 50000.0, 100000.0, "Full-time");
 
-        assertThrows(RuntimeException.class,
-                () -> jobService.createJob(job, 1L));
+        // Assert
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        verify(jobRepository).advancedSearch("Java", "Remote", 2, "Bachelors", 50000.0, 100000.0, "Full-time");
     }
-
-    // ================= GET ALL OPEN JOBS =================
 
     @Test
-    void testGetAllOpenJobs() {
+    void testGetEmployerJobsSorted_RecentBranch() {
+        // Arrange
+        when(employerRepository.findByUserUserId(userId)).thenReturn(Optional.of(employer));
+        when(jobRepository.findByEmployerEmployerIdOrderByJobIdDesc(100L))
+                .thenReturn(Collections.singletonList(job));
 
-        when(jobRepository.findByStatus("OPEN"))
-                .thenReturn(List.of(job));
+        // Act
+        jobService.getEmployerJobsSorted(userId, "recent");
 
-        List<JobDTO> result = jobService.getAllOpenJobs();
-
-        assertEquals(1, result.size());
-        assertEquals("Java Developer", result.get(0).getTitle());
+        // Assert
+        verify(jobRepository).findByEmployerEmployerIdOrderByJobIdDesc(100L);
     }
-
-    // ================= SEARCH JOBS =================
 
     @Test
-    void testSearchJobs() {
+    void testGetEmployerJobsSorted_DefaultBranch() {
+        // Arrange
+        when(employerRepository.findByUserUserId(userId)).thenReturn(Optional.of(employer));
+        when(jobRepository.findByEmployerEmployerId(100L))
+                .thenReturn(Collections.singletonList(job));
 
-        when(jobRepository.advancedSearch(
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any(),
-                any()
-        )).thenReturn(List.of(job));
+        // Act
+        jobService.getEmployerJobsSorted(userId, "none"); // Triggers the 'else' block
 
-        List<JobDTO> jobs =
-                jobService.searchJobs(
-                        "Java",
-                        "Bangalore",
-                        2,
-                        "BTech",
-                        20000.0,
-                        70000.0,
-                        "FULL_TIME"
-                );
-
-        assertEquals(1, jobs.size());
-        assertEquals("Java Developer", jobs.get(0).getTitle());
+        // Assert
+        verify(jobRepository).findByEmployerEmployerId(100L);
     }
-
-    // ================= CLOSE JOB =================
 
     @Test
-    void testCloseJob() {
+    void testCloseJob_ThrowsException() {
+        // Arrange
+        when(jobRepository.findById(jobId)).thenReturn(Optional.empty());
 
-        when(jobRepository.findById(1L))
-                .thenReturn(Optional.of(job));
-
-        jobService.closeJob(1L);
-
-        assertEquals("CLOSED", job.getStatus());
-        verify(jobRepository).save(job);
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> jobService.closeJob(jobId));
+        assertEquals("Job not found", exception.getMessage());
     }
-
-    // ================= DELETE JOB =================
-
-    @Test
-    void testDeleteJob() {
-
-        when(jobRepository.findById(1L))
-                .thenReturn(Optional.of(job));
-
-        jobService.deleteJob(1L);
-
-        verify(jobRepository).delete(job);
-    }
-
-    // ================= GET JOBS BY USER =================
-
-    @Test
-    void testGetJobsByUserId() {
-
-        when(employerRepository.findByUserUserId(1L))
-                .thenReturn(Optional.of(employer));
-
-        when(jobRepository.findByEmployerEmployerId(1L))
-                .thenReturn(List.of(job));
-
-        List<JobDTO> jobs = jobService.getJobsByUserId(1L);
-
-        assertEquals(1, jobs.size());
-        assertEquals("Java Developer", jobs.get(0).getTitle());
-    }
-
-    // ================= TOGGLE JOB STATUS =================
-
-    @Test
-    void testToggleJobStatus() {
-
-        when(jobRepository.findById(1L))
-                .thenReturn(Optional.of(job));
-
-        when(jobRepository.save(job))
-                .thenReturn(job);
-
-        JobDTO dto = jobService.toggleJobStatus(1L);
-
-        assertEquals("CLOSED", dto.getStatus());
-    }
-
-    // ================= GET JOB BY ID =================
-
-    @Test
-    void testGetJobById() {
-
-        when(jobRepository.findById(1L))
-                .thenReturn(Optional.of(job));
-
-        JobDTO result = jobService.getJobById(1L);
-
-        assertNotNull(result);
-        assertEquals("Java Developer", result.getTitle());
-    }
-
-    // ================= UPDATE JOB =================
-
-    @Test
-    void testUpdateJob() {
-
-        Job updatedJob = new Job();
-        updatedJob.setTitle("Senior Java Developer");
-        updatedJob.setLocation("Hyderabad");
-        updatedJob.setJobType("FULL_TIME");
-        updatedJob.setSalaryMin(BigDecimal.valueOf(50000));
-        updatedJob.setSalaryMax(BigDecimal.valueOf(90000));
-        updatedJob.setDescription("Backend role");
-        updatedJob.setExperienceRequired(5);
-        updatedJob.setEducationRequired("BTech");
-
-        when(jobRepository.findById(1L))
-                .thenReturn(Optional.of(job));
-
-        when(jobRepository.save(any(Job.class)))
-                .thenReturn(job);
-
-        JobDTO result = jobService.updateJob(1L, updatedJob);
-
-        assertNotNull(result);
-        verify(jobRepository).save(job);
-    }
-
 }

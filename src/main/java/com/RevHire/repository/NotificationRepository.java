@@ -16,4 +16,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Logger logger = LogManager.getLogger(NotificationRepository.class);
 
     List<Notification> findByUserUserId(Long userId);
+
+    Long countByUserUserIdAndIsReadFalse(Long userId);
 }
