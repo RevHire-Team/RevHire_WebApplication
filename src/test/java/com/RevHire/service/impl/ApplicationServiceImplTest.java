@@ -1,146 +1,238 @@
 package com.RevHire.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import com.RevHire.controller.ApplicationController;
+import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.NotificationService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ApplicationServiceImplTest {
-
-    @Mock private ApplicationRepository applicationRepository;
-    @Mock private ApplicationNoteRepository applicationNoteRepository;
-    @Mock private JobRepository jobRepository;
-    @Mock private JobSeekerProfileRepository seekerRepository;
-    @Mock private ResumeRepository resumeRepository;
-    @Mock private NotificationService notificationService;
-    @Mock private EmployerProfileRepository employerRepository;
+class ApplicationServiceImplTest {
 
     @InjectMocks
     private ApplicationServiceImpl applicationService;
 
+    @Mock
+    private ApplicationRepository applicationRepository;
+
+    @Mock
+    private JobRepository jobRepository;
+
+    @Mock
+    private JobSeekerProfileRepository seekerRepository;
+
+    @Mock
+    private ResumeRepository resumeRepository;
+
+    @Mock
+    private ResumeFileRepository resumeFileRepository;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private EmployerProfileRepository employerRepository;
+
+    @Mock
+    private ApplicationNoteRepository applicationNoteRepository;
+
     private Job job;
     private JobSeekerProfile seeker;
     private Resume resume;
-    private User user;
-    private EmployerProfile employer;
+    private ResumeFile resumeFile;
     private Application application;
 
     @BeforeEach
-    void setUp() {
-        user = new User();
-        user.setUserId(1L);
-        user.setEmail("test@revhire.com");
-
-        employer = new EmployerProfile();
-        employer.setEmployerId(10L);
-        employer.setUser(user);
-
+    void setup() {
+        // Job and employer
         job = new Job();
         job.setJobId(100L);
-        job.setTitle("Software Engineer");
+        EmployerProfile employer = new EmployerProfile();
+        employer.setEmployerId(10L);
+        User employerUser = new User();
+        employerUser.setUserId(5L);
+        employer.setUser(employerUser);
         job.setEmployer(employer);
 
+        // Seeker
         seeker = new JobSeekerProfile();
-        seeker.setSeekerId(50L);
+        seeker.setSeekerId(1L);
+        User seekerUser = new User();
+        seekerUser.setUserId(1L);
+        seeker.setUser(seekerUser);
         seeker.setFullName("John Doe");
-        seeker.setUser(user);
 
+        // Resume
         resume = new Resume();
         resume.setResumeId(200L);
+        resume.setSeeker(seeker);
 
+        // Resume File
+        resumeFile = new ResumeFile();
+        resumeFile.setFileId(300L);
+        resumeFile.setResume(resume);
+
+        // Application
         application = new Application();
         application.setApplicationId(1000L);
         application.setJob(job);
         application.setSeeker(seeker);
         application.setResume(resume);
         application.setStatus("APPLIED");
+        application.setAppliedDate(LocalDateTime.now());
     }
 
-    // --- applyJob Tests ---
-
+    // ===================== APPLY JOB =====================
     @Test
-    void applyJob_AlreadyApplied_ThrowsException() {
-        when(applicationRepository.findByJobJobIdAndSeekerSeekerId(100L, 50L)).thenReturn(Optional.of(application));
+    void applyJob_ShouldSaveApplication_WhenValidWithFile() {
+        // Stubbing
+        lenient().when(applicationRepository.findByJobJobIdAndSeekerSeekerId(anyLong(), anyLong()))
+                .thenReturn(Optional.empty());
+        when(jobRepository.findById(job.getJobId())).thenReturn(Optional.of(job));
+        when(seekerRepository.findByUserUserId(seeker.getUser().getUserId())).thenReturn(Optional.of(seeker));
+        when(resumeRepository.findBySeeker_SeekerId(seeker.getSeekerId())).thenReturn(Optional.of(resume));
+        when(resumeFileRepository.findById(resumeFile.getFileId())).thenReturn(Optional.of(resumeFile));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(notificationService).sendNotification(anyLong(), anyString());
 
-        assertThrows(RuntimeException.class, () ->
-                applicationService.applyJob(100L, 50L, 200L, "Cover Letter")
+        // Execute
+        Application result = applicationService.applyJob(
+                job.getJobId(),
+                seeker.getUser().getUserId(),
+                resume.getResumeId(),
+                resumeFile.getFileId(),
+                "Cover Letter"
         );
-    }
 
-    // --- updateStatus Tests ---
-
-    @Test
-    void updateStatus_Shortlisted_SendsSpecificNotification() {
-        when(applicationRepository.findById(1000L)).thenReturn(Optional.of(application));
-        when(applicationRepository.save(any(Application.class))).thenReturn(application);
-
-        applicationService.updateStatus(1000L, "SHORTLISTED");
-
-        assertEquals("SHORTLISTED", application.getStatus());
-        verify(notificationService).sendNotification(eq(1L), contains("SHORTLISTED"));
+        // Verify
+        assertNotNull(result);
+        assertEquals(job.getJobId(), result.getJob().getJobId());
+        assertEquals(seeker.getSeekerId(), result.getSeeker().getSeekerId());
+        assertEquals("APPLIED", result.getStatus());
+        verify(notificationService, times(1)).sendNotification(anyLong(), anyString());
     }
 
     @Test
-    void updateStatus_InvalidStatus_ThrowsException() {
-        when(applicationRepository.findById(1000L)).thenReturn(Optional.of(application));
+    void applyJob_ShouldSaveApplication_WhenValidWithoutFile() {
+        // Stubbing
+        lenient().when(applicationRepository.findByJobJobIdAndSeekerSeekerId(anyLong(), anyLong()))
+                .thenReturn(Optional.empty());
+        when(jobRepository.findById(job.getJobId())).thenReturn(Optional.of(job));
+        when(seekerRepository.findByUserUserId(seeker.getUser().getUserId())).thenReturn(Optional.of(seeker));
+        when(resumeRepository.findBySeeker_SeekerId(seeker.getSeekerId())).thenReturn(Optional.of(resume));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(notificationService).sendNotification(anyLong(), anyString());
 
-        assertThrows(RuntimeException.class, () ->
-                applicationService.updateStatus(1000L, "INVALID_STATUS")
+        // Execute
+        Application result = applicationService.applyJob(
+                job.getJobId(),
+                seeker.getUser().getUserId(),
+                resume.getResumeId(),
+                null,
+                "Cover Letter"
         );
+
+        // Verify
+        assertNotNull(result);
+        assertEquals(job.getJobId(), result.getJob().getJobId());
+        assertEquals(seeker.getSeekerId(), result.getSeeker().getSeekerId());
+        assertEquals("APPLIED", result.getStatus());
+        verify(notificationService, times(1)).sendNotification(anyLong(), anyString());
     }
 
-    // --- withdrawApplication Tests ---
-
+    // ===================== WITHDRAW APPLICATION =====================
     @Test
-    void withdrawApplication_Success() {
-        when(applicationRepository.findById(1000L)).thenReturn(Optional.of(application));
+    void withdrawApplication_ShouldUpdateStatusToWithdrawn() {
+        when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        applicationService.withdrawApplication(1000L, "Found another job");
+        applicationService.withdrawApplication(application.getApplicationId(), "No longer interested");
 
         assertEquals("WITHDRAWN", application.getStatus());
-        assertEquals("Found another job", application.getWithdrawReason());
-        verify(applicationRepository).save(application);
+        assertEquals("No longer interested", application.getWithdrawReason());
     }
 
-    // --- List Retrieval Tests ---
-
+    // ===================== UPDATE STATUS =====================
     @Test
-    void getApplicationsByEmployer_Success() {
-        when(employerRepository.findByUserUserId(1L)).thenReturn(Optional.of(employer));
-        when(applicationRepository.findByJobEmployerEmployerId(10L)).thenReturn(List.of(application));
+    void updateStatus_ShouldUpdateApplicationStatusAndNotify() {
+        when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
+        when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(notificationService).sendNotification(anyLong(), anyString());
 
-        List<EmployerApplicationDTO> results = applicationService.getApplicationsByEmployer(1L);
+        Application updated = applicationService.updateStatus(application.getApplicationId(), "SHORTLISTED");
 
-        assertFalse(results.isEmpty());
-        assertEquals("Software Engineer", results.get(0).getJobTitle());
+        assertEquals("SHORTLISTED", updated.getStatus());
+        verify(notificationService, times(1)).sendNotification(anyLong(), anyString());
     }
 
-    // --- addEmployerNotes Tests ---
+    @Test
+    void updateStatus_ShouldThrow_WhenInvalidStatus() {
+        when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> applicationService.updateStatus(application.getApplicationId(), "INVALID_STATUS"));
+
+        assertEquals("Invalid status value", ex.getMessage());
+    }
+
+    // ===================== GET APPLICATIONS =====================
+    @Test
+    void getApplicationsByJob_ShouldReturnApplications() {
+        when(applicationRepository.findByJobJobId(job.getJobId())).thenReturn(List.of(application));
+
+        List<ApplicationResponseDTO> results = applicationService.getApplicationsByJob(job.getJobId());
+
+        assertEquals(1, results.size());
+        assertEquals(application.getApplicationId(), results.get(0).getId());
+    }
 
     @Test
-    void addEmployerNotes_Success() {
-        when(applicationRepository.findById(1000L)).thenReturn(Optional.of(application));
-        when(employerRepository.findById(10L)).thenReturn(Optional.of(employer));
+    void getApplicationsBySeeker_ShouldReturnApplications() {
+        when(applicationRepository.findBySeekerSeekerId(seeker.getSeekerId())).thenReturn(List.of(application));
 
-        String response = applicationService.addEmployerNotes(1000L, 10L, "Great candidate");
+        List<ApplicationResponseDTO> results = applicationService.getApplicationsBySeeker(seeker.getSeekerId());
+
+        assertEquals(1, results.size());
+        assertEquals(application.getApplicationId(), results.get(0).getId());
+    }
+
+    @Test
+    void getApplicationsByEmployer_ShouldReturnApplications() {
+        when(employerRepository.findByUserUserId(seeker.getUser().getUserId()))
+                .thenReturn(Optional.of(job.getEmployer()));
+        when(applicationRepository.findByJobEmployerEmployerId(job.getEmployer().getEmployerId()))
+                .thenReturn(List.of(application));
+
+        List<EmployerApplicationDTO> results = applicationService.getApplicationsByEmployer(seeker.getUser().getUserId());
+
+        assertEquals(1, results.size());
+        assertEquals(application.getApplicationId(), results.get(0).getApplicationId());
+    }
+
+    // ===================== ADD EMPLOYER NOTES =====================
+    @Test
+    void addEmployerNotes_ShouldSaveNote() {
+        when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
+        when(employerRepository.findById(job.getEmployer().getEmployerId())).thenReturn(Optional.of(job.getEmployer()));
+        when(applicationNoteRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        String response = applicationService.addEmployerNotes(application.getApplicationId(),
+                job.getEmployer().getEmployerId(),
+                "Great candidate");
 
         assertEquals("Note added successfully", response);
-        verify(applicationNoteRepository, times(1)).save(any(ApplicationNote.class));
     }
 }

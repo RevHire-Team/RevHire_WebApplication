@@ -410,7 +410,8 @@
             Swal.fire("Note", "Already applied for this job.", "info");
             updateToAppliedState(jobId);
         } else {
-            Swal.fire("Error", "Could not apply.", "error");
+            Swal.fire("Note", "Already applied for this job.", "info");
+            updateToAppliedState(jobId);
         }
 
     } catch (err) {

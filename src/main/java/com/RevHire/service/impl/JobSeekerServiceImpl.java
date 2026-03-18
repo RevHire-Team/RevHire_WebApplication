@@ -6,6 +6,7 @@ import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,6 +34,9 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     private final UserRepository userRepo;
     private final JobRepository jobRepo;
     private final ResumeSkillRepository resumeSkillRepo;
+
+    @Autowired
+    private JobSeekerProfileRepository seekerRepository;
 
     public JobSeekerServiceImpl(JobSeekerProfileRepository profileRepo,
                                 ResumeRepository resumeRepo,
@@ -190,7 +194,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
         logger.info("Adding favorite job. seekerId: {}, jobId: {}", seekerId, jobId);
 
-        JobSeekerProfile seeker = profileRepo.findById(seekerId)
+        JobSeekerProfile seeker = seekerRepository.findByUserUserId(seekerId)
                 .orElseThrow(() -> {
                     logger.error("Seeker not found with ID: {}", seekerId);
                     return new RuntimeException("Seeker not found");

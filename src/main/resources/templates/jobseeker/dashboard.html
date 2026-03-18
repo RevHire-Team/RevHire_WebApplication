@@ -277,12 +277,15 @@
             Welcome Back
         </div>
 
-        <a th:href="@{/notifications/notification}" class="notification">
-
-            <i class="bi bi-bell"></i>
-            <span id="notificationCount" class="notification-badge d-none">0</span>
-
-        </a>
+        <a th:href="@{/notifications/notification}" class="nav-link position-relative">
+        <i class="bi bi-bell"></i>
+        <span id="unreadCountBadge"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="font-size:.65rem; display:none;">
+        0
+    </span>
+        <span>Notifications</span>
+    </a>
 
     </div>
 
@@ -401,6 +404,55 @@
     }
 
     setInterval(loadNotificationCount,10000);
+
+    async function updateUnreadNotifications() {
+    const userId = document.getElementById("sessionUserId").value;
+    if (!userId) return;
+
+    try {
+        const res = await fetch(`/notifications/unread-count/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const count = await res.json();
+
+        const badge = document.getElementById("unreadCountBadge");
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.style.display = "inline-block";
+            badge.textContent = count;
+        } else {
+            badge.style.display = "none";
+        }
+    } catch (err) {
+        console.error("Unread notifications fetch error:", err);
+    }
+}
+
+// Call on page load
+document.addEventListener("DOMContentLoaded", updateUnreadNotifications);
+
+// Optional: refresh every 30 sec
+setInterval(updateUnreadNotifications, 30000);
+
+// Update on page load
+document.addEventListener("DOMContentLoaded", updateUnreadNotifications);
+
+// Optional: Poll every 30 seconds for real-time update
+setInterval(updateUnreadNotifications, 30000);
+
+    async function markAllAsRead() {
+    const userId = document.getElementById("sessionUserId").value;
+    if (!userId) return;
+
+    try {
+        const res = await fetch(`/notifications/mark-all-read/${userId}`, { method: "POST" });
+        if (res.ok) {
+            updateUnreadNotifications(); // refresh badge
+        }
+    } catch (err) {
+        console.log("Failed to mark notifications as read", err);
+    }
+}
 
 </script>
 
