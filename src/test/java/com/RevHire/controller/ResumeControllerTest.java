@@ -13,9 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
@@ -47,8 +45,6 @@ class ResumeControllerTest {
         mockResume.setObjective("Professional Developer");
     }
 
-    // ================= CORE RESUME TESTS =================
-
     @Test
     void createResume_ShouldReturnSavedResume() throws Exception {
         when(resumeService.createResume(any(Resume.class))).thenReturn(mockResume);
@@ -70,8 +66,6 @@ class ResumeControllerTest {
                 .andExpect(jsonPath("$.resumeId").value(1));
     }
 
-    // ================= EDUCATION TESTS =================
-
     @Test
     void addEducation_ShouldReturnSavedEducation() throws Exception {
         ResumeEducation edu = new ResumeEducation();
@@ -86,14 +80,11 @@ class ResumeControllerTest {
                 .andExpect(jsonPath("$.institution").value("Revature University"));
     }
 
-    // ================= FILE MANAGEMENT TESTS =================
-
     @Test
     void uploadFile_ShouldReturnSuccessMessage() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf",
                 MediaType.APPLICATION_PDF_VALUE, "PDF Content".getBytes());
 
-        // Service returns void, so we just let it execute
         mockMvc.perform(multipart("/api/resume/upload/1").file(file))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("File uploaded successfully"));
@@ -108,11 +99,8 @@ class ResumeControllerTest {
                 .andExpect(content().string("Deleted"));
     }
 
-    // ================= PDF GENERATION TEST =================
-
     @Test
     void generateResumePdf_ShouldReturnPdfBytes() throws Exception {
-        // Setup: No physical files in list to force the fallback PDF generation
         mockResume.setFiles(Collections.emptyList());
 
         when(resumeService.getResumeById(1L)).thenReturn(mockResume);

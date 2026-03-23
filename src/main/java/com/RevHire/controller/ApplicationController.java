@@ -3,13 +3,12 @@ package com.RevHire.controller;
 import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
-import com.RevHire.entity.Application;
 import jakarta.servlet.http.HttpSession;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -22,12 +21,12 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/applications")
+@RequiredArgsConstructor
 public class ApplicationController {
 
     private static final Logger logger = LogManager.getLogger(ApplicationController.class);
 
-    @Autowired
-    private ApplicationService applicationService;
+    private final ApplicationService applicationService;
 
     @GetMapping("/jobseeker/jobs/apply/{jobId}")
     public String showApplyPage(@PathVariable Long jobId, Model model, HttpSession session) {
@@ -53,14 +52,14 @@ public class ApplicationController {
     public ResponseEntity<?> apply(@RequestParam Long jobId,
                                    @RequestParam Long userId,
                                    @RequestParam Long resumeId,
-                                   @RequestParam(required = false) Long fileId, // ✅ NEW
+                                   @RequestParam(required = false) Long fileId,
                                    @RequestParam(required = false) String coverLetter) {
 
         logger.info("Submitting application for jobId: {} by userId: {}", jobId, userId);
 
         try {
 
-            applicationService.applyJob(jobId, userId, resumeId, fileId, coverLetter); // ✅ UPDATED
+            applicationService.applyJob(jobId, userId, resumeId, fileId, coverLetter);
 
             return ResponseEntity.ok("Application submitted successfully");
 

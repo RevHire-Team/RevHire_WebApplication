@@ -46,8 +46,6 @@ class EmployerControllerTest {
         session.setAttribute("loggedInUser", mockUser);
     }
 
-    // ---------- Profile View/Edit Tests ----------
-
     @Test
     void viewProfilePage_ShouldReturnProfileView_WhenLoggedIn() throws Exception {
         EmployerProfileDTO profileDTO = new EmployerProfileDTO();
@@ -62,15 +60,22 @@ class EmployerControllerTest {
     }
 
     @Test
+    void viewProfilePage_ShouldRedirectToLogin_WhenNotLoggedIn() throws Exception {
+        mockMvc.perform(get("/employer/profile"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/auth/login"));
+    }
+
+    @Test
     void showEditProfilePage_ShouldRedirectToLogin_WhenNotLoggedIn() throws Exception {
-        mockMvc.perform(get("/employer/profile/edit")) // No session
+        mockMvc.perform(get("/employer/profile/edit"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
 
     @Test
     void showEditProfilePage_ShouldReturnEditView_WhenLoggedIn() throws Exception {
-        when(employerService.getProfile(1L)).thenReturn(null); // Simulate new profile
+        when(employerService.getProfile(1L)).thenReturn(null); // No profile exists
 
         mockMvc.perform(get("/employer/profile/edit").session(session))
                 .andExpect(status().isOk())
@@ -79,7 +84,19 @@ class EmployerControllerTest {
                 .andExpect(model().attribute("userId", 1L));
     }
 
-    // ---------- API / JSON Tests ----------
+    @Test
+    void showDashboard_ShouldReturnDashboardView() throws Exception {
+        EmployerDashboardDTO dashboardDTO = new EmployerDashboardDTO();
+
+        when(employerService.getDashboard(1L)).thenReturn(dashboardDTO);
+
+        mockMvc.perform(get("/employer/dashboard/1")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(view().name("employer/dashboard"))
+                .andExpect(model().attribute("dashboard", dashboardDTO));
+    }
+
 
     @Test
     void createOrUpdateProfile_ShouldReturnOkWithJson() throws Exception {

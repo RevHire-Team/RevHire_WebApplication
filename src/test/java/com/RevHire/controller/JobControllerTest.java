@@ -44,26 +44,10 @@ public class JobControllerTest {
         objectMapper = new ObjectMapper();
     }
 
-    // ==============================
-    // TEST: VIEW ALL JOBS
-    // ==============================
-//    @Test
-//    void testViewAllJobs() throws Exception {
-//        List<JobDTO> jobs = new ArrayList<>();
-//        when(jobService.getAllOpenJobs()).thenReturn(jobs);
-//
-//        mockMvc.perform(get("/jobs"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
-//    }
-
-    // ==============================
-    // TEST: CREATE JOB PAGE (LOGIN)
-    // ==============================
     @Test
     void testShowCreateJobPage_WithSession() throws Exception {
-
         User user = new User();
+        user.setUserId(1L);
 
         mockMvc.perform(get("/jobs/create")
                         .sessionAttr("loggedInUser", user))
@@ -71,23 +55,15 @@ public class JobControllerTest {
                 .andExpect(view().name("employer/jobs/create-job"));
     }
 
-    // ==============================
-    // TEST: CREATE JOB PAGE (NO LOGIN)
-    // ==============================
     @Test
     void testShowCreateJobPage_NoSession() throws Exception {
-
         mockMvc.perform(get("/jobs/create"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
 
-    // ==============================
-    // TEST: CREATE JOB API
-    // ==============================
     @Test
     void testCreateJob() throws Exception {
-
         Job job = new Job();
 
         when(jobService.createJob(any(Job.class), eq(1L))).thenReturn(new Job());
@@ -98,12 +74,8 @@ public class JobControllerTest {
                 .andExpect(status().isOk());
     }
 
-    // ==============================
-    // TEST: SEARCH JOB
-    // ==============================
     @Test
     void testSearchJobs() throws Exception {
-
         List<JobDTO> jobs = new ArrayList<>();
 
         when(jobService.searchJobs(any(), any(), any(), any(), any(), any(), any()))
@@ -111,35 +83,15 @@ public class JobControllerTest {
 
         mockMvc.perform(get("/jobs/search")
                         .param("title", "Java"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(view().name("jobs/search-results"))
+                .andExpect(model().attributeExists("jobs"));
     }
 
-    // ==============================
-    // TEST: CLOSE JOB
-    // ==============================
-    // ==============================
-// TEST: CLOSE JOB
-// ==============================
-//    @Test
-//    void testCloseJob() throws Exception {
-//
-//        // Mock the service
-//        doNothing().when(jobService).closeJob(1L);
-//
-//        // Perform PUT request and assert the response string
-//        mockMvc.perform(put("/jobs/close/1")
-//                        .accept(MediaType.TEXT_PLAIN))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Job Closed Successfully")); // match exact response
-//    }
-
-    // ==============================
-    // TEST: MANAGE JOB PAGE
-    // ==============================
     @Test
     void testShowManageJobsPage_WithSession() throws Exception {
-
         User user = new User();
+        user.setUserId(1L);
 
         mockMvc.perform(get("/jobs/manage")
                         .sessionAttr("loggedInUser", user))
@@ -149,32 +101,25 @@ public class JobControllerTest {
 
     @Test
     void testShowManageJobsPage_NoSession() throws Exception {
-
         mockMvc.perform(get("/jobs/manage"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
 
-    // ==============================
-    // TEST: GET EMPLOYER JOBS
-    // ==============================
     @Test
     void testGetEmployerJobs() throws Exception {
-
         List<JobDTO> jobs = new ArrayList<>();
 
-        when(jobService.getJobsByUserId(1L)).thenReturn(jobs);
+        when(jobService.getEmployerJobsSorted(eq(1L), any()))
+                .thenReturn(jobs);
 
-        mockMvc.perform(get("/jobs/jobs/1"))
+        mockMvc.perform(get("/jobs/jobs/1")
+                        .param("sort", "salary"))
                 .andExpect(status().isOk());
     }
 
-    // ==============================
-    // TEST: DELETE JOB
-    // ==============================
     @Test
     void testDeleteJob() throws Exception {
-
         doNothing().when(jobService).deleteJob(1L);
 
         mockMvc.perform(delete("/jobs/jobs/1"))
@@ -182,25 +127,18 @@ public class JobControllerTest {
                 .andExpect(content().string("Deleted successfully"));
     }
 
-    // ==============================
-    // TEST: TOGGLE JOB STATUS
-    // ==============================
     @Test
     void testToggleJob() throws Exception {
-
         when(jobService.toggleJobStatus(1L)).thenReturn(mock(JobDTO.class));
 
         mockMvc.perform(put("/jobs/jobs/toggle/1"))
                 .andExpect(status().isOk());
     }
 
-    // ==============================
-    // TEST: EDIT JOB PAGE
-    // ==============================
     @Test
-    void testShowEditJobPage() throws Exception {
-
+    void testShowEditJobPage_WithSession() throws Exception {
         User user = new User();
+        user.setUserId(1L);
 
         mockMvc.perform(get("/jobs/jobs/edit/1")
                         .sessionAttr("loggedInUser", user))
@@ -209,27 +147,27 @@ public class JobControllerTest {
                 .andExpect(model().attributeExists("jobId"));
     }
 
-    // ==============================
-    // TEST: GET JOB BY ID
-    // ==============================
+    @Test
+    void testShowEditJobPage_NoSession() throws Exception {
+        mockMvc.perform(get("/jobs/jobs/edit/1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/auth/login"));
+    }
+
     @Test
     void testGetJobById() throws Exception {
-
         when(jobService.getJobById(1L)).thenReturn(mock(JobDTO.class));
 
         mockMvc.perform(get("/jobs/get/1"))
                 .andExpect(status().isOk());
     }
 
-    // ==============================
-    // TEST: UPDATE JOB
-    // ==============================
     @Test
     void testUpdateJob() throws Exception {
-
         Job job = new Job();
 
-        when(jobService.updateJob(eq(1L), any(Job.class))).thenReturn(mock(JobDTO.class));
+        when(jobService.updateJob(eq(1L), any(Job.class)))
+                .thenReturn(mock(JobDTO.class));
 
         mockMvc.perform(put("/jobs/update/1")
                         .contentType(MediaType.APPLICATION_JSON)

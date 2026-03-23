@@ -10,8 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -25,8 +24,6 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
-
-    // ---------- Navigation Tests ----------
 
     @Test
     void showRegisterPage_ShouldReturnRegisterView() throws Exception {
@@ -43,22 +40,22 @@ class AuthControllerTest {
                 .andExpect(view().name("auth/login"));
     }
 
-    // ---------- Registration Tests ----------
+    @Test
+    void showForgotPasswordPage_ShouldReturnView() throws Exception {
+        mockMvc.perform(get("/auth/forgot-password"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/forgotpassword"));
+    }
 
     @Test
     void registerUser_ShouldRedirectToLogin_WhenSuccess() throws Exception {
-        User mockUser = new User();
-        when(authService.registerUser(any(User.class))).thenReturn(mockUser);
+        when(authService.registerUser(any(User.class))).thenReturn(new User());
 
         mockMvc.perform(post("/auth/register")
-                        .flashAttr("user", new User())
-                        .param("email", "test@example.com")
-                        .param("password", "123456"))
+                        .flashAttr("user", new User()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
-
-    // ---------- Login Role-Based Redirects ----------
 
     @Test
     void login_ShouldRedirectEmployerDashboard() throws Exception {
@@ -74,11 +71,25 @@ class AuthControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/employer/dashboard/1"))
                 .andExpect(result -> {
-                    // result.getRequest() returns the MockHttpServletRequest
                     Object role = result.getRequest().getSession().getAttribute("role");
                     assertNotNull(role);
                     assertEquals("EMPLOYER", role.toString());
                 });
+    }
+
+    @Test
+    void login_ShouldRedirectJobSeekerDashboard() throws Exception {
+        User user = new User();
+        user.setUserId(2L);
+        user.setRole(Role.JOB_SEEKER);
+
+        when(authService.login("user@test.com", "1234")).thenReturn(user);
+
+        mockMvc.perform(post("/auth/login")
+                        .param("email", "user@test.com")
+                        .param("password", "1234"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/jobseeker/dashboard/2"));
     }
 
     @Test
@@ -94,10 +105,11 @@ class AuthControllerTest {
                 .andExpect(model().attributeExists("error"));
     }
 
-    // ---------- Password Management ----------
-
     @Test
     void resetPassword_ShouldReturnLoginPage_WhenSuccess() throws Exception {
+        when(authService.resetPassword(anyString(), anyString(), anyString()))
+                .thenReturn("Password updated successfully");
+
         mockMvc.perform(post("/auth/forgot-password")
                         .param("email", "test@test.com")
                         .param("answer", "Blue")
@@ -105,20 +117,56 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("auth/login"))
                 .andExpect(model().attributeExists("success"));
-
-        verify(authService).resetPassword(eq("test@test.com"), anyString(), anyString());
     }
 
     @Test
-    void showResetPasswordPage_ShouldRedirectToLogin_WhenNotLoggedIn() throws Exception {
-        // No session provided
+    void resetPassword_ShouldReturnForgotPage_WhenError() throws Exception {
+        when(authService.resetPassword(anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("Wrong answer"));
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .param("email", "test@test.com")
+                        .param("answer", "wrong")
+                        .param("newPassword", "newPass123"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/forgotpassword"))
+                .andExpect(model().attributeExists("error"));
+    }
+
+    @Test
+    void showResetPasswordPage_ShouldRedirect_WhenNotLoggedIn() throws Exception {
         mockMvc.perform(get("/auth/reset-password"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
 
     @Test
-    void updatePassword_ShouldSetFlashError_WhenCurrentPasswordWrong() throws Exception {
+    void showResetPasswordPage_ShouldReturnView_WhenLoggedIn() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("userId", 1L);
+
+        mockMvc.perform(get("/auth/reset-password").session(session))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/reset-password"));
+    }
+
+    @Test
+    void updatePassword_ShouldRedirectWithSuccess() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("userId", 1L);
+
+        doNothing().when(authService).updatePassword(anyLong(), anyString(), anyString());
+
+        mockMvc.perform(post("/auth/update-password")
+                        .session(session)
+                        .param("currentPassword", "old")
+                        .param("newPassword", "new"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("success"));
+    }
+
+    @Test
+    void updatePassword_ShouldRedirectWithError() throws Exception {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("userId", 1L);
 
@@ -128,17 +176,26 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/update-password")
                         .session(session)
                         .param("currentPassword", "wrong")
-                        .param("newPassword", "new123"))
+                        .param("newPassword", "new"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attribute("error", "Incorrect current password"));
     }
 
-    // ---------- Account Deletion ----------
+    @Test
+    void updatePassword_ShouldRedirectToLogin_WhenNoSession() throws Exception {
+        mockMvc.perform(post("/auth/update-password")
+                        .param("currentPassword", "old")
+                        .param("newPassword", "new"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/auth/login"));
+    }
 
     @Test
-    void deleteAccount_ShouldRedirectHome_WhenDeletedSuccessfully() throws Exception {
+    void deleteAccount_ShouldRedirectHome_WhenSuccess() throws Exception {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("userId", 100L);
+
+        doNothing().when(authService).deleteUser(100L);
 
         mockMvc.perform(get("/auth/delete").session(session))
                 .andExpect(status().is3xxRedirection())
@@ -146,6 +203,20 @@ class AuthControllerTest {
                 .andExpect(flash().attributeExists("success"));
 
         verify(authService).deleteUser(100L);
+    }
+
+    @Test
+    void deleteAccount_ShouldRedirectReset_WhenError() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute("userId", 100L);
+
+        doThrow(new RuntimeException("Delete failed"))
+                .when(authService).deleteUser(100L);
+
+        mockMvc.perform(get("/auth/delete").session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/auth/reset-password"))
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test

@@ -32,7 +32,6 @@ class HomeControllerTest {
 
     @Test
     void testShowRegisterPage_ShouldReturnAuthRegisterView() throws Exception {
-        // Testing the shortcut route /register
         mockMvc.perform(get("/register"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("auth/register"))

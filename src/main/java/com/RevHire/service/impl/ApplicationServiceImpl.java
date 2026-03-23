@@ -47,11 +47,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private ResumeFileRepository resumeFileRepository;
 
     @Override
-    public Application applyJob(Long jobId,
-                                Long userId,
-                                Long resumeId,
-                                Long fileId,   // ✅ NEW
-                                String coverLetter){
+    public Application applyJob(Long jobId, Long userId, Long resumeId, Long fileId, String coverLetter){
 
         logger.info("Attempting to apply for jobId: {} by seekerId: {}", jobId, userId);
 
@@ -76,26 +72,21 @@ public class ApplicationServiceImpl implements ApplicationService {
                 });
         Long seekerId=seeker.getSeekerId();
 
-        /* ================= RESUME SELECTION LOGIC ================= */
-
         Resume resume = resumeRepository.findBySeeker_SeekerId(seekerId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
         ResumeFile selectedFile = null;
 
-// ✅ If user selected uploaded resume
         if (fileId != null) {
 
             selectedFile = resumeFileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("Resume file not found"));
 
-            // 🔥 SECURITY CHECK
             if (!selectedFile.getResume().getResumeId().equals(resume.getResumeId())) {
                 throw new RuntimeException("File does not belong to this user");
             }
         }
 
-        /* Validate resume belongs to seeker */
         if (!resume.getSeeker().getSeekerId().equals(seekerId)) {
 
             logger.error("Resume {} does not belong to seeker {}", resumeId, seekerId);
@@ -112,20 +103,13 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application saved = applicationRepository.save(application);
 
-        /* SEND NOTIFICATION TO EMPLOYER */
-
         Long employerUserId = job.getEmployer().getUser().getUserId();
 
-        String message =
-                seeker.getFullName() +
-                        " applied for " +
-                        job.getTitle();
+        String message = seeker.getFullName() + " applied for " + job.getTitle();
 
         notificationService.sendNotification(employerUserId, message);
 
         return saved;
-
-
     }
 
     public List<ApplicationResponseDTO> getApplicationsBySeeker(Long seekerId) {
@@ -175,10 +159,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     return new RuntimeException("Application not found");
                 });
 
-        List<String> validStatuses = List.of(
-                "APPLIED", "UNDER_REVIEW",
-                "SHORTLISTED", "REJECTED", "WITHDRAWN"
-        );
+        List<String> validStatuses = List.of("APPLIED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "WITHDRAWN");
 
         if(!validStatuses.contains(status)) {
             logger.warn("Invalid status attempted: {}", status);
@@ -189,23 +170,17 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application updated = applicationRepository.save(app);
 
-        /* SEND NOTIFICATION TO JOB SEEKER */
-
         Long seekerUserId = app.getSeeker().getUser().getUserId();
 
         String message;
 
         if(status.equals("SHORTLISTED")){
 
-            message = "Your application for "
-                    + app.getJob().getTitle()
-                    + " was SHORTLISTED";
+            message = "Your application for " + app.getJob().getTitle() + " was SHORTLISTED";
 
         }else if(status.equals("REJECTED")){
 
-            message = "Your application for "
-                    + app.getJob().getTitle()
-                    + " was REJECTED";
+            message = "Your application for " + app.getJob().getTitle() + " was REJECTED";
 
         }else{
             message = "Your application status updated to " + status;
@@ -243,7 +218,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         logger.info("Fetching applications for employer userId: {}", userId);
 
-        // 🔹 Fetch employer profile safely
         EmployerProfile employer = employerRepository.findByUserUserId(userId)
                 .orElseThrow(() -> {
                     String msg = "Employer profile not found for userId: " + userId;
@@ -269,9 +243,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public String addEmployerNotes(Long applicationId,
-                                   Long employerId,
-                                   String noteText) {
+    public String addEmployerNotes(Long applicationId, Long employerId, String noteText) {
 
         logger.info("Adding employer note for applicationId: {}", applicationId);
 
@@ -299,5 +271,4 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return "Note added successfully";
     }
-
 }

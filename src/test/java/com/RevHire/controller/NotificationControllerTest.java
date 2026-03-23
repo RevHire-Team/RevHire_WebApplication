@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,11 +40,8 @@ class NotificationControllerTest {
         mockNotification.setIsRead(false);
     }
 
-    // ========================= HTML View Tests =========================
-
     @Test
     void showNotificationsPage_ShouldReturnView_WhenLoggedIn() throws Exception {
-        // Specifically setting "userId" in session as per controller logic
         session.setAttribute("userId", 123L);
 
         mockMvc.perform(get("/notifications/notification").session(session))
@@ -55,12 +51,10 @@ class NotificationControllerTest {
 
     @Test
     void showNotificationsPage_ShouldRedirect_WhenNotLoggedIn() throws Exception {
-        mockMvc.perform(get("/notifications/notification")) // Empty session
+        mockMvc.perform(get("/notifications/notification"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
-
-    // ========================= JSON / API Tests =========================
 
     @Test
     void getNotifications_ShouldReturnJsonList() throws Exception {
@@ -71,7 +65,6 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].message").value("Your application was viewed"))
-                // CHANGE: Use isRead and notificationId to match your DTO's JSON output
                 .andExpect(jsonPath("$[0].isRead").value(false))
                 .andExpect(jsonPath("$[0].notificationId").value(1));
 
@@ -80,7 +73,6 @@ class NotificationControllerTest {
 
     @Test
     void markRead_ShouldReturnOkStatus() throws Exception {
-        // Void method in service, so we just verify it's called
         doNothing().when(notificationService).markAsRead(1L);
 
         mockMvc.perform(put("/notifications/api/1/read"))

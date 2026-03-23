@@ -33,9 +33,7 @@ class JobSeekerControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Mocking all constructor-injected dependencies
     @MockBean private JobSeekerService jobSeekerService;
-    @MockBean private com.RevHire.service.ResumeService resumeService;
     @MockBean private ApplicationServiceImpl applicationService;
     @MockBean private ResumeRepository resumeRepo;
     @MockBean private FavoriteJobRepository favoriteJobRepo;
@@ -56,12 +54,11 @@ class JobSeekerControllerTest {
         mockProfile.setProfileCompletion(80);
     }
 
-    // ---------- Profile Tests ----------
-
     @Test
     void getProfile_ShouldReturnFormattedMap() throws Exception {
         when(jobSeekerService.getProfile(1L)).thenReturn(Optional.of(mockProfile));
-        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong())).thenReturn(Optional.empty());
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong()))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/jobseeker/profile/1"))
                 .andExpect(status().isOk())
@@ -71,7 +68,12 @@ class JobSeekerControllerTest {
     @Test
     void updateProfile_ShouldReturnSuccess() throws Exception {
         when(profileRepo.findByUserUserId(anyLong())).thenReturn(Optional.of(mockProfile));
-        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong())).thenReturn(Optional.of(new Resume()));
+
+        Resume resume = new Resume();
+        resume.setResumeId(1L);
+
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong()))
+                .thenReturn(Optional.of(resume));
 
         Map<String, Object> updateData = Map.of(
                 "fullName", "John Updated",
@@ -87,17 +89,20 @@ class JobSeekerControllerTest {
                 .andExpect(jsonPath("$.message").value("Profile updated successfully"));
     }
 
-    // ---------- Resume Upload Test ----------
-
     @Test
     void uploadResume_ShouldReturnFileName_WhenSuccessful() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "resume.pdf",
-                MediaType.APPLICATION_PDF_VALUE, "test content".getBytes());
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "resume.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "test content".getBytes()
+        );
 
         ResumeFile mockFile = new ResumeFile();
         mockFile.setFileName("resume.pdf");
 
-        when(jobSeekerService.uploadResumeFile(eq(1L), any())).thenReturn(mockFile);
+        when(jobSeekerService.uploadResumeFile(eq(1L), any()))
+                .thenReturn(mockFile);
 
         mockMvc.perform(multipart("/api/jobseeker/resume/upload/1").file(file))
                 .andExpect(status().isOk())
@@ -105,14 +110,14 @@ class JobSeekerControllerTest {
                 .andExpect(jsonPath("$.fileName").value("resume.pdf"));
     }
 
-    // ---------- Dashboard Test ----------
-
     @Test
     void getDashboard_ShouldReturnStats() throws Exception {
         when(profileRepo.findByUserUserId(1L)).thenReturn(Optional.of(mockProfile));
         when(favoriteJobRepo.countBySeekerSeekerId(anyLong())).thenReturn(5L);
         when(applicationService.getApplicationsBySeeker(anyLong()))
                 .thenReturn(Collections.singletonList(new ApplicationResponseDTO()));
+        when(resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(anyLong()))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/jobseeker/dashboard/1"))
                 .andExpect(status().isOk())
@@ -121,11 +126,8 @@ class JobSeekerControllerTest {
                 .andExpect(jsonPath("$.totalApplications").value(1));
     }
 
-    // ---------- Favorite Jobs Test ----------
-
     @Test
     void addFavorite_ShouldReturnConflict_WhenAlreadySaved() throws Exception {
-        // Simulating the RuntimeException thrown by service when job is already saved
         when(jobSeekerService.addFavoriteJob(1L, 101L))
                 .thenThrow(new RuntimeException("Already saved"));
 

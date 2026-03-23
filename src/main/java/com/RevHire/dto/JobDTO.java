@@ -1,5 +1,6 @@
 package com.RevHire.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Data
+@AllArgsConstructor
 public class JobDTO {
 
     private Long jobId;
@@ -20,21 +22,4 @@ public class JobDTO {
     private String status;
     private String companyName;
 
-    public JobDTO(Long jobId,
-                  String title,
-                  String location,
-                  BigDecimal salaryMin,
-                  BigDecimal salaryMax,
-                  String jobType,
-                  String status,
-                  String companyName) {
-        this.jobId = jobId;
-        this.title = title;
-        this.location = location;
-        this.salaryMin = salaryMin;
-        this.salaryMax = salaryMax;
-        this.jobType = jobType;
-        this.status = status;
-        this.companyName = companyName;
-    }
 }
