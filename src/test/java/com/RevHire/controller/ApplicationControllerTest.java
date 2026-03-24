@@ -75,12 +75,10 @@ class ApplicationControllerTest {
 
     @Test
     void testApply_AlreadyAppliedConflict() throws Exception {
-        // GIVEN: Service throws a specific duplicate error
         doThrow(new RuntimeException("Already applied to this job"))
                 .when(applicationService)
                 .applyJob(anyLong(), anyLong(), anyLong(), any(), any());
 
-        // WHEN & THEN: Expect 409 Conflict
         mockMvc.perform(post("/applications/submit-application")
                         .param("jobId", "10")
                         .param("userId", "1")
@@ -109,8 +107,6 @@ class ApplicationControllerTest {
                 .andExpect(status().isOk());
     }
 
-    // ================= DATA FETCHING TESTS =================
-
     @Test
     void testGetAllApplications_Unauthorized() throws Exception {
         // GIVEN: Session is empty
@@ -120,7 +116,6 @@ class ApplicationControllerTest {
 
     @Test
     void testGetAllApplications_Authorized() throws Exception {
-        // GIVEN: Employer is logged in
         session.setAttribute("loggedInUser", mockUser);
 
         EmployerApplicationDTO dto = new EmployerApplicationDTO();
@@ -129,7 +124,6 @@ class ApplicationControllerTest {
         when(applicationService.getApplicationsByEmployer(1L))
                 .thenReturn(List.of(dto));
 
-        // WHEN & THEN: Expect JSON data
         mockMvc.perform(get("/applications/all").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))

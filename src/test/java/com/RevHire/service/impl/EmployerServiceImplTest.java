@@ -70,7 +70,6 @@ public class EmployerServiceImplTest {
         dto.setContactEmail("employer@test.com");
     }
 
-    // ====================== CREATE OR UPDATE PROFILE ======================
     @Test
     void testCreateOrUpdateProfileSuccess() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -104,7 +103,6 @@ public class EmployerServiceImplTest {
                 () -> employerService.createOrUpdateProfile(1L, dto));
     }
 
-    // ====================== GET PROFILE ======================
     @Test
     void testGetProfileSuccess() {
         when(employerProfileRepository.findByUserUserId(1L))
@@ -127,7 +125,6 @@ public class EmployerServiceImplTest {
                 () -> employerService.getProfile(1L));
     }
 
-    // ====================== DASHBOARD ======================
     @Test
     void testGetDashboardWithExistingProfile() {
         when(employerProfileRepository.findByUserUserId(1L))
@@ -171,7 +168,6 @@ public class EmployerServiceImplTest {
                 () -> employerService.getDashboard(1L));
     }
 
-    // ====================== PROFILE COMPLETION ======================
     @Test
     void testCalculateCompletionFullProfile() {
         when(employerProfileRepository.findByUserUserId(1L)).thenReturn(Optional.of(profile));

@@ -2,38 +2,33 @@ package com.RevHire.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import com.RevHire.entity.Job;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import com.RevHire.dto.JobDTO;
 import com.RevHire.repository.JobRepository;
 import com.RevHire.service.JobService;
-
+import com.RevHire.repository.EmployerProfileRepository;
+import com.RevHire.entity.EmployerProfile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Service
+@RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
 
     private static final Logger logger = LogManager.getLogger(JobServiceImpl.class);
 
-    @Autowired
-    private JobRepository jobRepository;
-
-    @Autowired
-    private com.RevHire.repository.EmployerProfileRepository employerRepository;
+    private final JobRepository jobRepository;
+    private final EmployerProfileRepository employerRepository;
 
     @Override
     @Transactional
     public Job createJob(Job job, Long userId) {
-
         logger.info("Creating job: {} for userId: {}", job.getTitle(), userId);
 
-        com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
-                .orElseThrow(() -> {
+        EmployerProfile employer = employerRepository.findByUserUserId(userId).orElseThrow(() -> {
                     logger.error("Employer Profile not found for userId: {}", userId);
                     return new RuntimeException("Employer Profile not found");
                 });
@@ -43,15 +38,12 @@ public class JobServiceImpl implements JobService {
         job.setActive(true);
 
         Job savedJob = jobRepository.save(job);
-
         logger.info("Job saved successfully with ID: {}", savedJob.getJobId());
-
         return savedJob;
     }
 
     @Override
     public List<JobDTO> getAllOpenJobs() {
-
         logger.info("Fetching all OPEN jobs");
 
         return jobRepository.findByStatus("OPEN")
@@ -78,8 +70,7 @@ public class JobServiceImpl implements JobService {
                                    Double maxSalary,
                                    String jobType) {
 
-        logger.info("Searching jobs with filters: title={}, location={}, experience={}",
-                title, location, experience);
+        logger.info("Searching jobs with filters: title={}, location={}, experience={}", title, location, experience);
 
         return jobRepository.advancedSearch(
                         title,
@@ -106,46 +97,37 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void closeJob(Long jobId) {
-
         logger.info("Closing job with ID: {}", jobId);
 
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found with ID: {}", jobId);
                     return new RuntimeException("Job not found");
                 });
 
         job.setStatus("CLOSED");
-
         jobRepository.save(job);
-
         logger.info("Job closed successfully with ID: {}", jobId);
     }
 
     @Override
     @Transactional
     public void deleteJob(Long jobId) {
-
         logger.info("Deleting job with ID: {}", jobId);
 
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found while deleting with ID: {}", jobId);
                     return new RuntimeException("Job not found");
                 });
 
         jobRepository.delete(job);
-
         logger.info("Job deleted successfully with ID: {}", jobId);
     }
 
     @Override
     public List<JobDTO> getJobsByUserId(Long userId) {
-
         logger.info("Fetching jobs for userId: {}", userId);
 
-        com.RevHire.entity.EmployerProfile employer = employerRepository.findByUserUserId(userId)
-                .orElseThrow(() -> {
+        EmployerProfile employer = employerRepository.findByUserUserId(userId).orElseThrow(() -> {
                     logger.error("Employer Profile not found for userId: {}", userId);
                     return new RuntimeException("Employer Profile not found");
                 });
@@ -167,12 +149,9 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<JobDTO> getEmployerJobsSorted(Long userId, String sort) {
-
         logger.info("Fetching employer jobs sorted by: {} for userId: {}", sort, userId);
 
-        com.RevHire.entity.EmployerProfile employer =
-                employerRepository.findByUserUserId(userId)
-                        .orElseThrow(() -> {
+        EmployerProfile employer = employerRepository.findByUserUserId(userId).orElseThrow(() -> {
                             logger.error("Employer Profile not found for userId: {}", userId);
                             return new RuntimeException("Employer Profile not found");
                         });
@@ -180,19 +159,12 @@ public class JobServiceImpl implements JobService {
         List<Job> jobs;
 
         if ("name".equalsIgnoreCase(sort)) {
-
-            jobs = jobRepository
-                    .findByEmployerEmployerIdOrderByTitleAsc(employer.getEmployerId());
-
+            jobs = jobRepository.findByEmployerEmployerIdOrderByTitleAsc(employer.getEmployerId());
         } else if ("recent".equalsIgnoreCase(sort)) {
-
-            jobs = jobRepository
-                    .findByEmployerEmployerIdOrderByJobIdDesc(employer.getEmployerId());
+            jobs = jobRepository.findByEmployerEmployerIdOrderByJobIdDesc(employer.getEmployerId());
 
         } else {
-
-            jobs = jobRepository
-                    .findByEmployerEmployerId(employer.getEmployerId());
+            jobs = jobRepository.findByEmployerEmployerId(employer.getEmployerId());
         }
 
         return jobs.stream().map(job -> new JobDTO(
@@ -209,22 +181,17 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobDTO toggleJobStatus(Long jobId) {
-
         logger.info("Toggling job status for jobId: {}", jobId);
 
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found with ID: {}", jobId);
                     return new RuntimeException("Job not found");
                 });
 
         boolean newActiveState = !job.getActive();
         job.setActive(newActiveState);
-
         job.setStatus(newActiveState ? "OPEN" : "CLOSED");
-
         Job savedJob = jobRepository.save(job);
-
         logger.info("Job status toggled successfully for jobId: {}", jobId);
 
         return new JobDTO(
@@ -241,11 +208,9 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobDTO getJobById(Long jobId) {
-
         logger.info("Fetching job details for jobId: {}", jobId);
 
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> {
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found with ID: {}", jobId);
                     return new RuntimeException("Job not found with ID: " + jobId);
                 });
@@ -265,11 +230,9 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     public JobDTO updateJob(Long jobId, Job updatedJob) {
-
         logger.info("Updating job with ID: {}", jobId);
 
-        Job existingJob = jobRepository.findById(jobId)
-                .orElseThrow(() -> {
+        Job existingJob = jobRepository.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found for update with ID: {}", jobId);
                     return new RuntimeException("Job not found");
                 });
@@ -284,7 +247,6 @@ public class JobServiceImpl implements JobService {
         existingJob.setEducationRequired(updatedJob.getEducationRequired());
 
         Job savedJob = jobRepository.save(existingJob);
-
         logger.info("Job updated successfully with ID: {}", jobId);
 
         return new JobDTO(
@@ -299,13 +261,9 @@ public class JobServiceImpl implements JobService {
         );
     }
 
-    // ================= RECOMMENDED JOBS =================
-
     @Override
     public List<JobDTO> getRecommendedJobs(String skill) {
-
         logger.info("Fetching recommended jobs for skill: {}", skill);
-
         List<Job> jobs = jobRepository.findRecommendedJobs(skill);
 
         return jobs.stream()

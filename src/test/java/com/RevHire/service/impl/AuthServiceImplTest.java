@@ -35,7 +35,6 @@ public class AuthServiceImplTest {
         user.setSecurityAnswerHash("pet");
     }
 
-    // ====================== REGISTER ======================
     @Test
     void testRegisterUserSuccess() {
         when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
@@ -59,7 +58,6 @@ public class AuthServiceImplTest {
         verify(userRepository, never()).save(any());
     }
 
-    // ====================== LOGIN ======================
     @Test
     void testLoginSuccess() {
         when(userRepository.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
@@ -90,7 +88,6 @@ public class AuthServiceImplTest {
         assertEquals("Invalid credentials", exception.getMessage());
     }
 
-    // ====================== RESET PASSWORD ======================
     @Test
     void testResetPasswordSuccess() {
         when(userRepository.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
@@ -124,7 +121,6 @@ public class AuthServiceImplTest {
         verify(userRepository, never()).save(any());
     }
 
-    // ====================== UPDATE PASSWORD ======================
     @Test
     void testUpdatePasswordSuccess() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -157,7 +153,6 @@ public class AuthServiceImplTest {
         verify(userRepository, never()).save(any());
     }
 
-    // ====================== DELETE USER ======================
     @Test
     void testDeleteUserSuccess() {
         when(userRepository.existsById(1L)).thenReturn(true);

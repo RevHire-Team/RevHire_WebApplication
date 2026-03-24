@@ -42,7 +42,6 @@ public class ResumeServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
         MockitoAnnotations.openMocks(this);
 
         resume = new Resume();
@@ -62,11 +61,8 @@ public class ResumeServiceImplTest {
         skill.setResume(resume);
     }
 
-    // ================= RESUME =================
-
     @Test
     void testCreateResume() {
-
         when(resumeRepo.save(resume)).thenReturn(resume);
 
         Resume result = resumeService.createResume(resume);
@@ -77,7 +73,6 @@ public class ResumeServiceImplTest {
 
     @Test
     void testUpdateResume() {
-
         Resume updated = new Resume();
         updated.setObjective("Backend Developer");
 
@@ -92,26 +87,20 @@ public class ResumeServiceImplTest {
 
     @Test
     void testUpdateResumeNotFound() {
-
         when(resumeRepo.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
-                () -> resumeService.updateResume(1L, resume));
+        assertThrows(RuntimeException.class, () -> resumeService.updateResume(1L, resume));
     }
 
     @Test
     void testDeleteResume() {
-
         resumeService.deleteResume(1L);
 
         verify(resumeRepo).deleteById(1L);
     }
 
-    // ================= EDUCATION =================
-
     @Test
     void testAddEducation() {
-
         when(educationRepo.save(education)).thenReturn(education);
 
         ResumeEducation result = resumeService.addEducation(education);
@@ -122,33 +111,25 @@ public class ResumeServiceImplTest {
 
     @Test
     void testGetEducationByResume() {
+        when(educationRepo.findByResume_ResumeId(1L)).thenReturn(List.of(education));
 
-        when(educationRepo.findByResume_ResumeId(1L))
-                .thenReturn(List.of(education));
-
-        List<ResumeEducation> result =
-                resumeService.getEducationByResume(1L);
+        List<ResumeEducation> result = resumeService.getEducationByResume(1L);
 
         assertEquals(1, result.size());
     }
 
     @Test
     void testDeleteEducation() {
-
         resumeService.deleteEducation(1L);
 
         verify(educationRepo).deleteById(1L);
     }
 
-    // ================= EXPERIENCE =================
-
     @Test
     void testAddExperience() {
-
         when(experienceRepo.save(experience)).thenReturn(experience);
 
-        ResumeExperience result =
-                resumeService.addExperience(experience);
+        ResumeExperience result = resumeService.addExperience(experience);
 
         assertNotNull(result);
         verify(experienceRepo).save(experience);
@@ -156,29 +137,22 @@ public class ResumeServiceImplTest {
 
     @Test
     void testGetExperienceByResume() {
+        when(experienceRepo.findByResume_ResumeId(1L)).thenReturn(List.of(experience));
 
-        when(experienceRepo.findByResume_ResumeId(1L))
-                .thenReturn(List.of(experience));
-
-        List<ResumeExperience> result =
-                resumeService.getExperienceByResume(1L);
+        List<ResumeExperience> result = resumeService.getExperienceByResume(1L);
 
         assertEquals(1, result.size());
     }
 
     @Test
     void testDeleteExperience() {
-
         resumeService.deleteExperience(1L);
 
         verify(experienceRepo).deleteById(1L);
     }
 
-    // ================= SKILLS =================
-
     @Test
     void testAddSkill() {
-
         when(skillRepo.save(skill)).thenReturn(skill);
 
         ResumeSkill result = resumeService.addSkill(skill);
@@ -189,29 +163,22 @@ public class ResumeServiceImplTest {
 
     @Test
     void testGetSkillsByResume() {
+        when(skillRepo.findByResume_ResumeId(1L)).thenReturn(List.of(skill));
 
-        when(skillRepo.findByResume_ResumeId(1L))
-                .thenReturn(List.of(skill));
-
-        List<ResumeSkill> result =
-                resumeService.getSkillsByResume(1L);
+        List<ResumeSkill> result = resumeService.getSkillsByResume(1L);
 
         assertEquals(1, result.size());
     }
 
     @Test
     void testDeleteSkill() {
-
         resumeService.deleteSkill(1L);
-
         verify(skillRepo).deleteById(1L);
     }
 
     @Test
     void testSaveSkills() {
-
-        when(resumeRepo.findById(1L))
-                .thenReturn(Optional.of(resume));
+        when(resumeRepo.findById(1L)).thenReturn(Optional.of(resume));
 
         resumeService.saveSkills(1L, List.of(skill));
 

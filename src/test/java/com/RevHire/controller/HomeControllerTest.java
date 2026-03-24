@@ -24,7 +24,6 @@ class HomeControllerTest {
 
     @Test
     void testLogin_ShouldReturnAuthLoginView() throws Exception {
-        // Testing the shortcut route /login
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("auth/login"));

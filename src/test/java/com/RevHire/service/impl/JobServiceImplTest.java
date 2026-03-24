@@ -33,7 +33,6 @@ class JobServiceImplTest {
     @InjectMocks
     private JobServiceImpl jobService;
 
-    // This solves the "Cannot resolve symbol" error
     @Captor
     private ArgumentCaptor<Job> jobCaptor;
 
@@ -57,7 +56,6 @@ class JobServiceImplTest {
 
     @Test
     void testUpdateJob_Success() {
-        // Arrange
         Job updatedData = new Job();
         updatedData.setTitle("Senior Engineer");
         updatedData.setLocation("New York");
@@ -65,14 +63,11 @@ class JobServiceImplTest {
         when(jobRepository.findById(jobId)).thenReturn(Optional.of(job));
         when(jobRepository.save(any(Job.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // Act
         JobDTO result = jobService.updateJob(jobId, updatedData);
 
-        // Assert
         assertEquals("Senior Engineer", result.getTitle());
         verify(jobRepository).save(jobCaptor.capture());
 
-        // Verify the internal state of the object passed to save()
         Job capturedJob = jobCaptor.getValue();
         assertEquals("Senior Engineer", capturedJob.getTitle());
         assertEquals("New York", capturedJob.getLocation());
@@ -80,14 +75,11 @@ class JobServiceImplTest {
 
     @Test
     void testSearchJobs_Coverage() {
-        // Arrange
         when(jobRepository.advancedSearch(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(Collections.singletonList(job));
 
-        // Act
         List<JobDTO> results = jobService.searchJobs("Java", "Remote", 2, "Bachelors", 50000.0, 100000.0, "Full-time");
 
-        // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
         verify(jobRepository).advancedSearch("Java", "Remote", 2, "Bachelors", 50000.0, 100000.0, "Full-time");
@@ -95,38 +87,30 @@ class JobServiceImplTest {
 
     @Test
     void testGetEmployerJobsSorted_RecentBranch() {
-        // Arrange
         when(employerRepository.findByUserUserId(userId)).thenReturn(Optional.of(employer));
         when(jobRepository.findByEmployerEmployerIdOrderByJobIdDesc(100L))
                 .thenReturn(Collections.singletonList(job));
 
-        // Act
         jobService.getEmployerJobsSorted(userId, "recent");
 
-        // Assert
         verify(jobRepository).findByEmployerEmployerIdOrderByJobIdDesc(100L);
     }
 
     @Test
     void testGetEmployerJobsSorted_DefaultBranch() {
-        // Arrange
         when(employerRepository.findByUserUserId(userId)).thenReturn(Optional.of(employer));
         when(jobRepository.findByEmployerEmployerId(100L))
                 .thenReturn(Collections.singletonList(job));
 
-        // Act
-        jobService.getEmployerJobsSorted(userId, "none"); // Triggers the 'else' block
+        jobService.getEmployerJobsSorted(userId, "none");
 
-        // Assert
         verify(jobRepository).findByEmployerEmployerId(100L);
     }
 
     @Test
     void testCloseJob_ThrowsException() {
-        // Arrange
         when(jobRepository.findById(jobId)).thenReturn(Optional.empty());
 
-        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> jobService.closeJob(jobId));
         assertEquals("Job not found", exception.getMessage());
     }

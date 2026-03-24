@@ -5,15 +5,12 @@ import com.RevHire.dto.JobDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,6 +19,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class JobSeekerServiceImpl implements JobSeekerService {
 
     private static final Logger logger = LogManager.getLogger(JobSeekerServiceImpl.class);
@@ -34,45 +32,19 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     private final UserRepository userRepo;
     private final JobRepository jobRepo;
     private final ResumeSkillRepository resumeSkillRepo;
-
-    @Autowired
-    private JobSeekerProfileRepository seekerRepository;
-
-    public JobSeekerServiceImpl(JobSeekerProfileRepository profileRepo,
-                                ResumeRepository resumeRepo,
-                                ResumeFileRepository resumeFileRepo,
-                                FavoriteJobRepository favoriteJobRepo,
-                                NotificationRepository notificationRepo,
-                                UserRepository userRepo,
-                                JobRepository jobRepo,
-                                ResumeSkillRepository resumeSkillRepo) {
-        this.profileRepo = profileRepo;
-        this.resumeRepo = resumeRepo;
-        this.resumeFileRepo = resumeFileRepo;
-        this.favoriteJobRepo = favoriteJobRepo;
-        this.notificationRepo = notificationRepo;
-        this.userRepo = userRepo;
-        this.jobRepo = jobRepo;
-        this.resumeSkillRepo = resumeSkillRepo;
-    }
-
-    // ========================= PROFILE =========================
+    private final JobSeekerProfileRepository seekerRepository;
 
     @Override
     public JobSeekerProfile createProfile(JobSeekerProfile profile, Long userId) {
-
         logger.info("Creating profile for userId: {}", userId);
 
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> {
+        User user = userRepo.findById(userId).orElseThrow(() -> {
                     logger.error("User not found with ID: {}", userId);
                     return new RuntimeException("User not found with ID: " + userId);
                 });
 
         profile.setUser(user);
-
         JobSeekerProfile savedProfile = profileRepo.save(profile);
-
         logger.info("Profile created successfully for userId: {}", userId);
 
         return savedProfile;
@@ -80,20 +52,15 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public Optional<JobSeekerProfile> getProfile(Long userId) {
-
         logger.info("Fetching profile for userId: {}", userId);
-
-        return Optional.ofNullable(profileRepo.findByUserUserId(userId)
-                .orElse(null));
+        return Optional.ofNullable(profileRepo.findByUserUserId(userId).orElse(null));
     }
 
     @Override
     public JobSeekerProfile updateProfile(Long profileId, JobSeekerProfile profile) {
-
         logger.info("Updating profile with ID: {}", profileId);
 
-        JobSeekerProfile existing = profileRepo.findById(profileId)
-                .orElseThrow(() -> {
+        JobSeekerProfile existing = profileRepo.findById(profileId).orElseThrow(() -> {
                     logger.error("Profile not found with ID: {}", profileId);
                     return new RuntimeException("Profile not found");
                 });
@@ -106,27 +73,20 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         existing.setProfileCompletion(profile.getProfileCompletion());
 
         JobSeekerProfile updated = profileRepo.save(existing);
-
         logger.info("Profile updated successfully with ID: {}", profileId);
-
         return updated;
     }
 
-    // ========================= RESUME =========================
-
     @Override
     public Resume getOrCreateResume(Long userId) {
-
         logger.info("Fetching or creating resume for userId: {}", userId);
 
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> {
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId).orElseThrow(() -> {
                     logger.error("Profile not found for userId: {}", userId);
                     return new RuntimeException("Profile not found. Create profile first.");
                 });
 
-        return resumeRepo.findBySeekerSeekerId(profile.getSeekerId())
-                .orElseGet(() -> {
+        return resumeRepo.findBySeekerSeekerId(profile.getSeekerId()).orElseGet(() -> {
                     logger.info("Creating new resume for seekerId: {}", profile.getSeekerId());
                     Resume newResume = new Resume();
                     newResume.setSeeker(profile);
@@ -136,9 +96,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public ResumeFile uploadResumeFile(Long userId, MultipartFile file) {
-
         logger.info("Uploading resume for userId: {}", userId);
-
         JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
                 .orElseThrow(() -> {
                     logger.error("Profile not found while uploading resume for userId: {}", userId);
@@ -148,7 +106,6 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         Resume resume = getOrCreateResume(userId);
 
         try {
-
             String projectPath = System.getProperty("user.dir");
             String uploadDir = projectPath + File.separator + "uploads" + File.separator + "resumes";
 
@@ -172,44 +129,33 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                     : "UNKNOWN";
 
             resumeFile.setFileType(extension);
-
             ResumeFile savedFile = resumeFileRepo.save(resumeFile);
 
             logger.info("Resume uploaded successfully for userId: {}", userId);
-
             return savedFile;
 
         } catch (IOException e) {
-
             logger.error("Error saving resume file for userId: {}", userId, e);
-
             throw new RuntimeException("FileSystem Error: Could not save file", e);
         }
     }
 
-    // ========================= FAVORITES =========================
-
     @Override
     public FavoriteJob addFavoriteJob(Long seekerId, Long jobId) {
-
         logger.info("Adding favorite job. seekerId: {}, jobId: {}", seekerId, jobId);
 
-        JobSeekerProfile seeker = seekerRepository.findByUserUserId(seekerId)
-                .orElseThrow(() -> {
+        JobSeekerProfile seeker = seekerRepository.findByUserUserId(seekerId).orElseThrow(() -> {
                     logger.error("Seeker not found with ID: {}", seekerId);
                     return new RuntimeException("Seeker not found");
                 });
 
-        Job job = jobRepo.findById(jobId)
-                .orElseThrow(() -> {
+        Job job = jobRepo.findById(jobId).orElseThrow(() -> {
                     logger.error("Job not found with ID: {}", jobId);
                     return new RuntimeException("Job not found");
                 });
 
         if (favoriteJobRepo.existsBySeekerSeekerIdAndJobJobId(seekerId, jobId)) {
-
             logger.warn("Job already added to favorites. seekerId: {}, jobId: {}", seekerId, jobId);
-
             throw new RuntimeException("Already added to favorites");
         }
 
@@ -218,7 +164,6 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         fav.setJob(job);
 
         FavoriteJob saved = favoriteJobRepo.save(fav);
-
         logger.info("Favorite job added successfully. favId: {}", saved.getFavId());
 
         return saved;
@@ -226,18 +171,12 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public List<FavoriteJobDTO> getFavorites(Long seekerId) {
-
         logger.info("Fetching favorite jobs for seekerId: {}", seekerId);
-
         List<FavoriteJob> favorites = favoriteJobRepo.findBySeekerSeekerId(seekerId);
 
         return favorites.stream().map(fav -> {
-
             Job job = fav.getJob();
-
-            String companyName = (job.getEmployer() != null)
-                    ? job.getEmployer().getCompanyName()
-                    : "Unknown Company";
+            String companyName = (job.getEmployer() != null) ? job.getEmployer().getCompanyName() : "Unknown Company";
 
             return new FavoriteJobDTO(
                     fav.getFavId(),
@@ -250,27 +189,20 @@ public class JobSeekerServiceImpl implements JobSeekerService {
                     job.getStatus(),
                     companyName
             );
-
         }).toList();
     }
 
     @Override
     public void removeFavoriteJob(Long favId) {
-
         logger.info("Removing favorite job with ID: {}", favId);
-
         favoriteJobRepo.deleteById(favId);
     }
 
-    // ========================= NOTIFICATIONS =========================
-
     @Override
     public void markNotificationAsRead(Long notificationId) {
-
         logger.info("Marking notification as read. notificationId: {}", notificationId);
 
-        Notification notification = notificationRepo.findById(notificationId)
-                .orElseThrow(() -> {
+        Notification notification = notificationRepo.findById(notificationId).orElseThrow(() -> {
                     logger.error("Notification not found with ID: {}", notificationId);
                     return new RuntimeException("Notification not found");
                 });
@@ -279,26 +211,13 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         notificationRepo.save(notification);
     }
 
-    // ========================= JOB SEARCH =========================
-
     @Override
-    public List<JobDTO> searchJobs(String title,
-                                   String location,
-                                   Integer exp,
-                                   String edu,
-                                   Double minSal,
-                                   Double maxSal,
-                                   String type) {
-
+    public List<JobDTO> searchJobs(String title, String location, Integer exp, String edu, Double minSal, Double maxSal, String type) {
         logger.info("Searching jobs with filters");
 
-        BigDecimal bMin = (minSal != null)
-                ? BigDecimal.valueOf(minSal)
-                : BigDecimal.ZERO;
+        BigDecimal bMin = (minSal != null) ? BigDecimal.valueOf(minSal) : BigDecimal.ZERO;
 
-        BigDecimal bMax = (maxSal != null)
-                ? BigDecimal.valueOf(maxSal)
-                : BigDecimal.valueOf(9999999);
+        BigDecimal bMax = (maxSal != null) ? BigDecimal.valueOf(maxSal) : BigDecimal.valueOf(9999999);
 
         List<Job> jobs = jobRepo.findAdvanced(
                 title != null ? "%" + title + "%" : "%",
@@ -312,17 +231,11 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         );
 
         logger.info("Jobs found: {}", jobs.size());
-
         return jobs.stream().map(this::convertToDTO).toList();
     }
 
-    // ========================= PRIVATE DTO CONVERTER =========================
-
     private JobDTO convertToDTO(Job job) {
-
-        String companyName = (job.getEmployer() != null)
-                ? job.getEmployer().getCompanyName()
-                : "Unknown Company";
+        String companyName = (job.getEmployer() != null) ? job.getEmployer().getCompanyName() : "Unknown Company";
 
         return new JobDTO(
                 job.getJobId(),
@@ -336,11 +249,8 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         );
     }
 
-    // ========================= RECOMMENDED JOBS =========================
-
     @Override
     public List<Job> getRecommendedJobs(List<String> skills) {
-
         logger.info("Fetching recommended jobs based on skills");
 
         if (skills == null || skills.isEmpty()) {

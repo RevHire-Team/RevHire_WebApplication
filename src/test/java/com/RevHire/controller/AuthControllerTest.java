@@ -94,8 +94,7 @@ class AuthControllerTest {
 
     @Test
     void login_ShouldReturnLoginPage_WhenInvalidCredentials() throws Exception {
-        when(authService.login(anyString(), anyString()))
-                .thenThrow(new RuntimeException("Invalid credentials"));
+        when(authService.login(anyString(), anyString())).thenThrow(new RuntimeException("Invalid credentials"));
 
         mockMvc.perform(post("/auth/login")
                         .param("email", "wrong@test.com")
