@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import com.RevHire.entity.User;
 import com.RevHire.repository.UserRepository;
 import com.RevHire.service.AuthService;
+import com.RevHire.entity.JobSeekerProfile;
+import com.RevHire.entity.EmployerProfile;
+import com.RevHire.repository.JobSeekerProfileRepository;
+import com.RevHire.repository.EmployerProfileRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -18,23 +22,37 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JobSeekerProfileRepository jobSeekerProfileRepository;
+    private final EmployerProfileRepository employerProfileRepository;
 
     public User registerUser(User user) {
-        logger.info("Attempting to register user with email: {}", user.getEmail());
 
         if (userRepository.existsByEmail(user.getEmail())) {
-            logger.warn("Registration failed - Email already registered: {}", user.getEmail());
             throw new RuntimeException("Email already registered");
         }
 
-        // ✅ Validate password
         validatePassword(user.getPasswordHash());
 
-        // ✅ Encode password
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
 
         User savedUser = userRepository.save(user);
-        logger.info("User registered successfully with id: {}", savedUser.getUserId());
+
+        // ✅ FIX: Create profile automatically
+        if (savedUser.getRole().name().equals("JOB_SEEKER")) {
+
+            JobSeekerProfile profile = new JobSeekerProfile();
+            profile.setUser(savedUser);
+            profile.setProfileCompletion(0);
+
+            jobSeekerProfileRepository.save(profile);
+
+        } else if (savedUser.getRole().name().equals("EMPLOYER")) {
+
+            EmployerProfile profile = new EmployerProfile();
+            profile.setUser(savedUser);
+
+            employerProfileRepository.save(profile);
+        }
 
         return savedUser;
     }
