@@ -75,7 +75,6 @@ public class JobSeekerServiceImplTest {
         job.setStatus("OPEN");
     }
 
-    // ================= PROFILE =================
     @Test
     void testCreateProfileSuccess() {
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
@@ -113,7 +112,6 @@ public class JobSeekerServiceImplTest {
                 () -> jobSeekerService.updateProfile(1L, profile));
     }
 
-    // ================= RESUME =================
     @Test
     void testGetOrCreateResumeExisting() {
         Resume resume = new Resume();
@@ -174,7 +172,6 @@ public class JobSeekerServiceImplTest {
         verify(favoriteJobRepo).deleteById(1L);
     }
 
-    // ================= NOTIFICATION =================
     @Test
     void testMarkNotificationAsReadSuccess() {
         Notification notification = new Notification();
@@ -196,7 +193,6 @@ public class JobSeekerServiceImplTest {
                 () -> jobSeekerService.markNotificationAsRead(1L));
     }
 
-    // ================= JOB SEARCH =================
     @Test
     void testSearchJobs() {
         when(jobRepo.findAdvanced(anyString(), anyString(), anyInt(),
@@ -211,7 +207,6 @@ public class JobSeekerServiceImplTest {
         assertEquals("Java Developer", results.get(0).getTitle());
     }
 
-    // ================= RECOMMENDED JOBS =================
     @Test
     void testGetRecommendedJobsWithSkills() {
         job.setTitle("Java Developer");

@@ -20,6 +20,7 @@ import com.RevHire.service.impl.JobServiceImpl;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 @Controller
 @RequestMapping("/jobseeker")
+@RequiredArgsConstructor
 public class JobSeekerUIController {
 
     private static final Logger logger = LogManager.getLogger(JobSeekerUIController.class);
@@ -39,39 +41,17 @@ public class JobSeekerUIController {
     private final JobSeekerService jobSeekerService;
     private final ResumeService resumeService;
     private final ResumeRepository resumeRepo;
-    private JobServiceImpl jobService;
-    private ApplicationService applicationService;
+    private final JobServiceImpl jobService;
+    private final ApplicationService applicationService;
     private final UserRepository userRepository;
     private final ResumeSkillRepository resumeSkillRepo;
     private final JobSeekerProfileRepository profileRepo;
 
-    public JobSeekerUIController(JobSeekerService jobSeekerService,
-                                 ResumeService resumeService,
-                                 ResumeRepository resumeRepo,
-                                 JobServiceImpl jobService,
-                                 ApplicationService applicationService,
-                                 UserRepository userRepository,
-                                 ResumeSkillRepository resumeSkillRepo,
-                                 JobSeekerProfileRepository profileRepo) {
-
-        this.jobSeekerService = jobSeekerService;
-        this.resumeService = resumeService;
-        this.resumeRepo = resumeRepo;
-        this.jobService = jobService;
-        this.applicationService = applicationService;
-        this.userRepository = userRepository;
-        this.resumeSkillRepo = resumeSkillRepo;
-        this.profileRepo = profileRepo;
-    }
-
-    // ================= DASHBOARD =================
     @GetMapping("/dashboard/{userId}")
     public String dashboard(@PathVariable Long userId, Model model, HttpSession session) {
-
         logger.info("Loading dashboard for userId {}", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         JobSeekerProfile profile = jobSeekerService.getProfile(userId).orElse(null);
 
@@ -99,7 +79,6 @@ public class JobSeekerUIController {
 
     @GetMapping("/profile/manage")
     public String manageProfile(HttpSession session, Model model) {
-
         logger.info("Opening manage profile page");
 
         if (session.getAttribute("userId") == null) {
@@ -113,7 +92,6 @@ public class JobSeekerUIController {
 
     @GetMapping("/edit-profile")
     public String editProfile(HttpSession session) {
-
         logger.info("Opening edit profile page");
 
         if (session.getAttribute("userId") == null) {
@@ -126,7 +104,6 @@ public class JobSeekerUIController {
 
     @GetMapping("/resume/builder")
     public String showResumeBuilder(HttpSession session, Model model) {
-
         logger.info("Opening resume builder");
 
         if (session.getAttribute("userId") == null) {
@@ -135,13 +112,11 @@ public class JobSeekerUIController {
         }
 
         model.addAttribute("activePage", "builder");
-
         return "jobseeker/resume-builder";
     }
 
     @GetMapping("/resume/upload")
     public String showUploadPage(HttpSession session, Model model) {
-
         logger.info("Opening resume upload page");
 
         if (session.getAttribute("userId") == null) {
@@ -150,15 +125,12 @@ public class JobSeekerUIController {
         }
 
         model.addAttribute("activePage", "upload");
-
         return "jobseeker/resume-upload";
     }
 
     @GetMapping("/resume/view")
     public String viewResume(HttpSession session, Model model) {
-
         Long userId = (Long) session.getAttribute("userId");
-
         logger.info("Viewing resume for userId {}", userId);
 
         if (userId == null) {
@@ -175,7 +147,6 @@ public class JobSeekerUIController {
 
         JobSeekerProfile profile = profileOpt.get();
         model.addAttribute("profile", profile);
-
         Optional<Resume> resumeOpt = resumeRepo.findBySeekerSeekerId(profile.getSeekerId());
 
         if (resumeOpt.isEmpty()) {
@@ -216,9 +187,7 @@ public class JobSeekerUIController {
             return "redirect:/auth/login";
         }
 
-        List<JobDTO> filteredJobs = jobService.searchJobs(
-                title, location, experience, education, minSalary, maxSalary, jobType
-        );
+        List<JobDTO> filteredJobs = jobService.searchJobs(title, location, experience, education, minSalary, maxSalary, jobType);
 
         model.addAttribute("jobs", filteredJobs);
         model.addAttribute("activePage", "search");
@@ -228,16 +197,15 @@ public class JobSeekerUIController {
 
     @GetMapping("/applications")
     public String showApplicationsPage(HttpSession session, Model model) {
-
         Long userId = (Long) session.getAttribute("userId");
-
         logger.info("Fetching applications for userId {}", userId);
 
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null){
+            return "redirect:/auth/login";
+        }
 
         jobSeekerService.getProfile(userId).ifPresent(profile -> {
-            List<ApplicationResponseDTO> apps =
-                    applicationService.getApplicationsBySeeker(profile.getSeekerId());
+            List<ApplicationResponseDTO> apps = applicationService.getApplicationsBySeeker(profile.getSeekerId());
 
             model.addAttribute("applications", apps);
             model.addAttribute("activePage", "applications");
@@ -248,17 +216,15 @@ public class JobSeekerUIController {
 
     @GetMapping("/jobs/saved")
     public String showSavedJobs(HttpSession session, Model model) {
-
         Long userId = (Long) session.getAttribute("userId");
-
         logger.info("Loading saved jobs for userId {}", userId);
 
-        if (userId == null) return "redirect:/auth/login";
+        if (userId == null) {
+            return "redirect:/auth/login";
+        }
 
         jobSeekerService.getProfile(userId).ifPresent(profile -> {
-
-            List<FavoriteJobDTO> favorites =
-                    jobSeekerService.getFavorites(profile.getSeekerId());
+            List<FavoriteJobDTO> favorites = jobSeekerService.getFavorites(profile.getSeekerId());
 
             model.addAttribute("savedJobs", favorites);
             model.addAttribute("activePage", "saved");
@@ -269,19 +235,15 @@ public class JobSeekerUIController {
 
     @Transactional
     public void updateFullProfile(Long userId, ProfileUpdateDTO dto) {
-
         logger.info("Updating full profile for userId {}", userId);
-
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId).orElseThrow(() -> new RuntimeException("Profile not found"));
 
         profile.setFullName(dto.getFullName());
         profile.setPhone(dto.getPhone());
         profile.setLocation(dto.getLocation());
         profileRepo.save(profile);
 
-        Resume resume = resumeRepo.findBySeekerSeekerId(profile.getSeekerId())
-                .orElseGet(() -> {
+        Resume resume = resumeRepo.findBySeekerSeekerId(profile.getSeekerId()).orElseGet(() -> {
                     Resume newR = new Resume();
                     newR.setSeeker(profile);
                     return resumeRepo.save(newR);
@@ -291,19 +253,14 @@ public class JobSeekerUIController {
         resumeRepo.save(resume);
 
         resumeSkillRepo.deleteByResumeResumeId(resume.getResumeId());
-
         if (dto.getSkills() != null && !dto.getSkills().trim().isEmpty()) {
-
             String[] skillNames = dto.getSkills().split(",");
 
             for (String name : skillNames) {
-
                 if (!name.trim().isEmpty()) {
-
                     ResumeSkill rs = new ResumeSkill();
                     rs.setResume(resume);
                     rs.setSkillName(name.trim());
-
                     resumeSkillRepo.save(rs);
                 }
             }
@@ -315,7 +272,6 @@ public class JobSeekerUIController {
     }
 
     private int calculateCompletion(JobSeekerProfile p, Resume r) {
-
         int count = 0;
 
         if (p.getFullName() != null) count += 20;
@@ -326,7 +282,6 @@ public class JobSeekerUIController {
         if (!resumeSkillRepo.findByResumeResumeId(r.getResumeId()).isEmpty()) {
             count += 20;
         }
-
         return count;
     }
 }

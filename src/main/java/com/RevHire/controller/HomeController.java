@@ -15,27 +15,20 @@ public class HomeController {
 
     @GetMapping("/")
     public String index() {
-
         logger.info("Home page requested");
-
         return "index";
     }
 
     @GetMapping("/login")
     public String login() {
-
         logger.info("Login page requested");
-
         return "auth/login";
     }
 
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
-
         logger.info("Register page requested");
-
         model.addAttribute("user", new User());
-
         return "auth/register";
     }
 }

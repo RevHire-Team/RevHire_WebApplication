@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class) // cleaner than MockitoAnnotations.openMocks
+@ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
 
     @Mock
@@ -53,8 +53,6 @@ class NotificationServiceImplTest {
         notification.setIsRead(false);
     }
 
-    // ================= SEND NOTIFICATION =================
-
     @Test
     void testSendNotification_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -80,8 +78,6 @@ class NotificationServiceImplTest {
         assertTrue(exception.getMessage().contains("User not found with ID: 1"));
     }
 
-    // ================= GET USER NOTIFICATIONS =================
-
     @Test
     void testGetUserNotifications_ReturnsData() {
         when(notificationRepository.findByUserUserId(1L)).thenReturn(List.of(notification));
@@ -96,7 +92,6 @@ class NotificationServiceImplTest {
 
     @Test
     void testGetUserNotifications_EmptyList() {
-        // Covers the stream/mapping logic for an empty collection
         when(notificationRepository.findByUserUserId(1L)).thenReturn(Collections.emptyList());
 
         List<NotificationDTO> result = notificationService.getUserNotifications(1L);
@@ -104,15 +99,12 @@ class NotificationServiceImplTest {
         assertTrue(result.isEmpty());
     }
 
-    // ================= MARK AS READ =================
-
     @Test
     void testMarkAsRead_Success() {
         when(notificationRepository.findById(10L)).thenReturn(Optional.of(notification));
 
         notificationService.markAsRead(10L);
 
-        // Verify the status was actually flipped
         assertTrue(notification.getIsRead());
         verify(notificationRepository).save(notification);
     }

@@ -2,83 +2,44 @@ package com.RevHire.controller;
 
 import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.FavoriteJobDTO;
-import com.RevHire.dto.ProfileUpdateDTO;
 import com.RevHire.dto.ResumeSaveDTO;
 import com.RevHire.entity.*;
 import com.RevHire.repository.*;
 import com.RevHire.service.JobSeekerService;
-import com.RevHire.service.ResumeService;
 import com.RevHire.service.impl.ApplicationServiceImpl;
 
-import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import org.springframework.core.io.UrlResource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @RestController
 @RequestMapping("/api/jobseeker")
+@RequiredArgsConstructor
 public class JobSeekerController {
 
     private static final Logger logger = LogManager.getLogger(JobSeekerController.class);
 
     private final JobSeekerService jobSeekerService;
-    private final ResumeService resumeService;
-    private final ApplicationServiceImpl applicationService;
     private final ResumeRepository resumeRepo;
     private final FavoriteJobRepository favoriteJobRepo;
     private final JobSeekerProfileRepository profileRepo;
     private final ResumeEducationRepository educationRepo;
     private final ResumeExperienceRepository experienceRepo;
+    private final ApplicationServiceImpl applicationService;
     private final ResumeCertificationRepository certificationRepo;
     private final ResumeProjectRepository projectRepo;
     private final ResumeSkillRepository resumeSkillRepo;
 
-    public JobSeekerController(
-            JobSeekerService jobSeekerService,
-            ResumeService resumeService,
-            ResumeRepository resumeRepo,
-            FavoriteJobRepository favoriteJobRepo,
-            JobSeekerProfileRepository profileRepo,
-            ResumeEducationRepository educationRepo,
-            ResumeExperienceRepository experienceRepo,
-            ApplicationServiceImpl applicationService,
-            ResumeCertificationRepository certificationRepo,
-            ResumeProjectRepository projectRepo,
-            ResumeSkillRepository resumeSkillRepo) {
-
-        this.jobSeekerService = jobSeekerService;
-        this.resumeService = resumeService;
-        this.resumeRepo = resumeRepo;
-        this.favoriteJobRepo = favoriteJobRepo;
-        this.profileRepo = profileRepo;
-        this.educationRepo = educationRepo;
-        this.experienceRepo = experienceRepo;
-        this.applicationService = applicationService;
-        this.certificationRepo = certificationRepo;
-        this.projectRepo = projectRepo;
-        this.resumeSkillRepo = resumeSkillRepo;
-    }
-
-    // PROFILE
     @PostMapping("/profile/{userId}")
-    public ResponseEntity<JobSeekerProfile> createProfile(
-            @PathVariable Long userId,
-            @RequestBody JobSeekerProfile profile) {
-
+    public ResponseEntity<JobSeekerProfile> createProfile(@PathVariable Long userId, @RequestBody JobSeekerProfile profile) {
         logger.info("Creating profile for userId: {}", userId);
 
         return ResponseEntity.ok(jobSeekerService.createProfile(profile, userId));
@@ -86,7 +47,6 @@ public class JobSeekerController {
 
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getProfile(@PathVariable Long userId) {
-
         Optional<JobSeekerProfile> profileOpt = jobSeekerService.getProfile(userId);
 
         if(profileOpt.isEmpty()) {
@@ -94,7 +54,6 @@ public class JobSeekerController {
         }
 
         JobSeekerProfile profile = profileOpt.get();
-
         Map<String,Object> response = new HashMap<>();
 
         response.put("fullName", profile.getFullName());
@@ -106,48 +65,39 @@ public class JobSeekerController {
                 .orElse(null);
 
         if(resume != null){
-
             response.put("experience", resume.getObjective());
+            List<ResumeSkill> skills = resumeSkillRepo.findByResumeResumeId(resume.getResumeId());
 
-            List<ResumeSkill> skills =
-                    resumeSkillRepo.findByResumeResumeId(resume.getResumeId());
-
-            response.put("skills",
-                    skills.stream()
+            response.put("skills", skills
+                            .stream()
                             .map(ResumeSkill::getSkillName)
                             .reduce((a,b)->a+","+b)
                             .orElse("")
             );
 
-            List<ResumeCertification> certs =
-                    certificationRepo.findByResumeResumeId(resume.getResumeId());
+            List<ResumeCertification> certs = certificationRepo.findByResumeResumeId(resume.getResumeId());
 
-            response.put("certifications",
-                    certs.stream()
+            response.put("certifications", certs
+                            .stream()
                             .map(ResumeCertification::getCertificationName)
                             .reduce((a,b)->a+","+b)
                             .orElse("")
             );
 
-            List<ResumeEducation> edus =
-                    educationRepo.findByResumeResumeId(resume.getResumeId());
+            List<ResumeEducation> edus = educationRepo.findByResumeResumeId(resume.getResumeId());
 
             if(!edus.isEmpty()){
                 ResumeEducation e = edus.get(0);
                 response.put("education", e.getDegree()+" - "+e.getInstitution());
             }
         }
-
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/profile/{userId}")
-    public ResponseEntity<?> updateProfile(
-            @PathVariable Long userId,
-            @RequestBody Map<String,Object> data) {
+    public ResponseEntity<?> updateProfile(@PathVariable Long userId, @RequestBody Map<String,Object> data) {
 
-        JobSeekerProfile profile = profileRepo.findByUserUserId(userId)
-                .orElseGet(() -> {
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId).orElseGet(() -> {
                     JobSeekerProfile newProfile = new JobSeekerProfile();
 
                     User user = new User();
@@ -165,7 +115,6 @@ public class JobSeekerController {
             profile.setCurrentEmploymentStatus((String) data.get("employmentStatus"));
             profile.setTotalExperience(parseExperience((String) data.get("employmentStatus")));
         }
-
         profileRepo.save(profile);
 
         Resume resume = resumeRepo
@@ -211,7 +160,6 @@ public class JobSeekerController {
         String educationVal = (String) data.get("education");
 
         if(educationVal != null && !educationVal.isEmpty()){
-
             ResumeEducation edu = new ResumeEducation();
             edu.setResume(resume);
 
@@ -227,67 +175,43 @@ public class JobSeekerController {
             educationRepo.save(edu);
         }
 
-        return ResponseEntity.ok(Map.of(
-                "message","Profile updated successfully"
+        return ResponseEntity.ok(Map.of("message","Profile updated successfully"
         ));
     }
-    // RESUME FILE UPLOAD
-    @PostMapping("/resume/upload/{userId}")
-    public ResponseEntity<?> uploadResume(
-            @PathVariable Long userId,
-            @RequestParam("file") MultipartFile file) {
 
+    @PostMapping("/resume/upload/{userId}")
+    public ResponseEntity<?> uploadResume(@PathVariable Long userId, @RequestParam("file") MultipartFile file) {
         logger.info("Uploading resume for userId {}", userId);
 
         try {
-
             if (file.getSize() > 2 * 1024 * 1024) {
-
                 logger.warn("File size exceeds limit for userId {}", userId);
-
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "File size must be less than 2MB"));
+                return ResponseEntity.badRequest().body(Map.of("error", "File size must be less than 2MB"));
             }
 
-            ResumeFile savedFile =
-                    jobSeekerService.uploadResumeFile(userId, file);
-
+            ResumeFile savedFile = jobSeekerService.uploadResumeFile(userId, file);
             logger.info("Resume uploaded successfully: {}", savedFile.getFileName());
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Resume uploaded successfully",
-                    "fileName", savedFile.getFileName()
-            ));
+            return ResponseEntity.ok(Map.of("message", "Resume uploaded successfully", "fileName", savedFile.getFileName()));
 
         } catch (Exception e) {
-
             logger.error("Resume upload failed for userId {}", userId, e);
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
 
-    // FAVORITE JOBS
     @PostMapping("/favorites/{seekerId}/{jobId}")
     public ResponseEntity<?> addFavorite(@PathVariable Long seekerId, @PathVariable Long jobId) {
-
         logger.info("Adding favorite job {} for seeker {}", jobId, seekerId);
 
         try {
-
             jobSeekerService.addFavoriteJob(seekerId, jobId);
-
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "message", "Job added to favorites successfully",
                     "jobId", jobId
             ));
-
         } catch (RuntimeException e) {
-
             logger.warn("Job already saved: jobId {}", jobId);
-
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                     "status", "error",
                     "message", "This job is already in your saved list."
@@ -297,56 +221,37 @@ public class JobSeekerController {
 
     @GetMapping("/favorites/{seekerId}")
     public ResponseEntity<List<FavoriteJobDTO>> getFavorites(@PathVariable Long seekerId) {
-
         logger.info("Fetching favorite jobs for seekerId {}", seekerId);
-
         List<FavoriteJobDTO> favorites = jobSeekerService.getFavorites(seekerId);
-
         return ResponseEntity.ok(favorites);
     }
 
     @DeleteMapping("/favorites/{favId}")
     public void removeFavorite(@PathVariable Long favId) {
-
         logger.warn("Removing favorite job with id {}", favId);
-
         jobSeekerService.removeFavoriteJob(favId);
     }
 
-    // DASHBOARD
     @GetMapping("/dashboard/{userId}")
     public ResponseEntity<?> getDashboard(@PathVariable Long userId) {
-
         logger.info("Loading dashboard for userId {}", userId);
-
-        JobSeekerProfile profile =
-                profileRepo.findByUserUserId(userId)
-                        .orElseThrow(() -> new RuntimeException("Profile not found"));
+        JobSeekerProfile profile = profileRepo.findByUserUserId(userId).orElseThrow(() -> new RuntimeException("Profile not found"));
 
         Long seekerId = profile.getSeekerId();
+        long savedJobs = favoriteJobRepo.countBySeekerSeekerId(seekerId);
 
-        long savedJobs =
-                favoriteJobRepo.countBySeekerSeekerId(seekerId);
-
-        List<ApplicationResponseDTO> applications =
-                applicationService.getApplicationsBySeeker(seekerId);
+        List<ApplicationResponseDTO> applications = applicationService.getApplicationsBySeeker(seekerId);
 
         int totalApps = applications.size();
 
-        List<ApplicationResponseDTO> recent =
-                applications.stream().limit(5).toList();
+        List<ApplicationResponseDTO> recent = applications.stream().limit(5).toList();
 
-        int score = profile.getProfileCompletion() != null
-                ? profile.getProfileCompletion()
-                : 0;
+        int score = profile.getProfileCompletion() != null ? profile.getProfileCompletion() : 0;
 
-        Optional<Resume> resumeOpt =
-                resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(seekerId);
+        Optional<Resume> resumeOpt = resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(seekerId);
 
         if (resumeOpt.isPresent()) {
-
             score = calculateProfileCompletion(profile, resumeOpt.get());
-
             profile.setProfileCompletion(score);
             profileRepo.save(profile);
         }
@@ -360,21 +265,23 @@ public class JobSeekerController {
     }
 
     private int parseExperience(String status){
-
         switch(status){
-
-            case "Fresher": return 0;
-            case "0-2 Years Experience": return 1;
-            case "3-5 Years Experience": return 4;
-            case "6-10 Years Experience": return 8;
-            case "10+ Years Experience": return 12;
+            case "Fresher":
+                return 0;
+            case "0-2 Years Experience":
+                return 1;
+            case "3-5 Years Experience":
+                return 4;
+            case "6-10 Years Experience":
+                return 8;
+            case "10+ Years Experience":
+                return 12;
             default: return 0;
         }
     }
+
     private int calculateProfileCompletion(JobSeekerProfile profile, Resume resume) {
-
         int score = 0;
-
         if(profile.getFullName()!=null && !profile.getFullName().isEmpty())
             score += 10;
 
@@ -406,18 +313,11 @@ public class JobSeekerController {
     }
 
     @PostMapping("/resume/save/{userId}")
-    public ResponseEntity<?> saveResume(
-            @PathVariable Long userId,
-            @RequestBody ResumeSaveDTO dto) {
-
+    public ResponseEntity<?> saveResume(@PathVariable Long userId, @RequestBody ResumeSaveDTO dto) {
         try {
+            JobSeekerProfile profile = profileRepo.findByUserUserId(userId).orElseThrow(() -> new RuntimeException("Profile not found"));
 
-            JobSeekerProfile profile =
-                    profileRepo.findByUserUserId(userId)
-                            .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-            Resume resume = resumeRepo
-                    .findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
+            Resume resume = resumeRepo.findTopBySeekerSeekerIdOrderByResumeIdDesc(profile.getSeekerId())
                     .orElseGet(() -> {
                         Resume r = new Resume();
                         r.setSeeker(profile);
@@ -426,92 +326,64 @@ public class JobSeekerController {
 
             resume.setObjective(dto.getObjective());
             resumeRepo.save(resume);
-
             Long resumeId = resume.getResumeId();
 
-            // Save Skills
             resumeSkillRepo.deleteByResumeResumeId(resumeId);
 
             for(String skill : dto.getSkills()){
-
                 ResumeSkill s = new ResumeSkill();
                 s.setResume(resume);
                 s.setSkillName(skill);
-
                 resumeSkillRepo.save(s);
             }
 
-            // Save Education
             educationRepo.deleteByResumeResumeId(resumeId);
-
             dto.getEducations().forEach(e -> {
-
                 ResumeEducation edu = new ResumeEducation();
                 edu.setResume(resume);
                 edu.setInstitution(e.getInstitution());
                 edu.setDegree(e.getDegree());
-
                 educationRepo.save(edu);
-
             });
 
-            // Save Experience
             experienceRepo.deleteByResumeResumeId(resumeId);
-
             dto.getExperiences().forEach(e -> {
-
                 ResumeExperience exp = new ResumeExperience();
                 exp.setResume(resume);
                 exp.setCompanyName(e.getCompanyName());
                 exp.setRole(e.getRole());
-
                 experienceRepo.save(exp);
-
             });
 
-            // Save Projects
             projectRepo.deleteByResumeResumeId(resumeId);
-
             dto.getProjects().forEach(p -> {
-
                 ResumeProject proj = new ResumeProject();
                 proj.setResume(resume);
                 proj.setProjectTitle(p.getProjectTitle());
                 proj.setTechnologies(p.getTechnologies());
                 proj.setProjectLink(p.getProjectLink());
                 proj.setDescription(p.getDescription());
-
                 projectRepo.save(proj);
 
             });
 
-            // Save Certifications
             certificationRepo.deleteByResumeResumeId(resumeId);
-
             dto.getCertifications().forEach(c -> {
-
                 ResumeCertification cert = new ResumeCertification();
                 cert.setResume(resume);
                 cert.setCertificationName(c.getCertificationName());
                 cert.setCompany(c.getCompany());
-
                 certificationRepo.save(cert);
-
             });
 
             int completion = calculateProfileCompletion(profile, resume);
             profile.setProfileCompletion(completion);
             profileRepo.save(profile);
 
-            return ResponseEntity.ok(
-                    Map.of("message","Resume saved successfully")
-            );
+            return ResponseEntity.ok(Map.of("message","Resume saved successfully"));
 
         } catch(Exception e){
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error",e.getMessage()));
-
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error",e.getMessage()));
         }
     }
 

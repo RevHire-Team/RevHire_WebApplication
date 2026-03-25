@@ -1,6 +1,5 @@
 package com.RevHire.controller;
 
-import com.RevHire.dto.ApplicationResponseDTO;
 import com.RevHire.dto.EmployerApplicationDTO;
 import com.RevHire.dto.NoteRequestDTO;
 import com.RevHire.entity.User;
@@ -15,10 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -45,30 +42,25 @@ class ApplicationControllerTest {
         session = new MockHttpSession();
         mockUser = new User();
         mockUser.setUserId(1L);
+        mockUser.setEmail("employer@revhire.com");
     }
-
-    // ================= UI / VIEW TESTS =================
 
     @Test
     void testShowApplyPage_Authorized() throws Exception {
         session.setAttribute("userId", 1L);
-
         mockMvc.perform(get("/applications/jobseeker/jobs/apply/10").session(session))
                 .andExpect(status().isOk())
                 .andExpect(view().name("jobseeker/applications"))
-                .andExpect(model().attributeExists("jobId"))
+                .andExpect(model().attribute("jobId", 10L))
                 .andExpect(model().attribute("userId", 1L));
     }
 
     @Test
     void testShowApplyPage_Unauthorized() throws Exception {
-        // No session attribute set
         mockMvc.perform(get("/applications/jobseeker/jobs/apply/10").session(session))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/auth/login"));
     }
-
-    // ================= POST / REST TESTS =================
 
     @Test
     void testApply_Success() throws Exception {
@@ -83,16 +75,14 @@ class ApplicationControllerTest {
 
     @Test
     void testApply_AlreadyAppliedConflict() throws Exception {
-        // Use any() for all slots to ensure the mock matches regardless of nulls
         doThrow(new RuntimeException("Already applied to this job"))
                 .when(applicationService)
-                .applyJob(any(), any(), any(), any(), any());
+                .applyJob(anyLong(), anyLong(), anyLong(), any(), any());
 
         mockMvc.perform(post("/applications/submit-application")
                         .param("jobId", "10")
                         .param("userId", "1")
                         .param("resumeId", "5"))
-                // Now this should correctly hit the 'catch' block in your controller
                 .andExpect(status().isConflict())
                 .andExpect(content().string("Already applied to this job"));
     }
@@ -117,10 +107,9 @@ class ApplicationControllerTest {
                 .andExpect(status().isOk());
     }
 
-    // ================= DATA FETCHING TESTS =================
-
     @Test
     void testGetAllApplications_Unauthorized() throws Exception {
+        // GIVEN: Session is empty
         mockMvc.perform(get("/applications/all").session(session))
                 .andExpect(status().isUnauthorized());
     }
@@ -128,6 +117,7 @@ class ApplicationControllerTest {
     @Test
     void testGetAllApplications_Authorized() throws Exception {
         session.setAttribute("loggedInUser", mockUser);
+
         EmployerApplicationDTO dto = new EmployerApplicationDTO();
         dto.setApplicationId(1L);
 
@@ -139,5 +129,4 @@ class ApplicationControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].applicationId").value(1));
     }
-
 }

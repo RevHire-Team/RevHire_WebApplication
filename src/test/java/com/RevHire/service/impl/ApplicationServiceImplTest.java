@@ -57,7 +57,6 @@ class ApplicationServiceImplTest {
 
     @BeforeEach
     void setup() {
-        // Job and employer
         job = new Job();
         job.setJobId(100L);
         EmployerProfile employer = new EmployerProfile();
@@ -67,7 +66,6 @@ class ApplicationServiceImplTest {
         employer.setUser(employerUser);
         job.setEmployer(employer);
 
-        // Seeker
         seeker = new JobSeekerProfile();
         seeker.setSeekerId(1L);
         User seekerUser = new User();
@@ -75,17 +73,14 @@ class ApplicationServiceImplTest {
         seeker.setUser(seekerUser);
         seeker.setFullName("John Doe");
 
-        // Resume
         resume = new Resume();
         resume.setResumeId(200L);
         resume.setSeeker(seeker);
 
-        // Resume File
         resumeFile = new ResumeFile();
         resumeFile.setFileId(300L);
         resumeFile.setResume(resume);
 
-        // Application
         application = new Application();
         application.setApplicationId(1000L);
         application.setJob(job);
@@ -95,10 +90,8 @@ class ApplicationServiceImplTest {
         application.setAppliedDate(LocalDateTime.now());
     }
 
-    // ===================== APPLY JOB =====================
     @Test
     void applyJob_ShouldSaveApplication_WhenValidWithFile() {
-        // Stubbing
         lenient().when(applicationRepository.findByJobJobIdAndSeekerSeekerId(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(jobRepository.findById(job.getJobId())).thenReturn(Optional.of(job));
@@ -108,7 +101,6 @@ class ApplicationServiceImplTest {
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         doNothing().when(notificationService).sendNotification(anyLong(), anyString());
 
-        // Execute
         Application result = applicationService.applyJob(
                 job.getJobId(),
                 seeker.getUser().getUserId(),
@@ -117,7 +109,6 @@ class ApplicationServiceImplTest {
                 "Cover Letter"
         );
 
-        // Verify
         assertNotNull(result);
         assertEquals(job.getJobId(), result.getJob().getJobId());
         assertEquals(seeker.getSeekerId(), result.getSeeker().getSeekerId());
@@ -127,7 +118,6 @@ class ApplicationServiceImplTest {
 
     @Test
     void applyJob_ShouldSaveApplication_WhenValidWithoutFile() {
-        // Stubbing
         lenient().when(applicationRepository.findByJobJobIdAndSeekerSeekerId(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(jobRepository.findById(job.getJobId())).thenReturn(Optional.of(job));
@@ -136,7 +126,6 @@ class ApplicationServiceImplTest {
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         doNothing().when(notificationService).sendNotification(anyLong(), anyString());
 
-        // Execute
         Application result = applicationService.applyJob(
                 job.getJobId(),
                 seeker.getUser().getUserId(),
@@ -145,7 +134,6 @@ class ApplicationServiceImplTest {
                 "Cover Letter"
         );
 
-        // Verify
         assertNotNull(result);
         assertEquals(job.getJobId(), result.getJob().getJobId());
         assertEquals(seeker.getSeekerId(), result.getSeeker().getSeekerId());
@@ -153,7 +141,6 @@ class ApplicationServiceImplTest {
         verify(notificationService, times(1)).sendNotification(anyLong(), anyString());
     }
 
-    // ===================== WITHDRAW APPLICATION =====================
     @Test
     void withdrawApplication_ShouldUpdateStatusToWithdrawn() {
         when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
@@ -165,7 +152,6 @@ class ApplicationServiceImplTest {
         assertEquals("No longer interested", application.getWithdrawReason());
     }
 
-    // ===================== UPDATE STATUS =====================
     @Test
     void updateStatus_ShouldUpdateApplicationStatusAndNotify() {
         when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));
@@ -188,7 +174,6 @@ class ApplicationServiceImplTest {
         assertEquals("Invalid status value", ex.getMessage());
     }
 
-    // ===================== GET APPLICATIONS =====================
     @Test
     void getApplicationsByJob_ShouldReturnApplications() {
         when(applicationRepository.findByJobJobId(job.getJobId())).thenReturn(List.of(application));
@@ -222,7 +207,6 @@ class ApplicationServiceImplTest {
         assertEquals(application.getApplicationId(), results.get(0).getApplicationId());
     }
 
-    // ===================== ADD EMPLOYER NOTES =====================
     @Test
     void addEmployerNotes_ShouldSaveNote() {
         when(applicationRepository.findById(application.getApplicationId())).thenReturn(Optional.of(application));

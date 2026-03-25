@@ -1,7 +1,5 @@
 package com.RevHire.service.impl;
 
-import java.util.Optional;
-
 import com.RevHire.dto.EmployerDashboardDTO;
 import com.RevHire.repository.ApplicationRepository;
 import com.RevHire.repository.JobRepository;
@@ -35,34 +33,24 @@ public class EmployerServiceImpl implements EmployerService {
     @Override
     @Transactional
     public EmployerProfileDTO createOrUpdateProfile(Long userId, EmployerProfileDTO dto) {
-
         logger.info("Creating or updating employer profile for userId: {}", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
+        User user = userRepository.findById(userId).orElseThrow(() -> {
                     logger.error("User not found with id: {}", userId);
-                    return new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "User not found");
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
                 });
 
-        EmployerProfile profile = employerProfileRepository
-                .findByUserUserId(userId)
-                .orElse(new EmployerProfile());
+        EmployerProfile profile = employerProfileRepository.findByUserUserId(userId).orElse(new EmployerProfile());
 
         if (dto.getContactEmail() != null && !dto.getContactEmail().isEmpty()) {
-
             logger.info("Updating contact email for userId: {}", userId);
-
             user.setEmail(dto.getContactEmail());
 
             try {
                 userRepository.save(user);
             } catch (Exception e) {
-
                 logger.error("Email already exists for another user: {}", dto.getContactEmail());
-
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Email already in use by another account");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use by another account");
             }
         }
 
@@ -75,20 +63,15 @@ public class EmployerServiceImpl implements EmployerService {
         profile.setLocation(dto.getLocation());
 
         employerProfileRepository.save(profile);
-
         logger.info("Employer profile saved successfully for userId: {}", userId);
-
         return dto;
     }
 
     @Override
     public EmployerProfileDTO getProfile(Long userId) {
-
         logger.info("Fetching employer profile for userId: {}", userId);
 
-        EmployerProfile profile = employerProfileRepository
-                .findByUserUserId(userId)
-                .orElseThrow(() -> {
+        EmployerProfile profile = employerProfileRepository.findByUserUserId(userId).orElseThrow(() -> {
                     logger.error("Employer profile not found for userId: {}", userId);
                     return new RuntimeException("Profile not found");
                 });
@@ -106,28 +89,18 @@ public class EmployerServiceImpl implements EmployerService {
         }
 
         logger.info("Employer profile retrieved successfully for userId: {}", userId);
-
         return dto;
     }
 
     public EmployerDashboardDTO getDashboard(Long userId) {
-
         logger.info("Fetching dashboard data for userId: {}", userId);
 
-        EmployerProfile profile = employerProfileRepository
-                .findByUserUserId(userId)
-                .orElseGet(() -> {
-
+        EmployerProfile profile = employerProfileRepository.findByUserUserId(userId).orElseGet(() -> {
                     logger.warn("Employer profile not found. Creating default profile for userId: {}", userId);
-
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("User not found"));
-
+                    User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
                     EmployerProfile newProfile = new EmployerProfile();
 
                     newProfile.setUser(user);
-
-                    /* default values to satisfy DB constraints */
                     newProfile.setCompanyName("Company");
                     newProfile.setIndustry("Not specified");
                     newProfile.setCompanySize(0);
@@ -141,17 +114,11 @@ public class EmployerServiceImpl implements EmployerService {
         Long employerId = profile.getEmployerId();
 
         logger.debug("EmployerId retrieved: {}", employerId);
-
         Long totalJobs = jobRepository.countByEmployerEmployerId(employerId);
-
         Long activeJobs = jobRepository.countByEmployerEmployerIdAndStatus(employerId, "OPEN");
-
         Long totalApplications = applicationRepository.countByJob_Employer_EmployerId(employerId);
-
         Long pendingReviews = applicationRepository.countByJob_Employer_EmployerIdAndStatus(employerId, "PENDING");
-
         double completion = calculateCompletion(userId);
-
         logger.info("Dashboard statistics calculated for employerId: {}", employerId);
 
         return new EmployerDashboardDTO(
@@ -164,9 +131,7 @@ public class EmployerServiceImpl implements EmployerService {
     }
 
     private double calculateCompletion(Long employerId) {
-
         logger.debug("Calculating profile completion for employerId: {}", employerId);
-
         EmployerProfile profile = employerProfileRepository.findByUserUserId(employerId).orElse(null);
 
         if (profile == null) {
@@ -175,14 +140,12 @@ public class EmployerServiceImpl implements EmployerService {
         }
 
         int count = 0;
-
         if (profile.getCompanyName() != null && !profile.getCompanyName().isEmpty()) count++;
         if (profile.getIndustry() != null && !profile.getIndustry().isEmpty()) count++;
         if (profile.getWebsite() != null && !profile.getWebsite().isEmpty()) count++;
         if (profile.getDescription() != null && !profile.getDescription().isEmpty()) count++;
 
         double completion = (count / 4.0) * 100.0;
-
         logger.debug("Profile completion calculated: {}%", completion);
 
         return completion;

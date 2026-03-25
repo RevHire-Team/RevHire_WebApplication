@@ -26,30 +26,22 @@ public class EmployerController {
 
     //mwthod to create ir update profile
     @PostMapping("/profile/{userId}")
-    public ResponseEntity<?> createOrUpdateProfile(
-            @PathVariable Long userId,
-            @RequestBody EmployerProfileDTO dto) {
-
+    public ResponseEntity<?> createOrUpdateProfile(@PathVariable Long userId, @RequestBody EmployerProfileDTO dto) {
         logger.info("Request received to create/update employer profile for userId: {}", userId);
 
         EmployerProfileDTO updatedDto = employerService.createOrUpdateProfile(userId, dto);
 
         logger.info("Employer profile updated successfully for userId: {}", userId);
-
         return ResponseEntity.ok(updatedDto);
     }
 
     @GetMapping("/profile/edit")
     public String showEditProfilePage(HttpSession session, Model model) {
-
         logger.info("Opening employer profile edit page");
 
         User user = (User) session.getAttribute("loggedInUser");
-
         if (user == null) {
-
             logger.warn("Unauthorized access to edit profile page");
-
             return "redirect:/auth/login";
         }
 
@@ -59,28 +51,21 @@ public class EmployerController {
         model.addAttribute("userId", user.getUserId());
 
         logger.info("Employer profile edit page loaded for userId: {}", user.getUserId());
-
         return "employer/edit-company-profile";
     }
 
     @GetMapping("/profile")
     public String viewProfilePage(HttpSession session, Model model) {
-
         logger.info("Opening employer company profile page");
 
         User user = (User) session.getAttribute("loggedInUser");
-
         if (user == null) {
-
             logger.warn("Unauthorized access to company profile page");
-
             return "redirect:/auth/login";
         }
 
         EmployerProfileDTO profile = employerService.getProfile(user.getUserId());
-
         model.addAttribute("profile", profile);
-
         logger.info("Employer profile fetched successfully for userId: {}", user.getUserId());
 
         return "employer/company-profile";
@@ -88,13 +73,10 @@ public class EmployerController {
 
     @GetMapping("/dashboard/{employerId}")
     public String showDashboard(@PathVariable Long employerId, Model model) {
-
         logger.info("Fetching dashboard data for employerId: {}", employerId);
-
         EmployerDashboardDTO dashboard = employerService.getDashboard(employerId);
 
         model.addAttribute("dashboard", dashboard);
-
         logger.info("Employer dashboard loaded successfully for employerId: {}", employerId);
 
         return "employer/dashboard";
