@@ -76,7 +76,6 @@ AND j.status = 'OPEN'
             String jobType
     );
 
-    // Recommended Jobs based on skill
     @Query("""
 SELECT j FROM Job j
 WHERE (
