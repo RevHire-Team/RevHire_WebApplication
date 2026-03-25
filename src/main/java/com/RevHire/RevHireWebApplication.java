@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
-public class RevHireWebApplication {
+public class 	RevHireWebApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(RevHireWebApplication.class, args);

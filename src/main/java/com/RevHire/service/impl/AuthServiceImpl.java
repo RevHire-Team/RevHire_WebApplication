@@ -4,6 +4,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.RevHire.entity.User;
 import com.RevHire.repository.UserRepository;
@@ -16,6 +17,7 @@ public class AuthServiceImpl implements AuthService {
     private static final Logger logger = LogManager.getLogger(AuthServiceImpl.class);
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public User registerUser(User user) {
         logger.info("Attempting to register user with email: {}", user.getEmail());
@@ -24,6 +26,12 @@ public class AuthServiceImpl implements AuthService {
             logger.warn("Registration failed - Email already registered: {}", user.getEmail());
             throw new RuntimeException("Email already registered");
         }
+
+        // ✅ Validate password
+        validatePassword(user.getPasswordHash());
+
+        // ✅ Encode password
+        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
 
         User savedUser = userRepository.save(user);
         logger.info("User registered successfully with id: {}", savedUser.getUserId());
@@ -37,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
 
         Optional<User> user = userRepository.findByEmail(email);
 
-        if(user.isPresent() && user.get().getPasswordHash().equals(password)) {
+        if(user.isPresent() && passwordEncoder.matches(password, user.get().getPasswordHash())) {
             logger.info("Login successful for user: {}", email);
             return user.get();
         }
@@ -56,8 +64,16 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         if(user.getSecurityAnswerHash().equals(securityAnswer)) {
-            user.setPasswordHash(newPassword);
+
+            // ✅ Step 1: Validate password
+            validatePassword(newPassword);
+
+            // ✅ Step 2: Encode password
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+            // ✅ Step 3: Save user
             userRepository.save(user);
+
             logger.info("Password reset successful for user: {}", email);
             return "Password updated successfully";
         }
@@ -75,14 +91,26 @@ public class AuthServiceImpl implements AuthService {
                     return new RuntimeException("User session expired or user not found");
                 });
 
-        if (!user.getPasswordHash().equals(currentPassword)) {
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             logger.warn("Password update failed - Incorrect current password for userId: {}", userId);
             throw new RuntimeException("The current password you entered is incorrect");
         }
 
-        user.setPasswordHash(newPassword);
+        validatePassword(newPassword);
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         logger.info("Password updated successfully for userId: {}", userId);
+    }
+
+    private void validatePassword(String password) {
+
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$";
+
+        if (!password.matches(regex)) {
+            throw new RuntimeException(
+                    "Password must be at least 8 characters, include uppercase, lowercase, number, and special character"
+            );
+        }
     }
 
     public void deleteUser(Long userId) {
