@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -18,6 +19,8 @@ public class AuthServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -33,6 +36,9 @@ public class AuthServiceImplTest {
         user.setEmail("test@gmail.com");
         user.setPasswordHash("12345");
         user.setSecurityAnswerHash("pet");
+
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -43,7 +49,7 @@ public class AuthServiceImplTest {
         User result = authService.registerUser(user);
 
         assertNotNull(result);
-        assertEquals("test@gmail.com", result.getEmail());
+        assertEquals("encodedPassword", result.getPasswordHash());
         verify(userRepository).save(user);
     }
 
@@ -60,7 +66,11 @@ public class AuthServiceImplTest {
 
     @Test
     void testLoginSuccess() {
-        when(userRepository.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@gmail.com"))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches("12345", user.getPasswordHash()))
+                .thenReturn(true);
 
         User result = authService.login("test@gmail.com", "12345");
 
@@ -70,8 +80,7 @@ public class AuthServiceImplTest {
 
     @Test
     void testLoginInvalidCredentials() {
-        when(userRepository.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
-
+        when(passwordEncoder.matches(any(), any())).thenReturn(false);
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> authService.login("test@gmail.com", "wrongpassword"));
 
